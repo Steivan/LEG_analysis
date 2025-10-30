@@ -1,0 +1,12 @@
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\bin\Debug\net9.0\LEG.E3Dc.Abstractions.deps.json
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\bin\Debug\net9.0\LEG.E3Dc.Abstractions.dll
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\bin\Debug\net9.0\LEG.E3Dc.Abstractions.pdb
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.AssemblyInfo.cs
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.dll
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\refint\LEG.E3Dc.Abstractions.dll
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.pdb
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\ref\LEG.E3Dc.Abstractions.dll

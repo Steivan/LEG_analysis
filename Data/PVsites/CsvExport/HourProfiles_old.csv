@@ -1,0 +1,6 @@
+SystemName, Owner, avg_hours, min_hours, max_hours
+h_household,hour1, 5, 2, 10
+h_general,hour2, 8, 6, 12
+h_heatpump,hour3, 8, 6, 10
+h_FF,hour4, 0.5, 0.1, 12
+h_flat,hour5, 4, 3, 5

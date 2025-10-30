@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LEG.Common\LEG.Common.csproj" />
+    <ProjectReference Include="..\LEG.CoreLib.Abstractions\LEG.CoreLib.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.CoreLib\LEG.CoreLib.csproj" />
+  </ItemGroup>
+
+</Project>

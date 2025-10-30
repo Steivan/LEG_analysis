@@ -1,0 +1,12 @@
+C:\code\LEG_analysis\LEG.Common\bin\Debug\net9.0\LEG.Common.deps.json
+C:\code\LEG_analysis\LEG.Common\bin\Debug\net9.0\LEG.Common.dll
+C:\code\LEG_analysis\LEG.Common\bin\Debug\net9.0\LEG.Common.pdb
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.AssemblyInfo.cs
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.dll
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\refint\LEG.Common.dll
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.pdb
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\ref\LEG.Common.dll

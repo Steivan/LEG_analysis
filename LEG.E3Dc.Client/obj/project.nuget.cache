@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "szqhhkjCrEM=",
+  "success": true,
+  "projectFilePath": "C:\\code\\LEG_analysis\\LEG.E3Dc.Client\\LEG.E3Dc.Client.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\steiv\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512"
+  ],
+  "logs": []
+}

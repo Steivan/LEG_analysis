@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LEG.Common\LEG.Common.csproj" />
+    <ProjectReference Include="..\LEG.CoreLib.Abstractions\LEG.CoreLib.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.CoreLib\LEG.CoreLib.csproj" />
+    <ProjectReference Include="..\LEG.E3Dc.Abstractions\LEG.E3Dc.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.E3Dc.Client\LEG.E3Dc.Client.csproj" />
+    <ProjectReference Include="..\LEG.MeteoSwiss.Abstractions\LEG.MeteoSwiss.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.MeteoSwiss.Client\LEG.MeteoSwiss.Client.csproj" />
+  </ItemGroup>
+
+</Project>

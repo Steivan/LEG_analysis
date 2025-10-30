@@ -1,0 +1,11 @@
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\bin\Debug\net9.0\LEG.HorizonProfiles.Abstractions.deps.json
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\bin\Debug\net9.0\LEG.HorizonProfiles.Abstractions.dll
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\bin\Debug\net9.0\LEG.HorizonProfiles.Abstractions.pdb
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.AssemblyInfo.cs
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.dll
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\refint\LEG.HorizonProfiles.Abstractions.dll
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.pdb
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\ref\LEG.HorizonProfiles.Abstractions.dll

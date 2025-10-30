@@ -1,0 +1,12 @@
+C:\code\LEG_analysis\LEG.OxyPlotHelper\bin\Debug\net9.0-windows\LEG.OxyPlotHelper.deps.json
+C:\code\LEG_analysis\LEG.OxyPlotHelper\bin\Debug\net9.0-windows\LEG.OxyPlotHelper.dll
+C:\code\LEG_analysis\LEG.OxyPlotHelper\bin\Debug\net9.0-windows\LEG.OxyPlotHelper.pdb
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.AssemblyInfo.cs
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.dll
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\refint\LEG.OxyPlotHelper.dll
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.pdb
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\ref\LEG.OxyPlotHelper.dll

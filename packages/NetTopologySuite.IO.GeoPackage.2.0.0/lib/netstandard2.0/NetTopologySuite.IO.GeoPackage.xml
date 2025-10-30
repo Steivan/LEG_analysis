@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>NetTopologySuite.IO.GeoPackage</name>
+    </assembly>
+    <members>
+        <member name="T:NetTopologySuite.IO.GeoPackageBinaryHeader">
+            <summary>
+            Represents GeoPackage binary header.
+            </summary>
+            <remarks>
+            Code adapted from SharpMap, used with special permission.
+            </remarks>
+            <seealso href="http://www.geopackage.org/spec/#gpb_format"/>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageBinaryHeader.Ordinates">
+            <summary>
+            Gets a value indicating the ordinates
+            </summary>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageBinaryHeader.IsEmpty">
+            <summary>
+            Gets a value indicating that this geometry is empty
+            </summary>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageBinaryHeader.Endianess">
+            <summary>
+            Gets a value indicating byte order (0=Big Endian, 1= Little Indian).
+            </summary>
+            <see href="http://www.geopackage.org/spec120/#gpb_format"/>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageBinaryHeader.Magic">
+            <summary>
+            Gets the magic number
+            </summary>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageBinaryHeader.Version">
+            <summary>
+            Gets a value indicating the version of the geometry data
+            </summary>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageBinaryHeader.SrsId">
+            <summary>
+            Gets a value indicating the spatial reference id
+            </summary>
+        </member>
+        <member name="T:NetTopologySuite.IO.GeoPackageGeoReader">
+            <summary>
+            Class to read GeoPackage geometries from an array of bytes
+            </summary>
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoReader.#ctor">
+            <summary>
+            Creates an instance of this class using the default <see cref="T:NetTopologySuite.Geometries.CoordinateSequenceFactory"/> and <see cref="T:NetTopologySuite.Geometries.PrecisionModel"/> to use.
+            </summary>
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoReader.#ctor(NetTopologySuite.Geometries.CoordinateSequenceFactory,NetTopologySuite.Geometries.PrecisionModel)">
+            <summary>
+            Creates an instance of this class using the provided <see cref="T:NetTopologySuite.Geometries.CoordinateSequenceFactory"/> and <see cref="T:NetTopologySuite.Geometries.PrecisionModel"/> to use.
+            </summary>
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoReader.#ctor(NetTopologySuite.Geometries.CoordinateSequenceFactory,NetTopologySuite.Geometries.PrecisionModel,NetTopologySuite.Geometries.Ordinates)">
+            <summary>
+            Creates an instance of this class using the provided <see cref="T:NetTopologySuite.Geometries.CoordinateSequenceFactory"/> and <see cref="T:NetTopologySuite.Geometries.PrecisionModel"/> to use.
+            Additionally the ordinate values that are to be handled can be set.
+            </summary>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageGeoReader.RepairRings">
+            <inheritdoc cref="P:NetTopologySuite.IO.WKBReader.RepairRings" />
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageGeoReader.HandleSRID">
+            <inheritdoc cref="P:NetTopologySuite.IO.WKBReader.HandleSRID" />
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageGeoReader.AllowedOrdinates">
+            <inheritdoc cref="P:NetTopologySuite.IO.WKBReader.AllowedOrdinates" />
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageGeoReader.HandleOrdinates">
+            <inheritdoc cref="P:NetTopologySuite.IO.WKBReader.HandleOrdinates" />
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoReader.Read(System.Byte[])">
+            <summary>
+            Deserializes a <see cref="T:NetTopologySuite.Geometries.Geometry"/> from the given byte array.
+            </summary>
+            <param name="blob">The byte array to read the geometry from.</param>
+            <returns>The deserialized <see cref="T:NetTopologySuite.Geometries.Geometry"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="blob"/> is <see langword="null"/>.</exception>
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoReader.Read(System.IO.Stream)">
+            <summary>
+            Deserializes a <see cref="T:NetTopologySuite.Geometries.Geometry"/> from the given <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> to read the geometry from.</param>
+            <returns>The deserialized <see cref="T:NetTopologySuite.Geometries.Geometry"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="stream"/> is <see langword="null"/>.</exception>
+        </member>
+        <member name="T:NetTopologySuite.IO.GeoPackageGeoWriter">
+            <summary>
+            Creates a 
+            </summary>
+        </member>
+        <member name="F:NetTopologySuite.IO.GeoPackageGeoWriter.AllowedOrdinates">
+            <summary>
+            Gets the <see cref="T:NetTopologySuite.Geometries.Ordinates"/> that this class can write.
+            </summary>
+        </member>
+        <member name="P:NetTopologySuite.IO.GeoPackageGeoWriter.HandleOrdinates">
+            <summary>
+            Gets or sets the maximum <see cref="T:NetTopologySuite.Geometries.Ordinates"/> to write out.
+            The default is equivalent to <see cref="F:NetTopologySuite.IO.GeoPackageGeoWriter.AllowedOrdinates"/>.
+            </summary>
+            <remarks>
+            <para>
+            The purpose of this property is to <b>restrict</b> what gets written out to ensure that,
+            e.g., Z values are never written out even if present on a geometry instance.  Ordinates
+            that are not present on a geometry instance will be omitted regardless of this value.
+            </para>
+            <para>
+            Flags not present in <see cref="F:NetTopologySuite.IO.GeoPackageGeoWriter.AllowedOrdinates"/> are silently ignored.
+            </para>
+            <para>
+            <see cref="F:NetTopologySuite.Geometries.Ordinates.X"/> and <see cref="F:NetTopologySuite.Geometries.Ordinates.Y"/> are always present.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoWriter.Write(NetTopologySuite.Geometries.Geometry,System.IO.Stream)">
+            <summary>
+            Serializes a given <see cref="T:NetTopologySuite.Geometries.Geometry"/> to a given <see cref="T:System.IO.Stream"/>.
+            </summary>
+            <param name="geom">The <see cref="T:NetTopologySuite.Geometries.Geometry"/> to serialize.</param>
+            <param name="stream">The <see cref="T:System.IO.Stream"/> to write <paramref name="geom"/> to.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when either argument is <see langword="null"/>.</exception>
+        </member>
+        <member name="M:NetTopologySuite.IO.GeoPackageGeoWriter.Write(NetTopologySuite.Geometries.Geometry)">
+            <summary>
+            Serializes a given <see cref="T:NetTopologySuite.Geometries.Geometry"/> to a new byte array.
+            </summary>
+            <param name="geom">The <see cref="T:NetTopologySuite.Geometries.Geometry"/> to serialize.</param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="geom"/> is <see langword="null"/>.</exception>
+        </member>
+    </members>
+</doc>

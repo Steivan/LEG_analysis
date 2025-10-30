@@ -1,0 +1,246 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "CsvHelper/33.1.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/CsvHelper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/CsvHelper.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.4": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "LEG.Common/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "CsvHelper": "33.0.1"
+        },
+        "compile": {
+          "bin/placeholder/LEG.Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.Common.dll": {}
+        }
+      },
+      "LEG.MeteoSwiss.Abstractions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "CsvHelper": "33.0.1"
+        },
+        "compile": {
+          "bin/placeholder/LEG.MeteoSwiss.Abstractions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.MeteoSwiss.Abstractions.dll": {}
+        }
+      },
+      "LEG.MeteoSwiss.Client/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.MeteoSwiss.Abstractions": "1.0.0",
+          "Newtonsoft.Json": "13.0.4"
+        },
+        "compile": {
+          "bin/placeholder/LEG.MeteoSwiss.Client.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.MeteoSwiss.Client.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CsvHelper/33.1.0": {
+      "sha512": "kqfTOZGrn7NarNeXgjh86JcpTHUoeQDMB8t9NVa/ZtlSYiV1rxfRnQ49WaJsob4AiGrbK0XDzpyKkBwai4F8eg==",
+      "type": "package",
+      "path": "csvhelper/33.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "csvhelper.33.1.0.nupkg.sha512",
+        "csvhelper.nuspec",
+        "lib/net462/CsvHelper.dll",
+        "lib/net462/CsvHelper.xml",
+        "lib/net47/CsvHelper.dll",
+        "lib/net47/CsvHelper.xml",
+        "lib/net48/CsvHelper.dll",
+        "lib/net48/CsvHelper.xml",
+        "lib/net8.0/CsvHelper.dll",
+        "lib/net8.0/CsvHelper.xml",
+        "lib/net9.0/CsvHelper.dll",
+        "lib/net9.0/CsvHelper.xml",
+        "lib/netstandard2.0/CsvHelper.dll",
+        "lib/netstandard2.0/CsvHelper.xml",
+        "lib/netstandard2.1/CsvHelper.dll",
+        "lib/netstandard2.1/CsvHelper.xml"
+      ]
+    },
+    "Newtonsoft.Json/13.0.4": {
+      "sha512": "pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A==",
+      "type": "package",
+      "path": "newtonsoft.json/13.0.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "README.md",
+        "lib/net20/Newtonsoft.Json.dll",
+        "lib/net20/Newtonsoft.Json.xml",
+        "lib/net35/Newtonsoft.Json.dll",
+        "lib/net35/Newtonsoft.Json.xml",
+        "lib/net40/Newtonsoft.Json.dll",
+        "lib/net40/Newtonsoft.Json.xml",
+        "lib/net45/Newtonsoft.Json.dll",
+        "lib/net45/Newtonsoft.Json.xml",
+        "lib/net6.0/Newtonsoft.Json.dll",
+        "lib/net6.0/Newtonsoft.Json.xml",
+        "lib/netstandard1.0/Newtonsoft.Json.dll",
+        "lib/netstandard1.0/Newtonsoft.Json.xml",
+        "lib/netstandard1.3/Newtonsoft.Json.dll",
+        "lib/netstandard1.3/Newtonsoft.Json.xml",
+        "lib/netstandard2.0/Newtonsoft.Json.dll",
+        "lib/netstandard2.0/Newtonsoft.Json.xml",
+        "newtonsoft.json.13.0.4.nupkg.sha512",
+        "newtonsoft.json.nuspec",
+        "packageIcon.png"
+      ]
+    },
+    "LEG.Common/1.0.0": {
+      "type": "project",
+      "path": "../LEG.Common/LEG.Common.csproj",
+      "msbuildProject": "../LEG.Common/LEG.Common.csproj"
+    },
+    "LEG.MeteoSwiss.Abstractions/1.0.0": {
+      "type": "project",
+      "path": "../LEG.MeteoSwiss.Abstractions/LEG.MeteoSwiss.Abstractions.csproj",
+      "msbuildProject": "../LEG.MeteoSwiss.Abstractions/LEG.MeteoSwiss.Abstractions.csproj"
+    },
+    "LEG.MeteoSwiss.Client/1.0.0": {
+      "type": "project",
+      "path": "../LEG.MeteoSwiss.Client/LEG.MeteoSwiss.Client.csproj",
+      "msbuildProject": "../LEG.MeteoSwiss.Client/LEG.MeteoSwiss.Client.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "CsvHelper >= 33.1.0",
+      "LEG.Common >= 1.0.0",
+      "LEG.MeteoSwiss.Abstractions >= 1.0.0",
+      "LEG.MeteoSwiss.Client >= 1.0.0",
+      "Newtonsoft.Json >= 13.0.4"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\steiv\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\code\\LEG_analysis\\MeteoData\\MeteoData.csproj",
+      "projectName": "MeteoData",
+      "projectPath": "C:\\code\\LEG_analysis\\MeteoData\\MeteoData.csproj",
+      "packagesPath": "C:\\Users\\steiv\\.nuget\\packages\\",
+      "outputPath": "C:\\code\\LEG_analysis\\MeteoData\\obj\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\steiv\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {},
+        "https://nuget.pkg.github.com/Systemorph/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "C:\\code\\LEG_analysis\\LEG.Common\\LEG.Common.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.Common\\LEG.Common.csproj"
+            },
+            "C:\\code\\LEG_analysis\\LEG.MeteoSwiss.Abstractions\\LEG.MeteoSwiss.Abstractions.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.MeteoSwiss.Abstractions\\LEG.MeteoSwiss.Abstractions.csproj"
+            },
+            "C:\\code\\LEG_analysis\\LEG.MeteoSwiss.Client\\LEG.MeteoSwiss.Client.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.MeteoSwiss.Client\\LEG.MeteoSwiss.Client.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.300"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "dependencies": {
+          "CsvHelper": {
+            "target": "Package",
+            "version": "[33.1.0, )"
+          },
+          "Newtonsoft.Json": {
+            "target": "Package",
+            "version": "[13.0.4, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

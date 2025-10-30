@@ -1,0 +1,12 @@
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\bin\Debug\net9.0\LEG.MeteoSwiss.Abstractions.deps.json
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\bin\Debug\net9.0\LEG.MeteoSwiss.Abstractions.dll
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\bin\Debug\net9.0\LEG.MeteoSwiss.Abstractions.pdb
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.AssemblyInfo.cs
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.dll
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\refint\LEG.MeteoSwiss.Abstractions.dll
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.pdb
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\ref\LEG.MeteoSwiss.Abstractions.dll
