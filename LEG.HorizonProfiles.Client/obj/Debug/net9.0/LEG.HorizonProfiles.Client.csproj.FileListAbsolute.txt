@@ -15,3 +15,4 @@ C:\code\LEG_analysis\LEG.HorizonProfiles.Client\obj\Debug\net9.0\LEG.HorizonProf
 C:\code\LEG_analysis\LEG.HorizonProfiles.Client\obj\Debug\net9.0\refint\LEG.HorizonProfiles.Client.dll
 C:\code\LEG_analysis\LEG.HorizonProfiles.Client\obj\Debug\net9.0\LEG.HorizonProfiles.Client.pdb
 C:\code\LEG_analysis\LEG.HorizonProfiles.Client\obj\Debug\net9.0\ref\LEG.HorizonProfiles.Client.dll
+C:\code\LEG_analysis\LEG.HorizonProfiles.Client\obj\Debug\net9.0\LEG.HorizonProfiles.Client.sourcelink.json

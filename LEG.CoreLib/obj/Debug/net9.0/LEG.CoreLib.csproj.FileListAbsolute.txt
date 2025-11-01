@@ -27,3 +27,4 @@ C:\code\LEG_analysis\LEG.CoreLib\obj\Debug\net9.0\LEG.CoreLib.dll
 C:\code\LEG_analysis\LEG.CoreLib\obj\Debug\net9.0\refint\LEG.CoreLib.dll
 C:\code\LEG_analysis\LEG.CoreLib\obj\Debug\net9.0\LEG.CoreLib.pdb
 C:\code\LEG_analysis\LEG.CoreLib\obj\Debug\net9.0\ref\LEG.CoreLib.dll
+C:\code\LEG_analysis\LEG.CoreLib\obj\Debug\net9.0\LEG.CoreLib.sourcelink.json

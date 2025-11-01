@@ -15,3 +15,4 @@ C:\code\LEG_analysis\LEG.MeteoSwiss.Client\obj\Debug\net9.0\LEG.MeteoSwiss.Clien
 C:\code\LEG_analysis\LEG.MeteoSwiss.Client\obj\Debug\net9.0\refint\LEG.MeteoSwiss.Client.dll
 C:\code\LEG_analysis\LEG.MeteoSwiss.Client\obj\Debug\net9.0\LEG.MeteoSwiss.Client.pdb
 C:\code\LEG_analysis\LEG.MeteoSwiss.Client\obj\Debug\net9.0\ref\LEG.MeteoSwiss.Client.dll
+C:\code\LEG_analysis\LEG.MeteoSwiss.Client\obj\Debug\net9.0\LEG.MeteoSwiss.Client.sourcelink.json

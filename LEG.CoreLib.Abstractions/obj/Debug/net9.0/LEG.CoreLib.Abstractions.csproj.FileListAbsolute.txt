@@ -13,3 +13,4 @@ C:\code\LEG_analysis\LEG.CoreLib.Abstractions\obj\Debug\net9.0\LEG.CoreLib.Abstr
 C:\code\LEG_analysis\LEG.CoreLib.Abstractions\obj\Debug\net9.0\refint\LEG.CoreLib.Abstractions.dll
 C:\code\LEG_analysis\LEG.CoreLib.Abstractions\obj\Debug\net9.0\LEG.CoreLib.Abstractions.pdb
 C:\code\LEG_analysis\LEG.CoreLib.Abstractions\obj\Debug\net9.0\ref\LEG.CoreLib.Abstractions.dll
+C:\code\LEG_analysis\LEG.CoreLib.Abstractions\obj\Debug\net9.0\LEG.CoreLib.Abstractions.sourcelink.json

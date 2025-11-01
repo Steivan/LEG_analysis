@@ -13,7 +13,7 @@ const int pythonMinutesPerPeriod = 10;
 // Use the getter from the SampleData project
 var siteOptions = PvSiteModelGetters.GetSitesList();
 
-var sampleId = siteOptions[0];
+var sampleId = siteOptions[2];
 
 const int evaluationYear = pythonReferenceYear;
 const int evaluationStartHour = 4;

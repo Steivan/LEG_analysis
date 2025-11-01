@@ -50,3 +50,4 @@ C:\code\LEG_analysis\LEG.ConsoleApp\obj\Debug\net9.0\refint\E3DcConsoleApp.dll
 C:\code\LEG_analysis\LEG.ConsoleApp\obj\Debug\net9.0\E3DcConsoleApp.pdb
 C:\code\LEG_analysis\LEG.ConsoleApp\obj\Debug\net9.0\E3DcConsoleApp.genruntimeconfig.cache
 C:\code\LEG_analysis\LEG.ConsoleApp\obj\Debug\net9.0\ref\E3DcConsoleApp.dll
+C:\code\LEG_analysis\LEG.ConsoleApp\obj\Debug\net9.0\E3DcConsoleApp.sourcelink.json

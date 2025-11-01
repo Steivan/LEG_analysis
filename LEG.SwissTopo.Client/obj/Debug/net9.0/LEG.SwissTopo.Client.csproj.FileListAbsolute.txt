@@ -16,3 +16,4 @@ C:\code\LEG_analysis\LEG.SwissTopo.Client\obj\Debug\net9.0\LEG.SwissTopo.Client.
 C:\code\LEG_analysis\LEG.SwissTopo.Client\obj\Debug\net9.0\refint\LEG.SwissTopo.Client.dll
 C:\code\LEG_analysis\LEG.SwissTopo.Client\obj\Debug\net9.0\LEG.SwissTopo.Client.pdb
 C:\code\LEG_analysis\LEG.SwissTopo.Client\obj\Debug\net9.0\ref\LEG.SwissTopo.Client.dll
+C:\code\LEG_analysis\LEG.SwissTopo.Client\obj\Debug\net9.0\LEG.SwissTopo.Client.sourcelink.json

@@ -10,3 +10,4 @@ C:\code\LEG_analysis\LEG.SwissTopo.Abstractions\obj\Debug\net9.0\LEG.SwissTopo.A
 C:\code\LEG_analysis\LEG.SwissTopo.Abstractions\obj\Debug\net9.0\refint\LEG.SwissTopo.Abstractions.dll
 C:\code\LEG_analysis\LEG.SwissTopo.Abstractions\obj\Debug\net9.0\LEG.SwissTopo.Abstractions.pdb
 C:\code\LEG_analysis\LEG.SwissTopo.Abstractions\obj\Debug\net9.0\ref\LEG.SwissTopo.Abstractions.dll
+C:\code\LEG_analysis\LEG.SwissTopo.Abstractions\obj\Debug\net9.0\LEG.SwissTopo.Abstractions.sourcelink.json

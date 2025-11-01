@@ -52,8 +52,9 @@ namespace SolarProductionTestApp
             }
 
             // Define plot axes styles
-            var totalPeakPower = maxPower * 1.1;
-            var (majorTickSizer, minorTickSize, nDecimals) = GetAxisTickSizes(totalPeakPower);
+            var peakPowerSum = productionResults.PeakPowerPerRoof.Sum();
+            var powerMaxScale = maxPower * 1.1;
+            var (majorTickSizer, minorTickSize, nDecimals) = GetAxisTickSizes(powerMaxScale);
 
             var panelXAxis = new AxisStyleRecord(
                 true,
@@ -112,8 +113,8 @@ namespace SolarProductionTestApp
                 nCols: 12,
                 xMin: 0, xMax: 24,
                 yMins: [ 0, 0 ],
-                yMaxs: [ 1.1, totalPeakPower ],
-                overallTitle: $"Computed Profiles for: {productionResults.SiteId}, {totalPeakPower:N1}kWp, {productionResults.EvaluationYear}: {productionResults.EffectiveYear[0]:N0}kWh (effective)",
+                yMaxs: [ 1.1, powerMaxScale ],
+                overallTitle: $"Computed Profiles for: {productionResults.SiteId}, max {maxPower:N1}kW/{peakPowerSum:N1}kWp, {productionResults.EffectiveYear[0]:N0}kWh (effective {productionResults.EvaluationYear})",
                 panelXAxis: panelXAxis,
                 panelYAxis: [panelYAxis0, panelYAxis1],
                 legendPosition : -6         // "-" => outside, "6" => middle right 
@@ -156,7 +157,7 @@ namespace SolarProductionTestApp
                 // Add month labels and total production texts
                 context.AddTextToPanel(0, month - 1, 12, 1.08, $"{monthLabels[month]}", OxyColors.Black,
                     textAlignment: 8, fontSize: 10, drawBox: false);
-                context.AddTextToPanel(1, month - 1, 23, totalPeakPower * 0.98, $"{productionResults.EffectiveMonth[0][month]:N0} kWh", OxyColors.Black,
+                context.AddTextToPanel(1, month - 1, 23, powerMaxScale * 0.98, $"{productionResults.EffectiveMonth[0][month]:N0} kWh", OxyColors.Black,
                     textAlignment: 9, fontSize: 10, drawBox: false);
             }
 

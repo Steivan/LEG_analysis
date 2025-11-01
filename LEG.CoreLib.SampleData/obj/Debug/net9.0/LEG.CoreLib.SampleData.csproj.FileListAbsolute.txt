@@ -31,3 +31,4 @@ C:\code\LEG_analysis\LEG.CoreLib.SampleData\obj\Debug\net9.0\LEG.CoreLib.SampleD
 C:\code\LEG_analysis\LEG.CoreLib.SampleData\obj\Debug\net9.0\refint\LEG.CoreLib.SampleData.dll
 C:\code\LEG_analysis\LEG.CoreLib.SampleData\obj\Debug\net9.0\LEG.CoreLib.SampleData.pdb
 C:\code\LEG_analysis\LEG.CoreLib.SampleData\obj\Debug\net9.0\ref\LEG.CoreLib.SampleData.dll
+C:\code\LEG_analysis\LEG.CoreLib.SampleData\obj\Debug\net9.0\LEG.CoreLib.SampleData.sourcelink.json

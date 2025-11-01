@@ -42,3 +42,4 @@ C:\code\LEG_analysis\BuildingFinderTestApp\obj\Debug\net9.0\refint\BuildingFinde
 C:\code\LEG_analysis\BuildingFinderTestApp\obj\Debug\net9.0\BuildingFinderTestApp.pdb
 C:\code\LEG_analysis\BuildingFinderTestApp\obj\Debug\net9.0\BuildingFinderTestApp.genruntimeconfig.cache
 C:\code\LEG_analysis\BuildingFinderTestApp\obj\Debug\net9.0\ref\BuildingFinderTestApp.dll
+C:\code\LEG_analysis\BuildingFinderTestApp\obj\Debug\net9.0\BuildingFinderTestApp.sourcelink.json

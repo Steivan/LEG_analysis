@@ -17,3 +17,4 @@ C:\code\LEG_analysis\LEG.E3Dc.Client\obj\Debug\net9.0\LEG.E3Dc.Client.dll
 C:\code\LEG_analysis\LEG.E3Dc.Client\obj\Debug\net9.0\refint\LEG.E3Dc.Client.dll
 C:\code\LEG_analysis\LEG.E3Dc.Client\obj\Debug\net9.0\LEG.E3Dc.Client.pdb
 C:\code\LEG_analysis\LEG.E3Dc.Client\obj\Debug\net9.0\ref\LEG.E3Dc.Client.dll
+C:\code\LEG_analysis\LEG.E3Dc.Client\obj\Debug\net9.0\LEG.E3Dc.Client.sourcelink.json

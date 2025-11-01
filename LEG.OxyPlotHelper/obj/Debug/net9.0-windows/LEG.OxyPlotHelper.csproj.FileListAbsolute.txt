@@ -10,3 +10,4 @@ C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelpe
 C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\refint\LEG.OxyPlotHelper.dll
 C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.pdb
 C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\ref\LEG.OxyPlotHelper.dll
+C:\code\LEG_analysis\LEG.OxyPlotHelper\obj\Debug\net9.0-windows\LEG.OxyPlotHelper.sourcelink.json

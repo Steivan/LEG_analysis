@@ -50,3 +50,4 @@ C:\code\LEG_analysis\SolarProductionTestApp\obj\Debug\net9.0-windows\refint\Sola
 C:\code\LEG_analysis\SolarProductionTestApp\obj\Debug\net9.0-windows\SolarProductionTestApp.pdb
 C:\code\LEG_analysis\SolarProductionTestApp\obj\Debug\net9.0-windows\SolarProductionTestApp.genruntimeconfig.cache
 C:\code\LEG_analysis\SolarProductionTestApp\obj\Debug\net9.0-windows\ref\SolarProductionTestApp.dll
+C:\code\LEG_analysis\SolarProductionTestApp\obj\Debug\net9.0-windows\SolarProductionTestApp.sourcelink.json

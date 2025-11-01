@@ -1,6 +1,8 @@
-﻿using System;
-using LEG.Common;
+﻿using LEG.Common;
+using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.E3Dc.Abstractions;
+using System;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace LEG.E3Dc.Client
 {
@@ -82,6 +84,175 @@ namespace LEG.E3Dc.Client
                 Console.WriteLine();
                 PrintE3DcData($"20{firstYear:00}-20{lastYear:00}", periodAccumulation);
                 Console.WriteLine();
+            }
+        }
+
+        public static SolarProductionAggregateResults MapToSolarProductionAggregateResults(
+            IE3DcAggregateArrayRecord e3DcRecord,
+            string siteId = "",
+            string town = "",
+            int utcShift = -1,
+            int nrOfRoofs = 1
+            )
+        {
+            // Source data
+            var dimensionRoofs = nrOfRoofs + 1;
+            const int dimensionYear = 13;
+            const int dimensionDay = 25;
+            const double wToKw = 1.0 / 1000.0;
+            var year = e3DcRecord.Year;
+            var recordsPerHour = e3DcRecord.SubRecordsPerHour;
+            var minutesPerInterval = e3DcRecord.GetMinutesPerRecord;
+            var hoursPerInterval = minutesPerInterval / 60.0;
+            var recordsPerYear = e3DcRecord.GetMaxRecordsPerYear;
+            var startDateTime = e3DcRecord.RecordingStartTime;
+            var endDateTime = e3DcRecord.RecordingEndTime;
+            var solarProduction = e3DcRecord.SolarProduction?.Select(v => (double)v).ToArray();
+            var recordIsValid = e3DcRecord.IsValid?.Select(v => v).ToArray();
+
+            // Target data
+            var maximumProduction = new double[dimensionRoofs, dimensionYear, dimensionDay];
+            var averageProduction = new double[dimensionRoofs, dimensionYear, dimensionDay];
+            var sumProductionHours = new double[dimensionRoofs, dimensionYear, dimensionDay];
+            var peakPowerPerRoof = new double[dimensionRoofs];
+            var countPerMonth = new int[dimensionYear];
+            var theoreticalMonth = new List<double[]>();
+            var effectiveMonth = new List<double[]>();
+            var theoreticalYear = new List<double>();
+            var effectiveYear = new List<double>();
+
+            var startMinute = (int)(minutesPerInterval / 2);
+            var dateTime0 = new DateTime(year, 1, 1, 0, startMinute, 0);
+
+            // Aggregate over all records
+            if (solarProduction != null)
+            {
+                for (var recordIndex = 0; recordIndex < recordsPerYear; recordIndex++)
+                {
+                    var isValid = recordIsValid != null && recordIsValid.Length > recordIndex
+                        ? recordIsValid[recordIndex]
+                        : true;
+
+                    var dateTime = dateTime0.AddMinutes(recordIndex * minutesPerInterval);
+                    if (isValid && dateTime.Year == year)
+                    {
+                        var month = dateTime.Month;
+                        var day = dateTime.Day;
+                        var hour = dateTime.Hour;
+                        var minute = dateTime.Minute;
+                        countPerMonth[month] = Math.Max(countPerMonth[month], day);
+                        for (var roof = 1; roof < dimensionRoofs; roof++)
+                        {
+                            var production = roof switch
+                            {
+                                1 => solarProduction[recordIndex] * wToKw,
+                                _ => 0.0
+                            };
+
+                            if (production > 0)
+                            {
+                                var productionPerHour = production / hoursPerInterval;
+                                peakPowerPerRoof[roof] = Math.Max(productionPerHour, peakPowerPerRoof[roof]);
+                                peakPowerPerRoof[0] = Math.Max(productionPerHour, peakPowerPerRoof[roof]);
+
+                                maximumProduction[roof, month, hour] = Math.Max(productionPerHour, maximumProduction[roof, month, hour]);
+                                maximumProduction[roof, 0, hour] = Math.Max(productionPerHour, maximumProduction[roof, 0, hour]);
+                                maximumProduction[0, month, hour] = Math.Max(productionPerHour, maximumProduction[0, month, hour]);
+                                maximumProduction[0, 0, hour] = Math.Max(productionPerHour, maximumProduction[0, 0, hour]);
+
+                                averageProduction[roof, month, hour] += production;
+                                averageProduction[roof, 0, hour] += production;
+                                averageProduction[0, month, hour] += production;
+                                averageProduction[0, 0, hour] += production;
+
+                                sumProductionHours[roof, month, hour] += hoursPerInterval;
+                                sumProductionHours[roof, 0, hour] += hoursPerInterval;
+                                sumProductionHours[0, month, hour] += hoursPerInterval;
+                                sumProductionHours[0, 0, hour] += hoursPerInterval;
+                            }
+                        }
+                    }
+                }
+                // Compute averages
+                for (var roof = 0; roof < dimensionRoofs; roof++)
+                {
+                    if (peakPowerPerRoof[roof] > 0)
+                    {
+                        for (var month = 0; month < dimensionYear; month++)
+                        {
+                            for (var index = 0; index < dimensionDay; index++)
+                            {
+                                var count = sumProductionHours[roof, month, index];
+                                if (count > 0)
+                                {
+                                    averageProduction[roof, month, index] /= count;
+                                }
+                            }
+                        }
+                    }
+                }
+                // Extract aggregates per Month
+                for (var roof = 0; roof < dimensionRoofs; roof++)
+                {
+                    var sumMaxPerMonth = new double[dimensionYear];
+                    var sumAvgPerMonth = new double[dimensionYear];
+                    var sumMaxPerYear = 0.0;
+                    var sumAvgPerYear = 0.0;
+                    for (var month = 1; month < dimensionYear ; month++)
+                    {
+                        for (var intraDayIndex = 0; intraDayIndex < dimensionDay; intraDayIndex++)
+                        {
+                            sumMaxPerMonth[month] += maximumProduction[0, month, intraDayIndex];
+                            sumAvgPerMonth[month] += averageProduction[0, month, intraDayIndex];
+                        }
+                        sumMaxPerMonth[month] *= countPerMonth[month];
+                        sumAvgPerMonth[month] *= countPerMonth[month];
+                        sumMaxPerYear += sumMaxPerMonth[month];
+                        sumAvgPerYear += sumAvgPerMonth[month];
+                    }
+                    theoreticalMonth.Add(sumMaxPerMonth);
+                    effectiveMonth.Add(sumAvgPerMonth);
+                    theoreticalYear.Add(sumMaxPerYear);
+                    effectiveYear.Add(sumAvgPerYear);
+                }
+
+                // Normalize
+                peakPowerPerRoof[0] = peakPowerPerRoof.Max();
+                for (var roof = 0; roof < dimensionRoofs; roof++)
+                {
+                    var peakPower = peakPowerPerRoof[roof];
+                    if (peakPower > 0)
+                    {
+                        for (var month = 0; month < dimensionYear; month++)
+                        {
+                            for (var intraDayIndex = 0; intraDayIndex < dimensionDay; intraDayIndex++)
+                            {
+                                maximumProduction[roof, month, intraDayIndex] /= peakPower;
+                                averageProduction[roof, month, intraDayIndex] /= peakPower;
+                            }
+                        }
+                    }
+                }
+
+                return new SolarProductionAggregateResults(
+                    SiteId: siteId,
+                    Town: town,
+                    EvaluationYear: year,
+                    UtcShift: utcShift,
+                    DimensionRoofs: nrOfRoofs,
+                    PeakPowerPerRoof: peakPowerPerRoof[1..],
+                    TheoreticalAggregation: maximumProduction,
+                    EffectiveAggregation: averageProduction,
+                    CountPerMonth: countPerMonth,
+                    TheoreticalMonth: theoreticalMonth,
+                    EffectiveMonth: effectiveMonth,
+                    TheoreticalYear: theoreticalYear,
+                    EffectiveYear: effectiveYear
+                );
+            }
+            else
+            {
+                throw new InvalidOperationException("Solar production data is null.");
             }
         }
 

@@ -1,13 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "e9gvLnM89bI=",
+  "dgSpecHash": "smULvQBEtYA=",
   "success": true,
   "projectFilePath": "C:\\code\\LEG_analysis\\CalibrationApp\\CalibrationApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\steiv\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512",
     "C:\\Users\\steiv\\.nuget\\packages\\dapper\\2.1.66\\dapper.2.1.66.nupkg.sha512",
-    "C:\\Users\\steiv\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.2\\microsoft.netframework.referenceassemblies.1.0.2.nupkg.sha512",
-    "C:\\Users\\steiv\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net461\\1.0.2\\microsoft.netframework.referenceassemblies.net461.1.0.2.nupkg.sha512",
     "C:\\Users\\steiv\\.nuget\\packages\\nettopologysuite\\2.6.0\\nettopologysuite.2.6.0.nupkg.sha512",
     "C:\\Users\\steiv\\.nuget\\packages\\nettopologysuite.features\\2.2.0\\nettopologysuite.features.2.2.0.nupkg.sha512",
     "C:\\Users\\steiv\\.nuget\\packages\\nettopologysuite.io.geojson\\4.0.0\\nettopologysuite.io.geojson.4.0.0.nupkg.sha512",
@@ -17,18 +15,5 @@
     "C:\\Users\\steiv\\.nuget\\packages\\oxyplot.core\\2.2.0\\oxyplot.core.2.2.0.nupkg.sha512",
     "C:\\Users\\steiv\\.nuget\\packages\\oxyplot.windowsforms\\2.2.0\\oxyplot.windowsforms.2.2.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1701",
-      "level": "Warning",
-      "message": "Package 'OxyPlot.WindowsForms 2.2.0' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.",
-      "projectPath": "C:\\code\\LEG_analysis\\CalibrationApp\\CalibrationApp.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\code\\LEG_analysis\\CalibrationApp\\CalibrationApp.csproj",
-      "libraryId": "OxyPlot.WindowsForms",
-      "targetGraphs": [
-        "net9.0"
-      ]
-    }
-  ]
+  "logs": []
 }

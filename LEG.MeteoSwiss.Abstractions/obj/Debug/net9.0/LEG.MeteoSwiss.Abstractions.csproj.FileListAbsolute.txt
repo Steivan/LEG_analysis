@@ -10,3 +10,4 @@ C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss
 C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\refint\LEG.MeteoSwiss.Abstractions.dll
 C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.pdb
 C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\ref\LEG.MeteoSwiss.Abstractions.dll
+C:\code\LEG_analysis\LEG.MeteoSwiss.Abstractions\obj\Debug\net9.0\LEG.MeteoSwiss.Abstractions.sourcelink.json

@@ -48,3 +48,4 @@ C:\code\LEG_analysis\HorizonProfiles\obj\Debug\net9.0-windows\refint\HorizonProf
 C:\code\LEG_analysis\HorizonProfiles\obj\Debug\net9.0-windows\HorizonProfiles.pdb
 C:\code\LEG_analysis\HorizonProfiles\obj\Debug\net9.0-windows\HorizonProfiles.genruntimeconfig.cache
 C:\code\LEG_analysis\HorizonProfiles\obj\Debug\net9.0-windows\ref\HorizonProfiles.dll
+C:\code\LEG_analysis\HorizonProfiles\obj\Debug\net9.0-windows\HorizonProfiles.sourcelink.json

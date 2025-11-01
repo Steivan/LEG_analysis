@@ -29,3 +29,4 @@ C:\code\LEG_analysis\LEG.CoreLib.DataSource.Csv\obj\Debug\net9.0\LEG.CoreLib.Dat
 C:\code\LEG_analysis\LEG.CoreLib.DataSource.Csv\obj\Debug\net9.0\refint\LEG.CoreLib.DataSource.Csv.dll
 C:\code\LEG_analysis\LEG.CoreLib.DataSource.Csv\obj\Debug\net9.0\LEG.CoreLib.DataSource.Csv.pdb
 C:\code\LEG_analysis\LEG.CoreLib.DataSource.Csv\obj\Debug\net9.0\ref\LEG.CoreLib.DataSource.Csv.dll
+C:\code\LEG_analysis\LEG.CoreLib.DataSource.Csv\obj\Debug\net9.0\LEG.CoreLib.DataSource.Csv.sourcelink.json

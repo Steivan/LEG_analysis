@@ -9,3 +9,4 @@ C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.Horiz
 C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\refint\LEG.HorizonProfiles.Abstractions.dll
 C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.pdb
 C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\ref\LEG.HorizonProfiles.Abstractions.dll
+C:\code\LEG_analysis\LEG.HorizonProfiles.Abstractions\obj\Debug\net9.0\LEG.HorizonProfiles.Abstractions.sourcelink.json

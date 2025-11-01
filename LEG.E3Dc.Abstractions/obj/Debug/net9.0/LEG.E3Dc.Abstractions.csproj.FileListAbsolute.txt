@@ -10,3 +10,4 @@ C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstraction
 C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\refint\LEG.E3Dc.Abstractions.dll
 C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.pdb
 C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\ref\LEG.E3Dc.Abstractions.dll
+C:\code\LEG_analysis\LEG.E3Dc.Abstractions\obj\Debug\net9.0\LEG.E3Dc.Abstractions.sourcelink.json

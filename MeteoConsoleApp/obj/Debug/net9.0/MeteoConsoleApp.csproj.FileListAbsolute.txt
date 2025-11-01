@@ -42,3 +42,4 @@ C:\code\LEG_analysis\MeteoConsoleApp\obj\Debug\net9.0\refint\MeteoConsoleApp.dll
 C:\code\LEG_analysis\MeteoConsoleApp\obj\Debug\net9.0\MeteoConsoleApp.pdb
 C:\code\LEG_analysis\MeteoConsoleApp\obj\Debug\net9.0\MeteoConsoleApp.genruntimeconfig.cache
 C:\code\LEG_analysis\MeteoConsoleApp\obj\Debug\net9.0\ref\MeteoConsoleApp.dll
+C:\code\LEG_analysis\MeteoConsoleApp\obj\Debug\net9.0\MeteoConsoleApp.sourcelink.json

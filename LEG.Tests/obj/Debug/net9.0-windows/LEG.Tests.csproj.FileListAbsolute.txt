@@ -204,3 +204,4 @@ C:\code\LEG_analysis\LEG.Tests\obj\Debug\net9.0-windows\refint\LEG.Tests.dll
 C:\code\LEG_analysis\LEG.Tests\obj\Debug\net9.0-windows\LEG.Tests.pdb
 C:\code\LEG_analysis\LEG.Tests\obj\Debug\net9.0-windows\LEG.Tests.genruntimeconfig.cache
 C:\code\LEG_analysis\LEG.Tests\obj\Debug\net9.0-windows\ref\LEG.Tests.dll
+C:\code\LEG_analysis\LEG.Tests\obj\Debug\net9.0-windows\LEG.Tests.sourcelink.json

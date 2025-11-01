@@ -10,3 +10,4 @@ C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.dll
 C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\refint\LEG.Common.dll
 C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.pdb
 C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\ref\LEG.Common.dll
+C:\code\LEG_analysis\LEG.Common\obj\Debug\net9.0\LEG.Common.sourcelink.json
