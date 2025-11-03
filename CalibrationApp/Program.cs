@@ -1,8 +1,11 @@
 ﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.E3Dc.Abstractions;
 using LEG.E3Dc.Client;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Policy;
+
+using LEG.CoreLib.SolarCalculations.Calculations;
+using LEG.HorizonProfiles.Client;
+using LEG.CoreLib.SampleData;
+using LEG.CoreLib.SampleData.SampleData;
 
 namespace CalibrationApp
 {
@@ -11,8 +14,8 @@ namespace CalibrationApp
         static async Task Main()
         {
 
-            ProcessE3DcData(E3DcConstants.DataFolder, E3DcConstants.SubFolder1, E3DcConstants.FirstYear1, E3DcConstants.LastYear1, 96);
-            ProcessE3DcData(E3DcConstants.DataFolder, E3DcConstants.SubFolder2, E3DcConstants.FirstYear2, E3DcConstants.LastYear2, 96);
+            await ProcessE3DcData(1);
+            await ProcessE3DcData(2);
        
             // Run E3DC aggregation
             E3DcAggregator.RunE3DcAggregation();
@@ -20,14 +23,22 @@ namespace CalibrationApp
             await Task.CompletedTask;
         }
 
-        public static void ProcessE3DcData(
-            string dataFolder, string subFolder,
-            int firstYear, int lastYear,
-            int recordsPerDay)
+        public static async Task ProcessE3DcData(int modelNr)
         {
+            modelNr = 1 + (modelNr -1) % 2;
+
+            // E3DC data parameters
+            string dataFolder = E3DcConstants.DataFolder;
+            string subFolder = modelNr == 1 ? E3DcConstants.SubFolder1 : E3DcConstants.SubFolder2;
+            int firstYear = modelNr == 1 ? E3DcConstants.FirstYear1 : E3DcConstants.FirstYear2;
+            int lastYear = modelNr == 1 ? E3DcConstants.LastYear1 : E3DcConstants.LastYear2;
+            int recordsPerDay = 96;
+
+            // PV Reference model
+            var referenceModelId = modelNr == 1 ? ListSites.Senn : ListSites.SennV;
+
             var folder = dataFolder + subFolder;
             var aggregationRecord = new E3DcAggregateArrayRecord();
-
 
             var arrayRecordsList = E3DcLoadArrayRecords.LoadE3DcArrayRecords(folder, firstYear, lastYear);
             var solarProductionList = new List<SolarProductionAggregateResults>();
@@ -57,12 +68,65 @@ namespace CalibrationApp
 
             var mergedSolarProduction = MergeSolarProductionAggregateResults(solarProductionList);
 
-            //PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[0]);
-            //PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[1]);
-            //PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[^2]);
-            //PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[^1]);
+            SolarProductionAggregateResults? referenceModel = await GetProductionModel(referenceModelId, siteAggregate: true);
 
-            PlotE3DcProfiles.ProductionProfilePlot(mergedSolarProduction, countYears: solarProductionList.Count);
+            //await PlotE3DcProfiles.ProductionProfilePlot(referenceModel);
+
+            //await PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[0]);
+            //await PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[1]);
+            //await PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[^2]);
+            //await PlotE3DcProfiles.ProductionProfilePlot(solarProductionList[^1]);
+
+            //await PlotE3DcProfiles.ProductionProfilePlot(mergedSolarProduction, countYears: solarProductionList.Count);
+
+            await CombinedPlot.ProductionProfilePlot(solarProductionList, referenceModel!, 2000 + firstYear);
+        }
+
+        public static async Task<SolarProductionAggregateResults?> GetProductionModel(
+            string sampleId, 
+            int evaluationYear = 2025, 
+            int minutesPerPeriod = 10, 
+            bool siteAggregate = false)
+        {
+            var siteModel = await PvSiteModelGetters.GetSiteDataModelAsync(sampleId);
+
+            // Instantiate the HorizonProfileClient and the new data providers
+            var apiKey = Environment.GetEnvironmentVariable("GOOGLE_ELEVATION_API_KEY");
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                Console.WriteLine("Google Elevation API key is not set. Please set the 'GOOGLE_ELEVATION_API_KEY' environment variable.");
+                return null;
+            }
+            var horizonClient = new HorizonProfileClient(googleApiKey: apiKey!);
+            var coordinateProvider = new SampleSiteCoordinateProvider();
+            var horizonControlProvider = new SampleSiteHorizonControlProvider();
+
+            if (siteAggregate)
+            {
+                return await siteModel.ComputePvSiteAggregateProductionPerSite(
+                horizonClient,
+                coordinateProvider,
+                horizonControlProvider,
+                evaluationYear: evaluationYear,
+                evaluationStartHour: 4,
+                evaluationEndHour: 22,
+                minutesPerPeriod: minutesPerPeriod,
+                print: false
+                );
+            }
+            else
+            {
+                return await siteModel.ComputePvSiteAggregateProductionPerRoof(
+                    horizonClient,
+                    coordinateProvider,
+                    horizonControlProvider,
+                    evaluationYear: evaluationYear,
+                    evaluationStartHour: 4,
+                    evaluationEndHour: 22,
+                    minutesPerPeriod: minutesPerPeriod,
+                    print: false
+                    );
+            }
         }
 
         public static SolarProductionAggregateResults MergeSolarProductionAggregateResults(
@@ -84,7 +148,6 @@ namespace CalibrationApp
             // Target data
             var hullProductionRatio = new double[1 + observationYears, dimensionYear, dimensionDay];
             var effectiveProductionRatio = new double[1 + observationYears, dimensionYear, dimensionDay];
-            //var sumProductionHours = new double[1 + observationYears, dimensionYear, dimensionDay];
             var reNormalizeFactors = new double[1 + observationYears];
             var countPerMonth = new int[dimensionYear];
             var hullYear = new double[1 + observationYears, dimensionYear];

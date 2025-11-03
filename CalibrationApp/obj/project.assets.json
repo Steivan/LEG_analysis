@@ -204,6 +204,27 @@
           "bin/placeholder/LEG.CoreLib.Abstractions.dll": {}
         }
       },
+      "LEG.CoreLib.SampleData/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.CoreLib": "1.0.0",
+          "LEG.CoreLib.Abstractions": "1.0.0",
+          "LEG.HorizonProfiles.Abstractions": "1.0.0",
+          "LEG.HorizonProfiles.Client": "1.0.0",
+          "LEG.MeteoSwiss.Abstractions": "1.0.0",
+          "LEG.MeteoSwiss.Client": "1.0.0",
+          "LEG.SwissTopo.Abstractions": "1.0.0",
+          "LEG.SwissTopo.Client": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LEG.CoreLib.SampleData.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.CoreLib.SampleData.dll": {}
+        }
+      },
       "LEG.E3Dc.Abstractions/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
@@ -241,6 +262,20 @@
         },
         "runtime": {
           "bin/placeholder/LEG.HorizonProfiles.Abstractions.dll": {}
+        }
+      },
+      "LEG.HorizonProfiles.Client/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.HorizonProfiles.Abstractions": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LEG.HorizonProfiles.Client.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.HorizonProfiles.Client.dll": {}
         }
       },
       "LEG.MeteoSwiss.Abstractions/1.0.0": {
@@ -530,6 +565,11 @@
       "path": "../LEG.CoreLib.Abstractions/LEG.CoreLib.Abstractions.csproj",
       "msbuildProject": "../LEG.CoreLib.Abstractions/LEG.CoreLib.Abstractions.csproj"
     },
+    "LEG.CoreLib.SampleData/1.0.0": {
+      "type": "project",
+      "path": "../LEG.CoreLib.SampleData/LEG.CoreLib.SampleData.csproj",
+      "msbuildProject": "../LEG.CoreLib.SampleData/LEG.CoreLib.SampleData.csproj"
+    },
     "LEG.E3Dc.Abstractions/1.0.0": {
       "type": "project",
       "path": "../LEG.E3Dc.Abstractions/LEG.E3Dc.Abstractions.csproj",
@@ -544,6 +584,11 @@
       "type": "project",
       "path": "../LEG.HorizonProfiles.Abstractions/LEG.HorizonProfiles.Abstractions.csproj",
       "msbuildProject": "../LEG.HorizonProfiles.Abstractions/LEG.HorizonProfiles.Abstractions.csproj"
+    },
+    "LEG.HorizonProfiles.Client/1.0.0": {
+      "type": "project",
+      "path": "../LEG.HorizonProfiles.Client/LEG.HorizonProfiles.Client.csproj",
+      "msbuildProject": "../LEG.HorizonProfiles.Client/LEG.HorizonProfiles.Client.csproj"
     },
     "LEG.MeteoSwiss.Abstractions/1.0.0": {
       "type": "project",
@@ -576,6 +621,7 @@
       "LEG.Common >= 1.0.0",
       "LEG.CoreLib >= 1.0.0",
       "LEG.CoreLib.Abstractions >= 1.0.0",
+      "LEG.CoreLib.SampleData >= 1.0.0",
       "LEG.E3Dc.Abstractions >= 1.0.0",
       "LEG.E3Dc.Client >= 1.0.0",
       "LEG.MeteoSwiss.Abstractions >= 1.0.0",
@@ -623,6 +669,9 @@
             },
             "C:\\code\\LEG_analysis\\LEG.CoreLib.Abstractions\\LEG.CoreLib.Abstractions.csproj": {
               "projectPath": "C:\\code\\LEG_analysis\\LEG.CoreLib.Abstractions\\LEG.CoreLib.Abstractions.csproj"
+            },
+            "C:\\code\\LEG_analysis\\LEG.CoreLib.SampleData\\LEG.CoreLib.SampleData.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.CoreLib.SampleData\\LEG.CoreLib.SampleData.csproj"
             },
             "C:\\code\\LEG_analysis\\LEG.CoreLib\\LEG.CoreLib.csproj": {
               "projectPath": "C:\\code\\LEG_analysis\\LEG.CoreLib\\LEG.CoreLib.csproj"

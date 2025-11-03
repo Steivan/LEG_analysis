@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LEG.MeteoSwiss.Abstractions")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+21b8b86611351bac9e0536f054b6c339f5151d19")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5331a617e1ef7b6b3150624c836186399225dca8")]
 [assembly: System.Reflection.AssemblyProductAttribute("LEG.MeteoSwiss.Abstractions")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LEG.MeteoSwiss.Abstractions")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

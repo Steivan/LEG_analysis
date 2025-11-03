@@ -433,6 +433,43 @@ namespace LEG.OxyPlotHelper
             return lineSeries;
         }
 
+        public AreaSeries AddAreaToPanel(
+            int row, int col,
+            double[] xData, double[] y1Data, double[] y2Data,
+            OxyColor fillColor,
+            OxyColor? strokeColor = null,
+            double strokeThickness = 1,
+            string label = ""
+        )
+        {
+            var points1 = new List<DataPoint>();
+            var points2 = new List<DataPoint>();
+
+            for (var i = 0; i < xData.Length; i++)
+            {
+                var (xNorm1, yNorm1) = DataToNorm(row, col, xData[i], y1Data[i]);
+                points1.Add(new DataPoint(xNorm1, yNorm1));
+
+                var (xNorm2, yNorm2) = DataToNorm(row, col, xData[i], y2Data[i]);
+                points2.Add(new DataPoint(xNorm2, yNorm2));
+            }
+
+            var areaSeries = new AreaSeries
+            {
+                Title = label,
+                Fill = fillColor,
+                Color = strokeColor ?? OxyColors.Undefined,
+                StrokeThickness = strokeThickness,
+                LineStyle = strokeColor.HasValue ? LineStyle.Solid : LineStyle.None
+            };
+
+            areaSeries.Points.AddRange(points1);
+            areaSeries.Points2.AddRange(points2);
+
+            PlotModel.Series.Add(areaSeries);
+            return areaSeries;
+        }
+
         // Add a marker to a specific panel
         public void AddMarkerToPanel(int row, int col, double x, double y, OxyColor color, MarkerType markerType,
             double size)

@@ -269,7 +269,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 );
         }
 
-        public static async Task<SolarProductionAggregateResults> ComputePvSiteAggregateProduction(this IPvSiteModel pvSiteModel,
+        public static async Task<SolarProductionAggregateResults> ComputePvSiteAggregateProductionPerRoof(this IPvSiteModel pvSiteModel,
             IHorizonProfileClient horizonProfileClient,
             ISiteCoordinateProvider coordinateProvider,
             ISiteHorizonControlProvider horizonControlProvider,
@@ -349,6 +349,105 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 EffectiveMonth: effectiveMonth,
                 TheoreticalYear: theoreticalYear,
                 EffectiveYear: effectiveYear
+                );
+        }
+
+        public static async Task<SolarProductionAggregateResults> ComputePvSiteAggregateProductionPerSite(this IPvSiteModel pvSiteModel,
+            IHorizonProfileClient horizonProfileClient,
+            ISiteCoordinateProvider coordinateProvider,
+            ISiteHorizonControlProvider horizonControlProvider,
+            int evaluationYear = BasicParametersAndConstants.DefaultYear,
+            int evaluationStartHour = 4,
+            int evaluationEndHour = 22,
+            int minutesPerPeriod = 10,
+            bool print = false)
+        {
+            // Source data
+            const int nrOfRoofs = 1;
+            const int dimensionRoofs = 1 + nrOfRoofs;
+            const int dimensionYear = 13;
+            const int dimensionDay = 25;
+
+            // Target data
+            var peakPowerRoofs = new double[nrOfRoofs];
+            var theoreticalAggregationRoofs = new double[dimensionRoofs, dimensionYear, dimensionDay];
+            var effectiveAggregationRoofs = new double[dimensionRoofs, dimensionYear, dimensionDay];
+            var aggregateMonthTheoreticalRoofs = new double[dimensionYear];
+            var aggregateMonthEffectiveRoofs = new double[dimensionYear];
+
+            var theoreticalYearRoofsList = new List<double>();
+            var effectiveYearRoofsList = new List<double>();
+
+            // Fetch production data on a roof level
+            var productionPerRoof = await ComputePvSiteAggregateProductionPerRoof(
+                    pvSiteModel,
+                    horizonProfileClient,
+                    coordinateProvider,
+                    horizonControlProvider,
+                    evaluationYear: evaluationYear,
+                    evaluationStartHour: evaluationStartHour,
+                    evaluationEndHour: evaluationEndHour,
+                    minutesPerPeriod: minutesPerPeriod,
+                    print: print
+                    );
+
+            var peakPowerPerRoof = productionPerRoof.PeakPowerPerRoof;
+            var theoreticalAggregation = productionPerRoof.TheoreticalAggregation;
+            var effectiveAggregation = productionPerRoof.EffectiveAggregation;
+            var theoreticalMonth = productionPerRoof.TheoreticalMonth;
+            var effectiveMonth = productionPerRoof.EffectiveMonth;
+            var theoreticalYear = productionPerRoof.TheoreticalYear;
+            var effectiveYear = productionPerRoof.EffectiveYear;
+
+            var countSourceRoofs = peakPowerPerRoof.Length;
+
+            // Aggregate to site level: assign to a single notional "roof"
+            var peakPowerSum = peakPowerPerRoof.Sum();
+            peakPowerRoofs[0] = peakPowerSum > 0 ? peakPowerSum : 1.0;
+            var normalizeFactors = new double[1 + countSourceRoofs];
+            normalizeFactors[0] = 1.0;
+            for (var roofIndex = 0; roofIndex < countSourceRoofs; roofIndex++)
+            {
+                normalizeFactors[1 + roofIndex] = peakPowerPerRoof[roofIndex] / peakPowerRoofs[0];
+            }
+
+            for (var month = 0; month < dimensionYear; month++)
+            {
+                for (var hour = 0; hour < dimensionDay; hour++)
+                {
+                    for (var sourceRoof = 1; sourceRoof <= countSourceRoofs; sourceRoof++)
+                    {
+                        theoreticalAggregationRoofs[1, month, hour] += theoreticalAggregation[sourceRoof, month, hour] * normalizeFactors[sourceRoof];
+                        effectiveAggregationRoofs[1, month, hour] += effectiveAggregation[sourceRoof, month, hour] * normalizeFactors[sourceRoof];
+                    }
+                    theoreticalAggregationRoofs[0, month, hour] = theoreticalAggregationRoofs[1, month, hour];
+                    effectiveAggregationRoofs[0, month, hour] = effectiveAggregationRoofs[1, month, hour];
+                }
+            }
+
+            for (var month = 1; month < dimensionYear; month++)
+            {
+                for (var roof = 1; roof <= countSourceRoofs; roof++)
+                {
+                    aggregateMonthTheoreticalRoofs[month] += theoreticalMonth[roof][month];
+                    aggregateMonthEffectiveRoofs[month] += effectiveMonth[roof][month];
+                }
+            }
+
+            return new SolarProductionAggregateResults(
+                SiteId: productionPerRoof.SiteId,
+                Town: productionPerRoof.Town,
+                EvaluationYear: productionPerRoof.EvaluationYear,
+                UtcShift: productionPerRoof.UtcShift,
+                DimensionRoofs: nrOfRoofs,
+                PeakPowerPerRoof: peakPowerRoofs,
+                TheoreticalAggregation: theoreticalAggregationRoofs,
+                EffectiveAggregation: effectiveAggregationRoofs,
+                CountPerMonth: productionPerRoof.CountPerMonth,
+                TheoreticalMonth: [aggregateMonthTheoreticalRoofs, aggregateMonthTheoreticalRoofs],
+                EffectiveMonth: [aggregateMonthEffectiveRoofs, aggregateMonthEffectiveRoofs],
+                TheoreticalYear: [aggregateMonthTheoreticalRoofs.Sum(), aggregateMonthTheoreticalRoofs.Sum()],
+                EffectiveYear: [aggregateMonthEffectiveRoofs.Sum(), aggregateMonthEffectiveRoofs.Sum()]
                 );
         }
     }

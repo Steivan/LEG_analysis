@@ -10,10 +10,10 @@ const int pythonEvaluationStartHour = 5;  // -> to match python script
 const int pythonEvaluationEndHour = 22;
 const int pythonMinutesPerPeriod = 10;
 
-// Use the getter from the SampleData project
+// Use the getter from the SampleData project: Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Liuns, Lotz, Senn, SennV, TestSite, Tof, "Manual"
 var siteOptions = PvSiteModelGetters.GetSitesList();
 
-var sampleId = siteOptions[2];
+var sampleId = siteOptions[8];
 
 const int evaluationYear = pythonReferenceYear;
 const int evaluationStartHour = 4;
@@ -40,7 +40,7 @@ SolarProductionAggregateResults? productionResults = null;
 for (var year = evaluationYear - 4; year <= evaluationYear; year++)
 {
     Console.WriteLine($"Evaluation evaluationYear: {year}:");
-    var results = await siteModel.ComputePvSiteAggregateProduction(
+    var results = await siteModel.ComputePvSiteAggregateProductionPerRoof(
         horizonClient,
         coordinateProvider,
         horizonControlProvider,
@@ -60,7 +60,7 @@ for (var year = evaluationYear - 4; year <= evaluationYear; year++)
 if (sampleId == "TestSite")
 {
     Console.WriteLine("Comparison with PYTHON");
-    var pythonComparisonResults = await siteModel.ComputePvSiteAggregateProduction(
+    var pythonComparisonResults = await siteModel.ComputePvSiteAggregateProductionPerRoof(
         horizonClient,
         coordinateProvider,
         horizonControlProvider,

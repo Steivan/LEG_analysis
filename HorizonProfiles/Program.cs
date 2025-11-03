@@ -2,7 +2,6 @@
 using LEG.CoreLib.SolarCalculations.Calculations;
 using OxyPlot;
 using LEG.Common.Utils;
-using LEG.HorizonProfiles.Abstractions;
 using LEG.HorizonProfiles.Client;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.CoreLib.SampleData.SampleData;

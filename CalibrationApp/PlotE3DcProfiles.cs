@@ -7,7 +7,7 @@ namespace CalibrationApp
 {
     public class PlotE3DcProfiles
     {
-        internal static void ProductionProfilePlot(SolarProductionAggregateResults productionResults, int countYears = 1)
+        internal static async Task ProductionProfilePlot(SolarProductionAggregateResults productionResults, int countYears = 1)
         {
             // Prepare data
             var theoreticalRelativeProductionPerMonthAndRoofList = new List<List<double[]>>();
@@ -167,6 +167,7 @@ namespace CalibrationApp
 
             // Show the plot in a window
             MultiPanelPlotContext.ShowPlot(context.PlotModel, 1200, 600); // or context.PlotModel.ShowPlot(...)
+          
 
             // Optionally, save the plot as a PNG
             context.SavePlot("plot.png", width: 800, height: 600);

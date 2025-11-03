@@ -49,3 +49,7 @@ C:\code\LEG_analysis\CalibrationApp\obj\Debug\net9.0-windows\refint\CalibrationA
 C:\code\LEG_analysis\CalibrationApp\obj\Debug\net9.0-windows\CalibrationApp.pdb
 C:\code\LEG_analysis\CalibrationApp\obj\Debug\net9.0-windows\CalibrationApp.genruntimeconfig.cache
 C:\code\LEG_analysis\CalibrationApp\obj\Debug\net9.0-windows\ref\CalibrationApp.dll
+C:\code\LEG_analysis\CalibrationApp\bin\Debug\net9.0-windows\LEG.CoreLib.SampleData.dll
+C:\code\LEG_analysis\CalibrationApp\bin\Debug\net9.0-windows\LEG.HorizonProfiles.Client.dll
+C:\code\LEG_analysis\CalibrationApp\bin\Debug\net9.0-windows\LEG.CoreLib.SampleData.pdb
+C:\code\LEG_analysis\CalibrationApp\bin\Debug\net9.0-windows\LEG.HorizonProfiles.Client.pdb

@@ -11,6 +11,7 @@
           "LEG.Common": "1.0.0",
           "LEG.CoreLib": "1.0.0",
           "LEG.CoreLib.Abstractions": "1.0.0",
+          "LEG.CoreLib.SampleData": "1.0.0",
           "LEG.E3Dc.Abstractions": "1.0.0",
           "LEG.E3Dc.Client": "1.0.0",
           "LEG.MeteoSwiss.Abstractions": "1.0.0",
@@ -166,6 +167,25 @@
           }
         }
       },
+      "LEG.CoreLib.SampleData/1.0.0": {
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.CoreLib": "1.0.0",
+          "LEG.CoreLib.Abstractions": "1.0.0",
+          "LEG.HorizonProfiles.Abstractions": "1.0.0",
+          "LEG.HorizonProfiles.Client": "1.0.0",
+          "LEG.MeteoSwiss.Abstractions": "1.0.0",
+          "LEG.MeteoSwiss.Client": "1.0.0",
+          "LEG.SwissTopo.Abstractions": "1.0.0",
+          "LEG.SwissTopo.Client": "1.0.0"
+        },
+        "runtime": {
+          "LEG.CoreLib.SampleData.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "LEG.E3Dc.Abstractions/1.0.0": {
         "dependencies": {
           "CsvHelper": "33.1.0"
@@ -194,6 +214,18 @@
       "LEG.HorizonProfiles.Abstractions/1.0.0": {
         "runtime": {
           "LEG.HorizonProfiles.Abstractions.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "LEG.HorizonProfiles.Client/1.0.0": {
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.HorizonProfiles.Abstractions": "1.0.0"
+        },
+        "runtime": {
+          "LEG.HorizonProfiles.Client.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -360,6 +392,11 @@
       "serviceable": false,
       "sha512": ""
     },
+    "LEG.CoreLib.SampleData/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
     "LEG.E3Dc.Abstractions/1.0.0": {
       "type": "project",
       "serviceable": false,
@@ -371,6 +408,11 @@
       "sha512": ""
     },
     "LEG.HorizonProfiles.Abstractions/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LEG.HorizonProfiles.Client/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
