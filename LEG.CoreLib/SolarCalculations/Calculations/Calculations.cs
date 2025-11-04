@@ -1,9 +1,7 @@
 ﻿using LEG.CoreLib.SolarCalculations.Utilities;
-using LEG.CoreLib.SolarCalculations.Domain;
 using LEG.CoreLib.HorizonProfiles;
 using LEG.HorizonProfiles.Abstractions;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
-using static LEG.CoreLib.Abstractions.ReferenceData.SiteStatus;
 
 namespace LEG.CoreLib.SolarCalculations.Calculations
 {
@@ -40,6 +38,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 int evaluationStartHour = 4,
                 int evaluationEndHour = 22,
                 int minutesPerPeriod = 10,
+                int shiftTimeSupport = 0,
                 bool print = false)
         {
             // Initialize horizon data: new approach for evaluating the time of sunrise and sunset 
@@ -142,6 +141,10 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 }
             }
 
+            var deltaMinutes = shiftTimeSupport * 60; // shift in minutes
+            DateTime[] timeStamps = [.. Enumerable.Range(0, dimensionAnnualSupport)
+                .Select(i => date0.AddMinutes(deltaMinutes + minutesPerPeriod * i))];
+
             return new SolarProductionDetails(
                 SiteId: pvSiteModel.PvSite.SystemName,
                 Town: town,
@@ -150,8 +153,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 DimensionRoofs: nrRoofs,
                 ValidRecordsCount: validRecordsCount,
                 PeakPowerPerRoof: peak,
-                TimeStamps: [.. Enumerable.Range(0, dimensionAnnualSupport)
-                    .Select(i => date0.AddMinutes(minutesPerPeriod * i))],
+                TimeStamps: timeStamps, 
                 TheoreticalIrradiationPerRoofAndInterval: theoreticalIrradiationFactor,
                 EffectiveIrradiationPerRoofAndInterval: effectiveIrradiationFactor,
                 CountPerMonth: countPerMonth,
@@ -168,6 +170,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 int evaluationStartHour = 4,
                 int evaluationEndHour = 22,
                 int minutesPerPeriod = 10,
+                int shiftTimeSupport = 0,
                 bool print = false)
         {
             var (
@@ -193,6 +196,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     evaluationStartHour: evaluationStartHour,
                     evaluationEndHour: evaluationEndHour,
                     minutesPerPeriod: minutesPerPeriod,
+                    shiftTimeSupport: shiftTimeSupport,
                     print: print
                     );
 
@@ -277,6 +281,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             int evaluationStartHour = 4,
             int evaluationEndHour = 22,
             int minutesPerPeriod = 10,
+            int shiftTimeSupport = 0,
             bool print = false)
         {
             // return new SolarProductionAggregateResults();
@@ -300,6 +305,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     evaluationStartHour: evaluationStartHour,
                     evaluationEndHour: evaluationEndHour,
                     minutesPerPeriod: minutesPerPeriod,
+                    shiftTimeSupport: shiftTimeSupport,
                     print: print
                     );
 
@@ -360,6 +366,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             int evaluationStartHour = 4,
             int evaluationEndHour = 22,
             int minutesPerPeriod = 10,
+            int shiftTimeSupport = 0,
             bool print = false)
         {
             // Source data
@@ -388,6 +395,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     evaluationStartHour: evaluationStartHour,
                     evaluationEndHour: evaluationEndHour,
                     minutesPerPeriod: minutesPerPeriod,
+                    shiftTimeSupport : shiftTimeSupport,
                     print: print
                     );
 

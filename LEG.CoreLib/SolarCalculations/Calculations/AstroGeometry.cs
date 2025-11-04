@@ -13,7 +13,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
         {
             // Input:
             //   - y, m, d, hh, mm, ss: local time T_local (year, month, day, hour, minute, second)
-            //   - utcShift: Time difference to UTC: UTC = T_local + utcShift
+            //   - utcShift: Time difference to UTC: UTC = T_local + utcShift => utcShift = -1 for CH standard time
             //   - lon, lat: longitude (+ = E) and latitude (+ = N) in °
             // Output:
             //   - aziDeg, elevDeg: azimuth (deviation from S) and elevation of the sun in °

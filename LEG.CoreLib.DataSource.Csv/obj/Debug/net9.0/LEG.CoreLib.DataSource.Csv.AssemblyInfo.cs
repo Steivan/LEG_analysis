@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LEG.CoreLib.DataSource.Csv")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5331a617e1ef7b6b3150624c836186399225dca8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8c8b68989a0d2e6b721b03dff2c9b5ad8268fe20")]
 [assembly: System.Reflection.AssemblyProductAttribute("LEG.CoreLib.DataSource.Csv")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LEG.CoreLib.DataSource.Csv")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
