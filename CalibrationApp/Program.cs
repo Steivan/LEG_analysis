@@ -79,14 +79,15 @@ namespace CalibrationApp
 
             //await PlotE3DcProfiles.ProductionProfilePlot(mergedSolarProduction, countYears: solarProductionList.Count);
 
-            var calibrationFactors = CalibrateionModel.GetCalibrationFactors(
+            var referenceModelAdjustmentFactors = CalibrateionModel.GetTimeSlotCalibrationFactors(
                 solarProductionList,
                 referenceModel!,
                 startHour: 12,
                 endHour: 18
                 );
 
-            await PlotCombinedProfiles.ProductionProfilePlot(solarProductionList, referenceModel!, calibrationFactors, true, 2000 + firstYear);
+            bool adjustReferenceModel = true;
+            await PlotCombinedProfiles.ProductionProfilePlot(solarProductionList, referenceModel!, referenceModelAdjustmentFactors, adjustReferenceModel, 2000 + firstYear);
         }
 
         public static async Task<SolarProductionAggregateResults?> GetReferenceModel(

@@ -1,0 +1,12 @@
+C:\code\LEG_analysis\LEG.PV.Data.Processor\bin\Debug\net9.0\LEG.PV.Data.Processor.deps.json
+C:\code\LEG_analysis\LEG.PV.Data.Processor\bin\Debug\net9.0\LEG.PV.Data.Processor.dll
+C:\code\LEG_analysis\LEG.PV.Data.Processor\bin\Debug\net9.0\LEG.PV.Data.Processor.pdb
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.AssemblyInfo.cs
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.sourcelink.json
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.dll
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\refint\LEG.PV.Data.Processor.dll
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.pdb
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\ref\LEG.PV.Data.Processor.dll

@@ -183,6 +183,19 @@ namespace LEG.CoreLib.SampleData.SampleData
                         HourlyProfileId: HourlyResidential
                     ),
 
+                [Kleiner + "_1"] =
+                    new Consumer(
+                        SystemName: Kleiner + "_1",
+                        SiteId: Kleiner,
+                        Label: Kleiner + " HH",
+                        AnnualEnergy: 10000.0,
+                        PeakPower: 5.0,
+                        AnnualProfileId: AnnualResidential,
+                        WeeklyProfileId: WeeklyResidential,
+                        DailyProfileId: DailyResidential,
+                        HourlyProfileId: HourlyResidential
+                    ),
+
                 [Liuns + "_1"] =
                     new Consumer(
                         SystemName: Liuns + "_1",

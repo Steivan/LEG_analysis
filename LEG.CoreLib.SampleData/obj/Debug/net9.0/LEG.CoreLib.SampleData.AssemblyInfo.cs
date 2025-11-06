@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LEG.CoreLib.SampleData")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8c8b68989a0d2e6b721b03dff2c9b5ad8268fe20")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+189229a19d2327366ffed98b9bd1da978dc7c2f1")]
 [assembly: System.Reflection.AssemblyProductAttribute("LEG.CoreLib.SampleData")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LEG.CoreLib.SampleData")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

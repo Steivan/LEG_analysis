@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "LEG.PV.Data.Processor/1.0.0": {
+        "runtime": {
+          "LEG.PV.Data.Processor.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "LEG.PV.Data.Processor/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

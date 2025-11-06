@@ -113,6 +113,23 @@ namespace LEG.CoreLib.SampleData.SampleData
                     IndicativeNrOfConsumers: 9
                 ),
 
+                [Kleiner] = new PvSite(
+                    SystemName: Kleiner,
+                    EgId: "",
+                    Status: Active,
+                    StreetName: "Unterdorfstrasse",
+                    HouseNumber: "11",
+                    ZipNumber: "8489",
+                    Town: "Wildberg",
+                    Lon: SiteLatLonElevDict[Kleiner].GetLongitude(),
+                    Lat: SiteLatLonElevDict[Kleiner].GetLatitude(),
+                    UtcShift: -1,
+                    MeteoId: "Maur_meteo",
+                    IndicativeNrOfInverters: 1,
+                    IndicativeNrOfRoofs: 2,
+                    IndicativeNrOfConsumers: 0
+                ),
+
                 [Liuns] = new PvSite(
                     SystemName: Liuns,
                     EgId: "",

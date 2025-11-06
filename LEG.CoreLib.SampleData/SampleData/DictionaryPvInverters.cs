@@ -38,16 +38,6 @@ namespace LEG.CoreLib.SampleData.SampleData
                     IndicativeNrOfRoofs: 1
                 ),
 
-                [Guldenen + "_1"] = new Inverter(
-                    SystemName: Guldenen + "_1",
-                    Site: Guldenen,
-                    HasBattery: false,
-                    Capacity: 0.0,
-                    MaxLoad: 0.0,
-                    MaxDrain: 0.0,
-                    IndicativeNrOfRoofs: 1
-                ),
-
                 [Ftan + "_1"] = new Inverter(
                     SystemName: Ftan + "_1",
                     Site: Ftan,
@@ -66,6 +56,26 @@ namespace LEG.CoreLib.SampleData.SampleData
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
                     IndicativeNrOfRoofs: 1
+                ),
+
+                [Guldenen + "_1"] = new Inverter(
+                    SystemName: Guldenen + "_1",
+                    Site: Guldenen,
+                    HasBattery: false,
+                    Capacity: 0.0,
+                    MaxLoad: 0.0,
+                    MaxDrain: 0.0,
+                    IndicativeNrOfRoofs: 1
+                ),
+
+                [Kleiner + "_1"] = new Inverter(
+                    SystemName: Kleiner + "_1",
+                    Site: Kleiner,
+                    HasBattery: false,
+                    Capacity: 0.0,
+                    MaxLoad: 0.0,
+                    MaxDrain: 0.0,
+                    IndicativeNrOfRoofs: 2
                 ),
 
                 [Liuns + "_1"] = new Inverter(

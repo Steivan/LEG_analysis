@@ -20,17 +20,17 @@ namespace CalibrationApp
             ) ExtractProfileLists(
             List<SolarProductionAggregateResults> annualProductionList,
             SolarProductionAggregateResults referenceModel,
-            double[] calibrationFactors,
-            bool reCalibrateReferenceModel = false)
+            double[] referenceModelAdjustmentFactors,
+            bool adjustReferenceModel = false)
         {
             var countYears = annualProductionList.Count;
             var dimCurves = 1 + countYears;
             const int dimMonth = 13;
             const int dimHours = 24;
 
-            if (!reCalibrateReferenceModel)
+            if (!adjustReferenceModel)
             {
-                calibrationFactors = (new double[13]).Select(v => 1.0).ToArray();
+                referenceModelAdjustmentFactors = (new double[13]).Select(v => 1.0).ToArray();
             }
 
             // Lists to hold reference and pruduction relative data
@@ -146,12 +146,12 @@ namespace CalibrationApp
 
                     if (isReference)
                     {
-                        if (reCalibrateReferenceModel)
+                        if (adjustReferenceModel)
                         {
-                            effectiveRelativeMonth = effectiveRelativeMonth.Select(v => v * calibrationFactors[month]).ToArray();
-                            effectiveAbsoluteMean = effectiveAbsoluteMean.Select(v => v * calibrationFactors[month]).ToArray();
+                            effectiveRelativeMonth = effectiveRelativeMonth.Select(v => v * referenceModelAdjustmentFactors[month]).ToArray();
+                            effectiveAbsoluteMean = effectiveAbsoluteMean.Select(v => v * referenceModelAdjustmentFactors[month]).ToArray();
 
-                            referenceModelPowerPerMonth[month] *= calibrationFactors[month];
+                            referenceModelPowerPerMonth[month] *= referenceModelAdjustmentFactors[month];
                         }
                         annualMaximaRelativeYearMean.Add(maximaRelativeMonth);
                         annualEffectiveRelativeYearMean.Add(effectiveRelativeMonth);

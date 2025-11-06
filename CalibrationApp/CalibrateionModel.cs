@@ -4,7 +4,7 @@ namespace CalibrationApp
 {
     internal class CalibrateionModel
     {
-        internal static double[] GetCalibrationFactors(
+        internal static double[] GetTimeSlotCalibrationFactors(
             List<SolarProductionAggregateResults> annualProductionList,
             SolarProductionAggregateResults referenceProduction,
             int startHour = 0,
@@ -16,18 +16,18 @@ namespace CalibrationApp
             var ((dimCurves, dimMonth, dimHours),
                 (referenceMaxPower, overallPeakPower, referenceModelPowerPerMonth),
 
-                (maximaRelativeYearMonthLists,
-                referenceMaximaAbsoluteMonthList,
-                productionMaximaAbsoluteMonthMeanList,
-                productionMaximaAbsoluteMonthMinList,
-                productionMaximaAbsoluteMonthMaxList),
+                (_, // maximaRelativeYearMonthLists,
+                _, // referenceMaximaAbsoluteMonthList,
+                _, // productionMaximaAbsoluteMonthMeanList,
+                _, // productionMaximaAbsoluteMonthMinList,
+                _), // productionMaximaAbsoluteMonthMaxList),
 
-                (effectiveRelativeYearMonthLists,
+                (_, // effectiveRelativeYearMonthLists,
                 referenceEffectiveAbsoluteMonthList,
                 productionEffectiveAbsoluteMonthMeanList,
-                productionEffectiveAbsoluteMonthMinList,
-                productionEffectiveAbsoluteMonthMaxList)
-                ) = DecomposeRecords.ExtractProfileLists(annualProductionList, referenceProduction, calibrationFactors, reCalibrateReferenceModel: false);
+                _, // productionEffectiveAbsoluteMonthMinList,
+                _) // productionEffectiveAbsoluteMonthMaxList)
+                ) = DecomposeRecords.ExtractProfileLists(annualProductionList, referenceProduction, calibrationFactors, adjustReferenceModel: false);
 
             // Calibration factors per month
             startHour = Math.Max(0, Math.Min(23, startHour));

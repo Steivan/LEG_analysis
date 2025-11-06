@@ -134,6 +134,27 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Peak: 6.0
                 ),
 
+                [Kleiner + "_1"] = new PvRoof(
+                    SystemName: Kleiner + "_1",
+                    EgrId: "",
+                    Inverter: Kleiner + "_1",
+                    Azi: 56.0,
+                    Elev: 42.0,
+                    Elev2: 0.0,
+                    Area: 130.0,
+                    Peak: 10.0
+                ),
+                [Kleiner + "_2"] = new PvRoof(
+                    SystemName: Kleiner + "_2",
+                    EgrId: "",
+                    Inverter: Kleiner + "_2",
+                    Azi: -124.0,
+                    Elev: 41.0,
+                    Elev2: 0.0,
+                    Area: 130.0,
+                    Peak: 10.0
+                ),
+
                 [Liuns + "_1"] = new PvRoof(
                     SystemName: Liuns + "_1",
                     EgrId: "",

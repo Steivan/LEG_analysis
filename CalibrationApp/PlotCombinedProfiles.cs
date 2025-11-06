@@ -10,9 +10,9 @@ namespace CalibrationApp
     {
         internal static async Task ProductionProfilePlot(
             List<SolarProductionAggregateResults> annualProductionList, 
-            SolarProductionAggregateResults referenceProduction,
-            double[] calibrationFactors,
-            bool reCalibrateReferenceModel,
+            SolarProductionAggregateResults referenceModel,
+            double[] referenceModelAdjustmentFactors,
+            bool adjustReferenceModel,
             int startYear)
         {
             var ((dimCurves, dimMonth, dimHours), 
@@ -28,10 +28,10 @@ namespace CalibrationApp
                 productionEffectiveAbsoluteMonthMeanList,
                 productionEffectiveAbsoluteMonthMinList,
                 productionEffectiveAbsoluteMonthMaxList)
-                ) = DecomposeRecords.ExtractProfileLists(annualProductionList, referenceProduction, calibrationFactors, reCalibrateReferenceModel: reCalibrateReferenceModel);
+                ) = DecomposeRecords.ExtractProfileLists(annualProductionList, referenceModel, referenceModelAdjustmentFactors, adjustReferenceModel: adjustReferenceModel);
 
             // Define plot axes styles
-            var peakPowerBound = referenceProduction.PeakPowerPerRoof.Sum();
+            var peakPowerBound = referenceModel.PeakPowerPerRoof.Sum();
             var powerMaxScale = referenceMaxPower * 1.1;
             var (majorTickSizer, minorTickSize, nDecimals) = GetAxisTickSizes(powerMaxScale);
 
@@ -93,7 +93,7 @@ namespace CalibrationApp
                 xMin: 0, xMax: 24,
                 yMins: [0, 0],
                 yMaxs: [1.1, powerMaxScale],
-                overallTitle: $"Computed Profiles for: {referenceProduction.SiteId}, max {referenceMaxPower:N1}kW/{peakPowerBound:N1}kWp, {referenceModelPowerPerMonth[0]:N0}kWh (effective {referenceProduction.EvaluationYear})",
+                overallTitle: $"Computed Profiles for: {referenceModel.SiteId}, max {referenceMaxPower:N1}kW/{peakPowerBound:N1}kWp, {referenceModelPowerPerMonth[0]:N0}kWh (effective {referenceModel.EvaluationYear})",
                 panelXAxis: panelXAxis,
                 panelYAxis: [panelYAxis0, panelYAxis1],
                 legendPosition: -6         // "-" => outside, "6" => middle right 

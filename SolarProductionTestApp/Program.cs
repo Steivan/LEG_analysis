@@ -10,10 +10,10 @@ const int pythonEvaluationStartHour = 5;  // -> to match python script
 const int pythonEvaluationEndHour = 22;
 const int pythonMinutesPerPeriod = 10;
 
-// Use the getter from the SampleData project: Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Liuns, Lotz, Senn, SennV, TestSite, Tof, "Manual"
+// Use the getter from the SampleData project: Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Kleiner, Liuns, Lotz, Senn, SennV, TestSite, Tof, "Manual"
 var siteOptions = PvSiteModelGetters.GetSitesList();
 
-var sampleId = siteOptions[8];
+var sampleId = siteOptions[6];
 
 const int evaluationYear = pythonReferenceYear;
 const int evaluationStartHour = 4;

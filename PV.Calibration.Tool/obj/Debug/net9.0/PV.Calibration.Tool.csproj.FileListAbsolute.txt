@@ -1,0 +1,15 @@
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\PV.Calibration.Tool.exe
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\PV.Calibration.Tool.deps.json
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\PV.Calibration.Tool.runtimeconfig.json
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\PV.Calibration.Tool.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\PV.Calibration.Tool.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.AssemblyInfo.cs
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.sourcelink.json
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\refint\PV.Calibration.Tool.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.genruntimeconfig.cache
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\ref\PV.Calibration.Tool.dll

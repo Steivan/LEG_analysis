@@ -85,6 +85,17 @@ namespace LEG.CoreLib.SampleData.SampleData
                     meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Guldenen].MeteoId]
                 ),
 
+                [Kleiner] = new PvSiteModel(
+                    pvSite: PvSiteDataDict[Kleiner],
+                    inverters: [PvInverterDataDict[Kleiner + "_1"]],
+                    roofsPerInverter: new Dictionary<string, PvRoof[]>
+                    {
+                        { Kleiner + "_1", [PvRoofDataDict[Kleiner + "_1"], PvRoofDataDict[Kleiner + "_2"]] }
+                    },
+                    consumers: [PvConsumerDataDict[Kleiner + "_1"]],
+                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Kleiner].MeteoId]
+                ),
+
                 [Liuns] = new PvSiteModel(
                     pvSite: PvSiteDataDict[Liuns],
                     inverters: [PvInverterDataDict[Liuns + "_1"]],
