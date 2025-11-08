@@ -10,3 +10,7 @@ C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processo
 C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\refint\LEG.PV.Data.Processor.dll
 C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.pdb
 C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\ref\LEG.PV.Data.Processor.dll
+C:\code\LEG_analysis\LEG.PV.Data.Processor\bin\Debug\net9.0\LEG.PV.Core.Models.dll
+C:\code\LEG_analysis\LEG.PV.Data.Processor\bin\Debug\net9.0\LEG.PV.Core.Models.pdb
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.Data.Processor.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\LEG.PV.Data.Processor\obj\Debug\net9.0\LEG.PV.D.7E069B36.Up2Date

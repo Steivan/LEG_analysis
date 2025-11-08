@@ -13,3 +13,10 @@ C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\refint\PV.Calibration.
 C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.pdb
 C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.genruntimeconfig.cache
 C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\ref\PV.Calibration.Tool.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.PV.Core.Models.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.PV.Data.Processor.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.PV.Core.Models.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.PV.Data.Processor.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calib.A3C860AB.Up2Date
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\MathNet.Numerics.dll

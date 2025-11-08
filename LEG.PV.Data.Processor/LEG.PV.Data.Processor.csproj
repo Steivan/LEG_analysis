@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LEG.PV.Core.Models\LEG.PV.Core.Models.csproj" />
+  </ItemGroup>
+
 </Project>

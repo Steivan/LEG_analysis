@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "iRP6gKx25Co=",
+  "dgSpecHash": "Du/ylD1qYTo=",
   "success": true,
   "projectFilePath": "C:\\code\\LEG_analysis\\PV.Calibration.Tool\\PV.Calibration.Tool.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\steiv\\.nuget\\packages\\mathnet.numerics\\5.0.0\\mathnet.numerics.5.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LEG.HorizonProfiles.Client")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+189229a19d2327366ffed98b9bd1da978dc7c2f1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d219ab16f7a3490ca20d43cdfe193d8905a53336")]
 [assembly: System.Reflection.AssemblyProductAttribute("LEG.HorizonProfiles.Client")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LEG.HorizonProfiles.Client")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

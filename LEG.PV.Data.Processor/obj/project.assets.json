@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net9.0": {}
+    "net9.0": {
+      "LEG.PV.Core.Models/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/LEG.PV.Core.Models.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.PV.Core.Models.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "LEG.PV.Core.Models/1.0.0": {
+      "type": "project",
+      "path": "../LEG.PV.Core.Models/LEG.PV.Core.Models.csproj",
+      "msbuildProject": "../LEG.PV.Core.Models/LEG.PV.Core.Models.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net9.0": []
+    "net9.0": [
+      "LEG.PV.Core.Models >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\steiv\\.nuget\\packages\\": {},
@@ -39,7 +58,11 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\code\\LEG_analysis\\LEG.PV.Core.Models\\LEG.PV.Core.Models.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.PV.Core.Models\\LEG.PV.Core.Models.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

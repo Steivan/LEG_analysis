@@ -7,4 +7,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LEG.PV.Core.Models\LEG.PV.Core.Models.csproj" />
+    <ProjectReference Include="..\LEG.PV.Data.Processor\LEG.PV.Data.Processor.csproj" />
+  </ItemGroup>
+
 </Project>
