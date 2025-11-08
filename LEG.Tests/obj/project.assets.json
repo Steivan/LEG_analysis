@@ -966,6 +966,29 @@
           "Microsoft.WindowsDesktop.App.WindowsForms"
         ]
       },
+      "LEG.PV.Core.Models/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/LEG.PV.Core.Models.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.PV.Core.Models.dll": {}
+        }
+      },
+      "LEG.PV.Data.Processor/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "LEG.PV.Core.Models": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LEG.PV.Data.Processor.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.PV.Data.Processor.dll": {}
+        }
+      },
       "LEG.SwissTopo.Abstractions/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
@@ -2302,6 +2325,16 @@
       "path": "../LEG.OxyPlotHelper/LEG.OxyPlotHelper.csproj",
       "msbuildProject": "../LEG.OxyPlotHelper/LEG.OxyPlotHelper.csproj"
     },
+    "LEG.PV.Core.Models/1.0.0": {
+      "type": "project",
+      "path": "../LEG.PV.Core.Models/LEG.PV.Core.Models.csproj",
+      "msbuildProject": "../LEG.PV.Core.Models/LEG.PV.Core.Models.csproj"
+    },
+    "LEG.PV.Data.Processor/1.0.0": {
+      "type": "project",
+      "path": "../LEG.PV.Data.Processor/LEG.PV.Data.Processor.csproj",
+      "msbuildProject": "../LEG.PV.Data.Processor/LEG.PV.Data.Processor.csproj"
+    },
     "LEG.SwissTopo.Abstractions/1.0.0": {
       "type": "project",
       "path": "../LEG.SwissTopo.Abstractions/LEG.SwissTopo.Abstractions.csproj",
@@ -2325,6 +2358,8 @@
       "LEG.MeteoSwiss.Abstractions >= 1.0.0",
       "LEG.MeteoSwiss.Client >= 1.0.0",
       "LEG.OxyPlotHelper >= 1.0.0",
+      "LEG.PV.Core.Models >= 1.0.0",
+      "LEG.PV.Data.Processor >= 1.0.0",
       "LEG.SwissTopo.Abstractions >= 1.0.0",
       "LEG.SwissTopo.Client >= 1.0.0",
       "MSTest.TestAdapter >= 3.5.0",
@@ -2395,6 +2430,12 @@
             },
             "C:\\code\\LEG_analysis\\LEG.OxyPlotHelper\\LEG.OxyPlotHelper.csproj": {
               "projectPath": "C:\\code\\LEG_analysis\\LEG.OxyPlotHelper\\LEG.OxyPlotHelper.csproj"
+            },
+            "C:\\code\\LEG_analysis\\LEG.PV.Core.Models\\LEG.PV.Core.Models.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.PV.Core.Models\\LEG.PV.Core.Models.csproj"
+            },
+            "C:\\code\\LEG_analysis\\LEG.PV.Data.Processor\\LEG.PV.Data.Processor.csproj": {
+              "projectPath": "C:\\code\\LEG_analysis\\LEG.PV.Data.Processor\\LEG.PV.Data.Processor.csproj"
             },
             "C:\\code\\LEG_analysis\\LEG.SwissTopo.Abstractions\\LEG.SwissTopo.Abstractions.csproj": {
               "projectPath": "C:\\code\\LEG_analysis\\LEG.SwissTopo.Abstractions\\LEG.SwissTopo.Abstractions.csproj"

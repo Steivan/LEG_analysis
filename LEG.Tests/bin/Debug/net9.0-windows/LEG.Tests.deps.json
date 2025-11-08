@@ -18,6 +18,8 @@
           "LEG.MeteoSwiss.Abstractions": "1.0.0",
           "LEG.MeteoSwiss.Client": "1.0.0",
           "LEG.OxyPlotHelper": "1.0.0",
+          "LEG.PV.Core.Models": "1.0.0",
+          "LEG.PV.Data.Processor": "1.0.0",
           "LEG.SwissTopo.Abstractions": "1.0.0",
           "LEG.SwissTopo.Client": "1.0.0",
           "MSTest.TestAdapter": "3.5.0",
@@ -804,6 +806,25 @@
           }
         }
       },
+      "LEG.PV.Core.Models/1.0.0": {
+        "runtime": {
+          "LEG.PV.Core.Models.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "LEG.PV.Data.Processor/1.0.0": {
+        "dependencies": {
+          "LEG.PV.Core.Models": "1.0.0"
+        },
+        "runtime": {
+          "LEG.PV.Data.Processor.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "LEG.SwissTopo.Abstractions/1.0.0": {
         "dependencies": {
           "NetTopologySuite": "2.6.0",
@@ -1073,6 +1094,16 @@
       "sha512": ""
     },
     "LEG.OxyPlotHelper/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LEG.PV.Core.Models/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LEG.PV.Data.Processor/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

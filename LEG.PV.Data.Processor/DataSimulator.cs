@@ -12,10 +12,22 @@ public class DataSimulator
         const int hoursPerDay = 24;
         const int periodsPerHour = 6;
         const int minutesPerPeriod = 60 / periodsPerHour;
-        var now = DateTime.Now;
 
-        var StartTime = new DateTime(now.Year - (int)Math.Ceiling(simulationsPeriod), 1, 1, 0, 0, 0);
-        int daysTotal = (int)Math.Ceiling(daysPerYears * simulationsPeriod);
+        var now = DateTime.Now;
+        var tomorrow = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0).AddDays(1);
+        var endDate = new DateTime(tomorrow.Year, tomorrow.Month, 1, 0, 0, 0).AddDays(-1); // last day of previous month
+        var startDate = now.AddDays(-(int)Math.Ceiling(daysPerYears * simulationsPeriod)); // first of first month post simulationsPeriod years ago
+        if (startDate.Month == 12 && startDate.Day > 1)
+        {
+            startDate = new DateTime(startDate.Year + 1, 1, 1, 0, 0, 0);
+        }
+        else if (startDate.Day > 1)
+        {
+            startDate = new DateTime(startDate.Year, startDate.Month + 1, 1, 0, 0, 0);
+        }
+        var daysTotal = (endDate - startDate).Days + 1;
+        var time0 = new DateTime(startDate.Year, 1, 1, 0, 0, 0);
+        var startLag = (startDate - time0).Days;
 
         const double omegaYear = 2 * Math.PI / daysPerYears;
         const double omegaDay = 2 * Math.PI / hoursPerDay;
@@ -23,15 +35,15 @@ public class DataSimulator
         const double annualSolarAmplitude = 0.1;
         const double diurnalSolarAmplitude = 0.9;
 
-        const double maxIrradiation = 1000; // [W/m^2]
+        const double maxIrradiation = 1000;     // [W/m^2]
         const double weightPreviousIrradiation = 0.7;
 
-        const double averageTemp = 15; // [°C]
-        const double annualTempAmplitude = 10; // [°C]
-        const double diurnalTempAmplitude = 5; // [°C]
+        const double averageTemp = 15;          // [°C]
+        const double annualTempAmplitude = 10;  // [°C]
+        const double diurnalTempAmplitude = 5;  // [°C]
 
-        const double maxWindVelocity = 150; // [km/h]
-        const double maxNewWindGust = 10; // [km/h]
+        const double maxWindVelocity = 150;     // [km/h]
+        const double maxNewWindGust = 10;       // [km/h]
         const double windGustProbability = 0.1;
         const double weightPreviousWindVelocity = 0.95;
 
@@ -55,19 +67,20 @@ public class DataSimulator
         for (int day = 0; day < daysTotal; day++)
         {
             var age = (double)day / daysPerYears;
-            var currentDate = StartTime.AddDays(day);
+            var currentDate = startDate.AddDays(day);
             var monthIndex = currentDate.Month - 1;
             var randomDayOfMonth = random.Next(1, daysPerMonth[monthIndex] + 1);
             var isFoggyDay = randomDayOfMonth <= fogDaysPerMonth[monthIndex];
-            var annualVariation = -Math.Cos(omegaYear * day);
+
+            var annualVariation = -Math.Cos(omegaYear * (startLag + day));
             for (int hour = 0; hour < 24; hour++)
             {
                 var currentHour = currentDate.AddHours(hour);
                 for (int period = 0; period < periodsPerHour; period++)
                 {
-
                     var timeStamp = currentHour.AddMinutes(period * minutesPerPeriod);
                     var timeOfDay = (double)hour + period / periodsPerHour;
+
                     var diurnalVariation = -Math.Cos(omegaDay * timeOfDay);
 
                     // Geometry factor combines annual and diurnal variations
@@ -94,9 +107,11 @@ public class DataSimulator
                     var noise = calculatedPower * randomNoiseStdDev * (random.NextDouble() - 0.5);
 
                     var measuredPower = calculatedPower + noise;
-                    if (isFoggyDay && hour <= 12)
+                    double hour1 = 6;
+                    double hour2 = 12;
+                    if (isFoggyDay && hour <= hour2)
                     {
-                        var fogFactor = hour < 7 ? 0.0 : hour >= 12 ? 1.0 : (hour - 6.0) / 6.0;
+                        var fogFactor = hour <= hour1 ? 0.0 : hour >= hour2 ? 1.0 : (hour - hour1) / (hour2 - hour1);
                         measuredPower *= fogFactor; // Reduced power in foggy mornings
                     }
 
@@ -114,11 +129,15 @@ public class DataSimulator
                         }
                         );
 
-                    var isValidRecord = (!isFoggyDay || hour > 12 || geometryFactor <= 0);
+                    var isValidRecord = (!isFoggyDay || hour >= hour2 || geometryFactor <= 0);
                     validRecords.Add(isValidRecord);
                 }
             }
         }
+
+        // Check period start date and period end date
+        var firstRecordDate = pvRecords.First().Timestamp;
+        var lastRecordDate = pvRecords.Last().Timestamp;
 
         var countFalse = validRecords.Count(v => v!=true);
         return (pvRecords, validRecords);

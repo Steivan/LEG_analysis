@@ -27,19 +27,10 @@
         internal const double minLDegr = 0.0;
         internal const double maxLDegr = 0.03;
 
-        //// eta_sys: [0, 1]
-        //theta[0] = Math.Min(1.0, Math.Max(0.0, theta[0]));
-
-        //// gamma: Must be non-positive (efficiency decreases with temp)
-        //theta[1] = Math.Min(0.0, theta[1]);
-
-        //// U0, U1: Must be positive (heat loss must occur)
-        //theta[2] = Math.Max(1e-6, theta[2]); // U0 > 0
-        //theta[3] = Math.Max(1e-6, theta[3]); // U1 >= 0
-
-        //// L_degr: [0, 0.03] (Degradation loss)
-        //theta[4] = Math.Min(0.03, Math.Max(0.0, theta[4]));
-
+        public static (double Etha, double Gamma, double U0, double U1, double LDegr) GetAllPriorsMeans()
+        {
+            return (meanEthaSys, meanGamma, meanU0, meanU1, meanLDegr);
+        }
         public static (double mean, double sigma, double min, double max) GetPriorsEtha()
         {
             return (meanEthaSys, sigmaEthaSys, minEthaSys, maxEthaSys);

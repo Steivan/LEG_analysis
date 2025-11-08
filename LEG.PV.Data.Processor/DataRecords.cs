@@ -1,4 +1,6 @@
-﻿namespace LEG.PV.Data.Processor
+﻿using LEG.PV.Core.Models;
+
+namespace LEG.PV.Data.Processor
 {
     public class DataRecords
     {
@@ -30,6 +32,12 @@
             public double U0 { get; init; }
             public double U1 { get; init; }
             public double LDegr { get; init; }
+        }
+
+        public static PvModelParams GetDefaultPriorModelParams()
+        {
+            var (etha, gamma, u0, u1, lDegr) = PvPriorConfig.GetAllPriorsMeans();
+            return new PvModelParams(etha, gamma, u0, u1, lDegr);
         }
 
     }

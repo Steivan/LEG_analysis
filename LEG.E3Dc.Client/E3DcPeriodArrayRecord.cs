@@ -1,11 +1,4 @@
-﻿using CsvHelper.Configuration.Attributes;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using LEG.Common;
-using LEG.E3Dc.Abstractions;
+﻿using LEG.E3Dc.Abstractions;
 
 namespace LEG.E3Dc.Client
 {

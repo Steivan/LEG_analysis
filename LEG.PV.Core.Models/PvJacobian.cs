@@ -24,6 +24,64 @@ public class PvJacobian
         return gCell;
     }
 
+    // Numerical Derivative
+    public static double GetNumericalDerivative(int paramIndexinstalledPower, double installedPower, double geometryFactor,
+        double irradiation, double ambientTemp, double windVelocity, double age,
+        double ethaSys, double gamma, double u0, double u1, double lDegr,
+        double sigmaEtha, double sigmaGamma, double sigmaU0, double sigmaU1, double sigmaLDegr)
+    {
+        var ethaSys1 = ethaSys;
+        var ethaSys2 = ethaSys;
+        var gamma1 = gamma;
+        var gamma2 = gamma;
+        var u01 = u0;
+        var u02 = u0;
+        var u11 = u1;
+        var u12 = u1;
+        var lDegr1 = lDegr;
+        var lDegr2 = lDegr;
+        var delta = 1e-6;
+
+        switch (paramIndexinstalledPower % 5)
+        {
+            case 0:
+                ethaSys1 += sigmaEtha;
+                ethaSys2 -= sigmaEtha;
+                delta = 2 * sigmaEtha;
+                break;
+            case 1:
+                gamma1 += sigmaGamma;
+                gamma2 -= sigmaGamma;
+                delta = 2 * sigmaGamma;
+                break;
+            case 2:
+                u01 += sigmaU0 / 10;
+                u02 -= sigmaU0 / 10;
+                delta = 2 * sigmaU0 / 10;
+                break;
+            case 3:
+                u11 += sigmaU1 / 10;
+                u12 -= sigmaU1 / 10;
+                delta = 2 * sigmaU1 / 10;
+                break;
+            case 4:
+                lDegr1 += sigmaLDegr;
+                lDegr2 -= sigmaLDegr;
+                delta = 2 * sigmaLDegr;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(paramIndexinstalledPower), "Invalid parameter index");
+        }
+        var f1 = EffectiveCellPower(installedPower, geometryFactor,
+            irradiation, ambientTemp, windVelocity, age,
+            ethaSys: ethaSys1, gamma: gamma1, u0: u01, u1: u11, lDegr: lDegr1);
+        var f2 = EffectiveCellPower(installedPower, geometryFactor,
+            irradiation, ambientTemp, windVelocity, age,
+            ethaSys: ethaSys2, gamma: gamma2, u0: u02, u1: u12, lDegr: lDegr2);
+
+        return (f1 - f2) / delta;
+    }
+
     // Derivativs for Jacobian
     public static double DerEthaSys(double installedPower, double geometryFactor,
         double irradiation, double ambientTemp, double windVelocity, double age,

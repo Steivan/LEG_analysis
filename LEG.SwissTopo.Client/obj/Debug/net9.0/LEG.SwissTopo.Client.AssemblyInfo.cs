@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LEG.SwissTopo.Client")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d219ab16f7a3490ca20d43cdfe193d8905a53336")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57d3f96d85f07c9b0086a0599c7bbdc1509d7914")]
 [assembly: System.Reflection.AssemblyProductAttribute("LEG.SwissTopo.Client")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LEG.SwissTopo.Client")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
