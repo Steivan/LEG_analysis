@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("E3DcConsoleApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d65dc8f652daadbf39bc4f36fd4381d082411352")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+342abbe3ecd1eb5ab685dac44f961b29ad4aa9d5")]
 [assembly: System.Reflection.AssemblyProductAttribute("E3DcConsoleApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("E3DcConsoleApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

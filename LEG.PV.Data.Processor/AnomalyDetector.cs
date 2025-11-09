@@ -19,11 +19,15 @@ namespace LEG.PV.Data.Processor
 
             int[] GetIndices(int recordsCount, int stepSize, bool[] hasData, double[] ratios, double loBoundRatio, double hiBoundRatio)
             {
+                if (ratios.Max() <= 0.0)
+                {
+                    return new int[8] { recordsCount, recordsCount, recordsCount, recordsCount, -1, -1, -1, -1 };
+                }
 
-                int firstValidIndex = -1;
-                int firstNonZeroIndex = -1;
-                int firstXsLoBoundIndex = -1;
-                int firstXsHiBoundIndex = -1;
+                int firstValidIndex = recordsCount;
+                int firstNonZeroIndex = recordsCount;
+                int firstXsLoBoundIndex = recordsCount;
+                int firstXsHiBoundIndex = recordsCount;
 
                 int lastValidIndex = -1;
                 int lastNonZeroIndex = -1;
@@ -32,13 +36,13 @@ namespace LEG.PV.Data.Processor
 
                 for (int i = 0; i < recordsCount; i++)
                 {
-                    if (firstValidIndex == -1 && hasData[i])
+                    if (firstValidIndex == recordsCount && hasData[i])
                         firstValidIndex = i;
-                    if (firstNonZeroIndex == -1 && ratios[i] > 0.0)
+                    if (firstNonZeroIndex == recordsCount && ratios[i] > 0.0)
                         firstNonZeroIndex = i;
-                    if (firstXsLoBoundIndex == -1 && ratios[i] >= loBoundRatio)
+                    if (firstXsLoBoundIndex == recordsCount && ratios[i] >= loBoundRatio)
                         firstXsLoBoundIndex = i;
-                    if (firstXsHiBoundIndex == -1 && ratios[i] >= hiBoundRatio)
+                    if (firstXsHiBoundIndex == recordsCount && ratios[i] >= hiBoundRatio)
                         firstXsHiBoundIndex = i;
 
                     int revIndex = recordsCount - 1 - i;
@@ -80,15 +84,12 @@ namespace LEG.PV.Data.Processor
             }
         }
 
-        public static (List<int[]> diurnalIndicesList, int periodsPerDay, int indexOffset) GetDiurnalPatterns(
-            List<PvRecord> pvRecords,
-            double installedPower,
-            PvModelParams pvModelParams,
-            int patternType = 0,
-            bool relativeThreshold = true,
-            int thresholdType = 2, 
-            double loThreshold = 0.1, 
-            double hiThreshold = 0.9)
+        internal static (
+            List<(bool[], double[])> periodRatiosList, 
+            List<(bool[], double[])> hourlyRatiosList, 
+            List<(bool[], double[])> blockRatiosList, 
+            int periodsPerDay, int hoursPerDay, int blocksPerDay, int indexOffset) 
+            CalculateDiurnalRatios(List<PvRecord> pvRecords, double installedPower, PvModelParams pvModelParams)
         {
             const double daysPerYear = 365.2522;
             const int hoursPerDay = 24;
@@ -98,23 +99,23 @@ namespace LEG.PV.Data.Processor
 
             var firstRecordDate = pvRecords.First().Timestamp;
             var secondRecordDate = pvRecords[1].Timestamp;
-            var lastRecordDate = pvRecords.Last().Timestamp;
 
             var minutesPerPeriod = (secondRecordDate - firstRecordDate).Minutes;
             var periodsPerHour = minutesPerHour / minutesPerPeriod;
             var periodsPerDay = hoursPerDay * periodsPerHour;
 
-            var diurnalIndicesList = new List<int[]>();
-
             var recordsCount = pvRecords.Count;
             var recordIndex = 0;
             var indexOffset = -1;
+            var periodRatiosList = new List<(bool[], double[])>();
+            var hourlyRatiosList = new List<(bool[], double[])>();
+            var blockRatiosList = new List<(bool[], double[])>();
             while (recordIndex < recordsCount)
             {
                 var pTheoretical = new double[periodsPerDay];
                 var pMeasured = new double[periodsPerDay];
                 var hasPeriodData = new bool[periodsPerDay];
-                var hasHourData = new bool[hoursPerDay];
+                var hasHourlyData = new bool[hoursPerDay];
                 var hasBlockData = new bool[blocksPerDay];
 
                 // Collect data for Day
@@ -170,7 +171,7 @@ namespace LEG.PV.Data.Processor
                                 sumHourTheoretical += pTheor;
                                 sumHourMeasured += pMeas;
 
-                                hasHourData[hour] = true;
+                                hasHourlyData[hour] = true;
                                 hasBlockData[block] = true;
                             }
                         }
@@ -185,75 +186,48 @@ namespace LEG.PV.Data.Processor
                     blockSumMeasured[block] = sumBlockMeasured;
                     blockRatios[block] = sumBlockTheoretical > 0 ? sumBlockMeasured / sumBlockTheoretical : 0.0;
                 }
-                var maxPeriodRatio = periodRatios.Max();
-                var maxHourRatio = hourlyRatios.Max();
-                var maxBlockRatio = blockRatios.Max();
-
-                var daySumTheoretical = blockSumTheoretical.Sum();
-                var daySumMeasured = blockSumMeasured.Sum();
-                var daySumRatio = daySumTheoretical > 0 ? daySumMeasured / daySumTheoretical : 0.0;
-
-                diurnalIndicesList.Add(GetRomboidIndices(
-                    periodsPerDay, hoursPerDay, blocksPerDay,
-                    hasPeriodData, hasHourData, hasBlockData,
-                    periodRatios, hourlyRatios, blockRatios,
-                    patternType: patternType,
-                    relativeThreshold: relativeThreshold, 
-                    thresholdType: thresholdType, 
-                    loThreshold: loThreshold, 
-                    hiThreshold: hiThreshold)
-                    ); 
+                periodRatiosList.Add((hasPeriodData, periodRatios));
+                hourlyRatiosList.Add((hasHourlyData, hourlyRatios));
+                blockRatiosList.Add((hasBlockData, blockRatios));
             }
 
-            return (diurnalIndicesList, periodsPerDay, indexOffset);
+            return (periodRatiosList, hourlyRatiosList, blockRatiosList, periodsPerDay, hoursPerDay, blocksPerDay, indexOffset);
         }
-        public static List<bool> ExcludeFoggyRecords(
+
+        internal static (List<int[]> diurnalIndicesList, int periodsPerDay, int indexOffset) GetDiurnalPatterns(
             List<PvRecord> pvRecords,
-            List<bool> initialValidRecords,
             double installedPower,
             PvModelParams pvModelParams,
             int patternType = 0,
             bool relativeThreshold = true,
-            int thresholdType = 2, 
-            double loThreshold = 0.1, 
+            int thresholdType = 2,
+            double loThreshold = 0.1,
             double hiThreshold = 0.9)
-        {
-            var recordsCount = pvRecords.Count;
-
-            var (diurnalIndicesList, periodsPerDay, indexOffset) = GetDiurnalPatterns(
+        { 
+            var (periodRatiosList, hourlyRatiosList, blockRatiosList, periodsPerDay, hoursPerDay, blocksPerDay, indexOffset) = CalculateDiurnalRatios(
                 pvRecords,
                 installedPower,
-                pvModelParams,
-                patternType: patternType,
-                relativeThreshold: relativeThreshold,
-                thresholdType: thresholdType, 
-                loThreshold: loThreshold, 
-                hiThreshold: hiThreshold);
+                pvModelParams);
+            var diurnalIndicesList = new List<int[]>();
 
-            var countDays = (pvRecords.Last().Timestamp - pvRecords.First().Timestamp).Days + 1;
-            if (countDays == diurnalIndicesList.Count)
-            {                                                               // Mark records outside valid diurnal patterns as invalid
-                for (int day = 0; day < countDays; day++)
-                {
-                    var startIndex = day * periodsPerDay - indexOffset;
-                    var diurnalIndices = diurnalIndicesList[day];
-                    var firstValidIndex = diurnalIndices[3];                // first index with value >= hiThreshold
-                    var lastValidIndex = diurnalIndices[6] - 1;             // last index with value > 0 
-                    for (int i = 0; i < periodsPerDay; i++)
-                    {
-                        var recordIndex = startIndex + i;
-                        if (recordIndex >= 0 && recordIndex < recordsCount)
-                        {
-                            if (i < firstValidIndex || i > lastValidIndex)
-                            {
-                                initialValidRecords[recordIndex] = false;
-                            }
-                        }
-                    }
-                }
+            for (var day = 0; day < periodRatiosList.Count; day++)
+            {
+                var (hasPeriodData, periodRatios) = periodRatiosList[day];
+                var (hasHourlyData, hourlyRatios) = hourlyRatiosList[day];
+                var (hasBlockData, blockRatios) = blockRatiosList[day];
+                diurnalIndicesList.Add(GetRomboidIndices(
+                    periodsPerDay, hoursPerDay, blocksPerDay,
+                    hasPeriodData, hasHourlyData, hasBlockData,
+                    periodRatios, hourlyRatios, blockRatios,
+                    patternType: patternType,
+                    relativeThreshold: relativeThreshold,
+                    thresholdType: thresholdType,
+                    loThreshold: loThreshold,
+                    hiThreshold: hiThreshold)
+                    );
             }
 
-            return initialValidRecords;
+            return (diurnalIndicesList, periodsPerDay, indexOffset);
         }
     }
 }

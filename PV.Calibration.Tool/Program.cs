@@ -28,11 +28,11 @@ var (pvRecords, modelValidRecords) = DataSimulator.GetPvSimulatedRecords(thetaMo
 
 var defaultPriors = new PvPriors();
 var defaultModelParams = GetDefaultPriorModelParams();
-var defaultValidRecords = modelValidRecords.Select(v => true).ToList();
+var filteredValidRecors = modelValidRecords.Select(v => true).ToList();
 
-var updatedValidRecords = AnomalyDetector.ExcludeFoggyRecords(
+filteredValidRecors = DataFilter.ExcludeFoggyRecords(
     pvRecords,
-    defaultValidRecords,
+    filteredValidRecors,
     installedPower,
     defaultModelParams,
     patternType: 0,
@@ -40,6 +40,26 @@ var updatedValidRecords = AnomalyDetector.ExcludeFoggyRecords(
     thresholdType: 2, 
     loThreshold: 0.1, 
     hiThreshold: 0.9);
+
+filteredValidRecors = DataFilter.ExcludeSnowyRecords(
+    pvRecords,
+    filteredValidRecors,
+    installedPower,
+    defaultModelParams,
+    patternType: 0,
+    relativeThreshold: false,
+    thresholdType: 2,
+    loThreshold: 0.1,
+    hiThreshold: 0.8);
+
+filteredValidRecors = DataFilter.ExcludeOutlierRecords(
+    pvRecords,
+    filteredValidRecors,
+    installedPower,
+    defaultModelParams,
+    periodThreshold: 1.5,
+    hourlyThreshold: 1.5,
+    blockThreshold: 1.5);
 
 var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, GetDefaultPriorModelParams());
 var hullPriors = new PvPriors
@@ -56,31 +76,18 @@ var hullPriors = new PvPriors
     U1StdDev = sigmaU1
 };
 
-Console.WriteLine("Calibration with Filtering on Valid Records (using AnomalyDetector to identify foggy days)");
+Console.WriteLine("Bayesian Calibration: default priors / no filter");
 var (thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     defaultPriors,
     PvJacobianFunc,
-    validRecords: updatedValidRecords,
-    installedPower: installedPower,
-    tolerance: tolerance,
-    maxIterations: maxIterations);
-
-PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
-
-Console.WriteLine("Calibration without Filtering on Valid Records: default priors");
-(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
-    pvRecords: pvRecords,
-    defaultPriors,
-    PvJacobianFunc,
     validRecords: null,
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-
 PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
 
-Console.WriteLine("Calibration with Filtering on Valid Records (exclude mornings of foggy days): hull calibration");
+Console.WriteLine("Bayesian Calibration: default priors / model filter");
 (thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     defaultPriors,
@@ -89,22 +96,9 @@ Console.WriteLine("Calibration with Filtering on Valid Records (exclude mornings
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-
 PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
 
-Console.WriteLine("Calibration without Filtering on Valid Records: hull calibration");
-(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
-    pvRecords: pvRecords,
-    hullPriors,
-    PvJacobianFunc,
-    validRecords: null,
-    installedPower: installedPower,
-    tolerance: tolerance,
-    maxIterations: maxIterations);
-
-PrintResults(hullPriors, thetaModel, thetaCalibratedList, iterations);
-
-Console.WriteLine("Calibration with Filtering on Valid Records (exclude mornings of foggy days): hull calibration");
+Console.WriteLine("Bayesian Calibration: hull priors / model filter");
 (thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     hullPriors,
@@ -113,8 +107,20 @@ Console.WriteLine("Calibration with Filtering on Valid Records (exclude mornings
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-
 PrintResults(hullPriors, thetaModel, thetaCalibratedList, iterations);
+
+
+Console.WriteLine("Bayesian Calibration: default priors / Anomaly detector filters : Fog, Snow, Outliers)");
+(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
+    pvRecords: pvRecords,
+    defaultPriors,
+    PvJacobianFunc,
+    validRecords: filteredValidRecors,
+    installedPower: installedPower,
+    tolerance: tolerance,
+    maxIterations: maxIterations);
+PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
+
 
 void PrintResults(PvPriors pvPriors, PvModelParams thetaModel, List<PvModelParams> thetaCalibratedList, int iterations)
 {
