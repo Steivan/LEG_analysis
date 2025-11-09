@@ -24,10 +24,22 @@ var thetaModel = new PvModelParams(
 double tolerance = 1e-6;
 int maxIterations = 10;
 
-var (pvRecords, validRecords) = DataSimulator.GetPvSimulatedRecords(thetaModel);
+var (pvRecords, modelValidRecords) = DataSimulator.GetPvSimulatedRecords(thetaModel);
 
 var defaultPriors = new PvPriors();
 var defaultModelParams = GetDefaultPriorModelParams();
+var defaultValidRecords = modelValidRecords.Select(v => true).ToList();
+
+var updatedValidRecords = AnomalyDetector.ExcludeFoggyRecords(
+    pvRecords,
+    defaultValidRecords,
+    installedPower,
+    defaultModelParams,
+    patternType: 0,
+    relativeThreshold: true,
+    thresholdType: 2, 
+    loThreshold: 0.1, 
+    hiThreshold: 0.9);
 
 var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, GetDefaultPriorModelParams());
 var hullPriors = new PvPriors
@@ -44,8 +56,20 @@ var hullPriors = new PvPriors
     U1StdDev = sigmaU1
 };
 
-Console.WriteLine("Calibration without Filtering on Valid Records: default priors");
+Console.WriteLine("Calibration with Filtering on Valid Records (using AnomalyDetector to identify foggy days)");
 var (thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
+    pvRecords: pvRecords,
+    defaultPriors,
+    PvJacobianFunc,
+    validRecords: updatedValidRecords,
+    installedPower: installedPower,
+    tolerance: tolerance,
+    maxIterations: maxIterations);
+
+PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
+
+Console.WriteLine("Calibration without Filtering on Valid Records: default priors");
+(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     defaultPriors,
     PvJacobianFunc,
@@ -61,7 +85,7 @@ Console.WriteLine("Calibration with Filtering on Valid Records (exclude mornings
     pvRecords: pvRecords,
     defaultPriors,
     PvJacobianFunc,
-    validRecords: validRecords,
+    validRecords: modelValidRecords,
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
@@ -85,7 +109,7 @@ Console.WriteLine("Calibration with Filtering on Valid Records (exclude mornings
     pvRecords: pvRecords,
     hullPriors,
     PvJacobianFunc,
-    validRecords: validRecords,
+    validRecords: modelValidRecords,
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
