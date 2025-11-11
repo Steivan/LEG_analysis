@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BuildingFinderTestApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3e67ca2a01299521c2564f9aee1a5c9d8de3e60d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ca751687c807e8137788f7c9ea786dfdb0e0db77")]
 [assembly: System.Reflection.AssemblyProductAttribute("BuildingFinderTestApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BuildingFinderTestApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

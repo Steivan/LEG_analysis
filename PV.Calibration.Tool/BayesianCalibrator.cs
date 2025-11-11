@@ -1,4 +1,5 @@
-﻿using MathNet.Numerics.LinearAlgebra;
+﻿using LEG.PV.Data.Processor;
+using MathNet.Numerics.LinearAlgebra;
 
 using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Data.Processor.DataRecords;
@@ -34,7 +35,7 @@ namespace PV.Calibration.Tool
         }
 
         // --- Core Calibration Method ---
-        public static (List<PvModelParams> thetaCalibrated, int iterations) Calibrate(
+        public static (List<PvModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
             List<PvRecord> pvRecords,
             PvPriors pvPriors,
             JacobianFunc jacobianFunc,
@@ -149,7 +150,14 @@ namespace PV.Calibration.Tool
                 }
             }
 
-            return (thetaCalibratedList, iterations);
+            var meanSquaredError = PvErrorStatistics.ComputeMeanError(
+                pvRecords,
+                validRecords,
+                installedPower,
+                thetaCalibratedList[^1]
+                );
+
+            return (thetaCalibratedList, iterations, meanSquaredError);
         }
 
         // --- Helper Method for Clamping ---
@@ -159,19 +167,6 @@ namespace PV.Calibration.Tool
             {
                 theta[i] = Math.Min(GetPriorMax(i), Math.Max(GetPriorMin(i), theta[i]));
             }
-
-            //// eta_sys: [0, 1]
-            //theta[0] = Math.Min(1.0, Math.Max(0.0, theta[0]));
-
-            //// gamma: Must be non-positive (efficiency decreases with temp)
-            //theta[1] = Math.Min(0.0, theta[1]);
-
-            //// U0, U1: Must be positive (heat loss must occur)
-            //theta[2] = Math.Max(1e-6, theta[2]); // U0 > 0
-            //theta[3] = Math.Max(1e-6, theta[3]); // U1 >= 0
-
-            //// L_degr: [0, 0.03] (Degradation loss)
-            //theta[4] = Math.Min(0.03, Math.Max(0.0, theta[4]));
         }
     }
 }

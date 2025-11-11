@@ -1,9 +1,9 @@
 ﻿using LEG.PV.Data.Processor;
-using static LEG.PV.Data.Processor.DataRecords;
+using PV.Calibration.Tool;
 using static LEG.PV.Core.Models.PvJacobian;
 using static LEG.PV.Core.Models.PvPriorConfig;
+using static LEG.PV.Data.Processor.DataRecords;
 using static PV.Calibration.Tool.BayesianCalibrator;
-using PV.Calibration.Tool;
 
 var installedPower = 10.0;      // [kWp]
 
@@ -28,7 +28,15 @@ var (pvRecords, modelValidRecords) = DataSimulator.GetPvSimulatedRecords(thetaMo
 
 var defaultPriors = new PvPriors();
 var defaultModelParams = GetDefaultPriorModelParams();
-var filteredValidRecors = modelValidRecords.Select(v => true).ToList();
+
+var filteredValidRecors = DataFilter.ExcludeSubHorizonRecords(pvRecords);
+
+var initialMeanSquaredError0 = PvErrorStatistics.ComputeMeanError(
+    pvRecords,
+    filteredValidRecors,
+    installedPower,
+    defaultModelParams
+    );
 
 filteredValidRecors = DataFilter.ExcludeFoggyRecords(
     pvRecords,
@@ -77,7 +85,7 @@ var hullPriors = new PvPriors
 };
 
 Console.WriteLine("Bayesian Calibration: default priors / no filter");
-var (thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
+var (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     defaultPriors,
     PvJacobianFunc,
@@ -85,10 +93,10 @@ var (thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
+PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, meanError);
 
 Console.WriteLine("Bayesian Calibration: default priors / model filter");
-(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
+(thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     defaultPriors,
     PvJacobianFunc,
@@ -96,10 +104,18 @@ Console.WriteLine("Bayesian Calibration: default priors / model filter");
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
+var (minError, maxError, meanError0, binSize, binCenters, binCounts) = PvErrorStatistics.ComputeHistograms(
+    pvRecords,
+    modelValidRecords,
+    installedPower,
+    thetaCalibratedList[^1],
+    countOfBins: 50);
+PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, meanError);
+Console.WriteLine($"Error Statistics: Min {minError:F5}, Max {maxError:F5} , MeanSquared {meanError0:F5}  ");
+Console.WriteLine();
 
 Console.WriteLine("Bayesian Calibration: hull priors / model filter");
-(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
+(thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     hullPriors,
     PvJacobianFunc,
@@ -107,11 +123,11 @@ Console.WriteLine("Bayesian Calibration: hull priors / model filter");
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-PrintResults(hullPriors, thetaModel, thetaCalibratedList, iterations);
+PrintResults(hullPriors, thetaModel, thetaCalibratedList, iterations, meanError);
 
 
 Console.WriteLine("Bayesian Calibration: default priors / Anomaly detector filters : Fog, Snow, Outliers)");
-(thetaCalibratedList, iterations) = BayesianCalibrator.Calibrate(
+(thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
     pvRecords: pvRecords,
     defaultPriors,
     PvJacobianFunc,
@@ -119,14 +135,20 @@ Console.WriteLine("Bayesian Calibration: default priors / Anomaly detector filte
     installedPower: installedPower,
     tolerance: tolerance,
     maxIterations: maxIterations);
-PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations);
+(minError, maxError, meanError, binSize, binCenters, binCounts) = PvErrorStatistics.ComputeHistograms(
+    pvRecords,
+    filteredValidRecors,
+    installedPower,
+    thetaCalibratedList[^1],
+    countOfBins: 50);
+PrintResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, meanError);
+Console.WriteLine($"Error Statistics: Min {minError:F5}, Max {maxError:F5} , MeanSquared {meanError:F5}  ");
+Console.WriteLine();
 
-
-void PrintResults(PvPriors pvPriors, PvModelParams thetaModel, List<PvModelParams> thetaCalibratedList, int iterations)
+void PrintResults(PvPriors pvPriors, PvModelParams thetaModel, List<PvModelParams> thetaCalibratedList, int iterations, double meanSquaredError)
 {
     var thetaFirst = thetaCalibratedList[0];
     var thetaCalibrated = thetaCalibratedList[^1];
-    Console.WriteLine();
     Console.WriteLine($"Calibration Results ({iterations} / {maxIterations} iterations):");
     Console.WriteLine($"Parameter{"prior",10}{"model",10}{"1st it.",10}{"calibrated",15}{"delta %",10}");
     Console.WriteLine($"Etha     {pvPriors.EthaSysMean,10:F5}{thetaModel.Etha,10:F5}{thetaFirst.Etha,10:F5} ... {thetaCalibrated.Etha,10:F5}{(thetaCalibrated.Etha / thetaModel.Etha - 1) * 100,10:F3}");
@@ -134,5 +156,6 @@ void PrintResults(PvPriors pvPriors, PvModelParams thetaModel, List<PvModelParam
     Console.WriteLine($"U0       {pvPriors.U0Mean,10:F5}{thetaModel.U0,10:F5}{thetaFirst.U0,10:F5} ... {thetaCalibrated.U0,10:F5}{(thetaCalibrated.U0 / thetaModel.U0 - 1) * 100,10:F3}");
     Console.WriteLine($"U1       {pvPriors.U1Mean,10:F5}{thetaModel.U1,10:F5}{thetaFirst.U1,10:F5} ... {thetaCalibrated.U1,10:F5}{(thetaCalibrated.U1 / thetaModel.U1 - 1) * 100,10:F3}");
     Console.WriteLine($"LDegr    {pvPriors.LDegrMean,10:F5}{thetaModel.LDegr,10:F5}{thetaFirst.LDegr,10:F5} ... {thetaCalibrated.LDegr,10:F5}{(thetaCalibrated.LDegr / thetaModel.LDegr - 1) * 100,10:F3}");
+    Console.WriteLine($"Mean Squared Error: {meanSquaredError:F6} (initial: {initialMeanSquaredError0:F6})");
     Console.WriteLine();
 }

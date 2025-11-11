@@ -5,6 +5,28 @@ namespace LEG.PV.Data.Processor
 {
     public class DataFilter
     {
+        public static List<bool> ExcludeSubHorizonRecords(
+            List<PvRecord> pvRecords,
+            List<bool>? initialValidRecords = null)
+        {
+            var recordsCount = pvRecords.Count;
+
+            initialValidRecords ??= Enumerable.Repeat(true, recordsCount).ToList();
+            if (initialValidRecords.Count != recordsCount)
+            {
+                throw new ArgumentException("Initial valid records list length does not match the number of PV records.");
+            }
+
+            for (var recordId = 0; recordId < recordsCount; recordId++)
+            {      
+                if (pvRecords[recordId].GeometryFactor <= 0.0)
+                {
+                    initialValidRecords[recordId] = false;
+                }
+            }
+            return initialValidRecords;
+        }
+
         public static List<bool> ExcludeFoggyRecords(
             List<PvRecord> pvRecords,
             List<bool> initialValidRecords,
@@ -50,7 +72,6 @@ namespace LEG.PV.Data.Processor
                     }
                 }
             }
-
             return initialValidRecords;
         }
         public static List<bool> ExcludeSnowyRecords(
