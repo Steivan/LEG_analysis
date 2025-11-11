@@ -1,8 +1,9 @@
 ﻿
+using LEG.Common.Utils;
 using LEG.MeteoSwiss.Abstractions;
+using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
-using LEG.Common.Utils;
 
 namespace MeteoConsoleApp
 {
@@ -10,6 +11,36 @@ namespace MeteoConsoleApp
     {
         static async Task Main(string[] args)
         {
+            var client = new WeatherForecastClient();
+
+            var forecast = await client.Get7DayPeriodsAsync("8124");
+            Console.WriteLine("7-Day Forecast:");
+            if (forecast.Count > 0)
+            {
+                var current = forecast[0];
+                var last = forecast[^1];
+                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | " +
+                                  $"Solar: {current.SolarRadiationWm2:F0} W/m² | Gust: {current.WindGustsKmh:F1} km/h");
+                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | " +
+                                  $"Solar: {last.SolarRadiationWm2:F0} W/m² | Gust: {last.WindGustsKmh:F1} km/h");
+            }
+
+            var nowcast = await client.GetNowcast15MinuteAsync("8124");
+            Console.WriteLine("90-Hour Nowcast:");
+            if (nowcast.Count > 0)
+            {
+                var current = nowcast[0];
+                var last = nowcast[^1];
+                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | " +
+                                  $"Solar: {current.SolarRadiationWm2:F0} W/m² | Gust: {current.WindGustsKmh:F1} km/h");
+                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | " +
+                                  $"Solar: {last.SolarRadiationWm2:F0} W/m² | Gust: {last.WindGustsKmh:F1} km/h");
+            }
+
+            return;
+
+            // ******************************************   
+
             // 1. Instantiate our new, consolidated service layer.
             var apiClient = new MeteoSwissClient();
             var meteoDataService = new MeteoDataService(apiClient);
