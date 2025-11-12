@@ -1,17 +1,103 @@
 ﻿using LEG.Common;
 using LEG.MeteoSwiss.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.IO;
-using System.Linq;
+using LEG.Common.Utils;
+using LEG.MeteoSwiss.Client.Forecast;
+using LEG.MeteoSwiss.Client.MeteoSwiss;
+using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
+
 
 namespace LEG.MeteoSwiss.Client.MeteoSwiss
 {
     public static class MeteoAggregator
     {
+        public static List<WeatherCsvRecord> GetFilteredRecords(
+            string stationId, 
+            StationMetaInfo stationMetaInfo, 
+            int periodStartYear, 
+            int periodEndYear, 
+            string granularity = "t", 
+            bool isTower = false,
+            bool includeRecent = true)
+        {
+            var getRecent = includeRecent && DateTime.UtcNow.Year <= periodEndYear;
+            var startDecade = (periodStartYear / 10) * 10;
+            var endDecade = (periodEndYear / 10) * 10;
+
+            var allRecords = new List<WeatherCsvRecord>();
+            for (var decade = startDecade; decade <= endDecade; decade += 10)
+            {
+                var period = $"{decade}-{decade + 9}";
+                period = MeteoSwissHelper.NormalizeAndValidatePeriod(period);
+                var filePath = "";
+                if (isTower)
+                {
+                    (_, filePath) = MeteoSwissHelper.GetTowerCsvFilename(stationId, period, granularity: granularity);
+                }
+                else
+                {
+                    (_, filePath) = MeteoSwissHelper.GetGroundCsvFilename(stationId, period, granularity: granularity);
+                }
+
+                if (!File.Exists(filePath))
+                {
+                    Console.WriteLine($"Warning: File not found: {filePath}");
+                    continue;
+                }
+
+                var records = ImportCsv.ImportFromFile<WeatherCsvRecord>(filePath, ";");
+                allRecords.AddRange(records);
+            }
+            if (getRecent)
+            {
+                // Also get recent data from the "recent" file
+                var recentPeriod = "recent";
+                var recentFilePath = "";
+                if (isTower)
+                {
+                    (_, recentFilePath) = MeteoSwissHelper.GetTowerCsvFilename(stationId, recentPeriod, granularity: granularity);
+                }
+                else
+                {
+                    (_, recentFilePath) = MeteoSwissHelper.GetGroundCsvFilename(stationId, recentPeriod, granularity: granularity);
+                }
+                if (File.Exists(recentFilePath))
+                {
+                    var recentRecords = ImportCsv.ImportFromFile<WeatherCsvRecord>(recentFilePath, ";");
+                    allRecords.AddRange(recentRecords);
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: Recent file not found: {recentFilePath}");
+                }
+            }
+
+            // Filter records for the period of interest
+            var filteredRecords = allRecords
+                .Where(r => r.ReferenceTimestamp.Year >= periodStartYear && r.ReferenceTimestamp.Year <= periodEndYear)
+                .ToList();
+
+            if (filteredRecords.Count == 0)
+            {
+                Console.WriteLine("No records found for the specified period.");
+                return [];
+            }
+            return filteredRecords;
+        }
+
         public static void RunMeteoAggregationForPeriod(string stationId, StationMetaInfo stationMetaInfo, int periodStartYear, int periodEndYear, string granularity = "t", bool isTower = false)
         {
+            // Determine all relevant decades
+            var sreConversionFactor = granularity switch
+            {
+                // 10 minutes
+                "t" => 2.4,
+                // 1 hour
+                "h" => 24.0,
+                // 1 day
+                "d" => 1.0,
+                _ => 1.0,
+            };
+
             // Helper to compute average, returns null if no valid data
             double? SafeAverage(IEnumerable<double?> values)
             {
@@ -51,56 +137,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                 return "n/a".PadLeft(width);
             }
 
-            var allRecords = new List<WeatherCsvRecord>();
-
-            // Determine all relevant decades
-            var startDecade = (periodStartYear / 10) * 10;
-            var endDecade = (periodEndYear / 10) * 10;
-            var sreConversionFactor = granularity switch
-            {
-                // 10 minutes
-                "t" => 2.4,
-                // 1 hour
-                "h" => 24.0,
-                // 1 day
-                "d" => 1.0,
-                _ => 1.0,
-            };
-            for (var decade = startDecade; decade <= endDecade; decade += 10)
-            {
-                var period = $"{decade}-{decade + 9}";
-                period = MeteoSwissHelper.NormalizeAndValidatePeriod(period);
-                var filePath = "";
-                if (isTower)
-                {
-                    (_, filePath) = MeteoSwissHelper.GetTowerCsvFilename(stationId, period, granularity: granularity);
-                }
-                else
-                {
-                    (_, filePath) = MeteoSwissHelper.GetGroundCsvFilename(stationId, period, granularity: granularity);
-                }
-
-                if (!File.Exists(filePath))
-                {
-                    Console.WriteLine($"Warning: File not found: {filePath}");
-                    continue;
-                }
-
-                var records = ImportCsv.ImportFromFile<WeatherCsvRecord>(filePath, ";");
-                allRecords.AddRange(records);
-            }
-
-            // Filter records for the period of interest
-            var filteredRecords = allRecords
-                .Where(r => r.ReferenceTimestamp.Year >= periodStartYear && r.ReferenceTimestamp.Year <= periodEndYear)
-                .ToList();
-
-            if (filteredRecords.Count == 0)
-            {
-                Console.WriteLine("No records found for the specified period.");
-                return;
-            }
-
+            var filteredRecords = GetFilteredRecords(stationId, stationMetaInfo, periodStartYear, periodEndYear, granularity, isTower, false);
             // --- Monthly averages ---
             var monthlyAverages = filteredRecords
                 .GroupBy(r => new { r.ReferenceTimestamp.Year, r.ReferenceTimestamp.Month })

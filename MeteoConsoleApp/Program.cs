@@ -1,6 +1,5 @@
 ﻿
 using LEG.Common.Utils;
-using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
@@ -37,7 +36,7 @@ namespace MeteoConsoleApp
                                   $"Solar: {last.SolarRadiationWm2:F0} W/m² | Gust: {last.WindGustsKmh:F1} km/h");
             }
 
-            return;
+            //return;
 
             // ******************************************   
 
@@ -78,11 +77,11 @@ namespace MeteoConsoleApp
             };
             var groundStationsGrSelection = new List<string>()
             {
-                ARO, CHU, NAS, SCU
+                SCU // ARO, CHU, NAS, SCU
             };
 
             // Stations to be processed
-            const string stationCanton = "GR"; // "CH" for all
+            const string stationCanton = "ZH"; // "CH" for all
             const bool lonLatAsDms = true;
 
             var downloadGroundStationIds = groundStationsGrSelection;
@@ -106,7 +105,8 @@ namespace MeteoConsoleApp
                     $"List of ground stations in {stationCanton}",
                     groundStationsMetaDict,
                     stationCanton,
-                    GeoUtils.ToDms,
+                    lon => GeoUtils.ToDms(lon),
+                    lat => GeoUtils.ToDms(lat),
                     lonLatAsDms
                 );
                 StationConsolePrinter.PrintStationMetaSeparator();
@@ -114,7 +114,8 @@ namespace MeteoConsoleApp
                     $"List of tower stations in {stationCanton}",
                     towerStationsMetaDict,
                     stationCanton,
-                    GeoUtils.ToDms,
+                    lon => GeoUtils.ToDms(lon),
+                    lat => GeoUtils.ToDms(lat),
                     lonLatAsDms
                 ));
                 StationConsolePrinter.PrintStationMetaSeparator();
@@ -135,14 +136,15 @@ namespace MeteoConsoleApp
                         info => info.NrYearsDailyObsInRefPer ?? 0,
                         info => info.HasHourlyData
                     ],
-                    GeoUtils.ToDms,
+                    lon => GeoUtils.ToDms(lon),
+                    lat => GeoUtils.ToDms(lat),
                     lonLatAsDms
                 );
 
                 StationConsolePrinter.PrintStationInfoTable(
                     "Standard Period Station Info:",
                     standardPerStationDict,
-                    idList, 
+                    idList,
                     [
                         info => info.Name,
                         info => info.Height ?? 0,
@@ -154,7 +156,8 @@ namespace MeteoConsoleApp
                         info => info.NrNaYearsDailyObsInStandardPer ?? 0,
                         info => info.HasHourlyData
                     ],
-                    GeoUtils.ToDms,
+                    lon => GeoUtils.ToDms(lon),
+                    lat => GeoUtils.ToDms(lat),
                     lonLatAsDms
                 );
 

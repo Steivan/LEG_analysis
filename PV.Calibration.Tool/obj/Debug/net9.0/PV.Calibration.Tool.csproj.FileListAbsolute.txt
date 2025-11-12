@@ -20,3 +20,17 @@ C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.PV.Data.Processor.
 C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calibration.Tool.csproj.AssemblyReference.cache
 C:\code\LEG_analysis\PV.Calibration.Tool\obj\Debug\net9.0\PV.Calib.A3C860AB.Up2Date
 C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\MathNet.Numerics.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\CsvHelper.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.Common.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.CoreLib.Abstractions.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.E3Dc.Abstractions.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.E3Dc.Client.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.E3Dc.Abstractions.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.E3Dc.Client.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.Common.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.CoreLib.Abstractions.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.MeteoSwiss.Abstractions.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.MeteoSwiss.Client.dll
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.MeteoSwiss.Abstractions.pdb
+C:\code\LEG_analysis\PV.Calibration.Tool\bin\Debug\net9.0\LEG.MeteoSwiss.Client.pdb

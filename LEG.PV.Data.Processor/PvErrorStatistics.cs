@@ -126,5 +126,40 @@ namespace LEG.PV.Data.Processor
 
             return (minError, maxError, meanError, binSize, binCenters, binCounts);
         }
+
+    public static List<double> ComputeQuantiles(
+        List<PvRecord> pvRecords,
+        List<bool>? initialValidRecords,
+        double installedPower,
+        PvModelParams pvModelParams,
+        List<double> pCumulative)
+        {
+            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactor > 0.0).ToList();
+
+            var errorList = GetErrorList(
+                pvRecords,
+                initialValidRecords,
+                installedPower,
+                pvModelParams
+                );
+            errorList.Sort();
+
+            var countOfRecords = errorList.Count;
+            var countOfQuantiles = pCumulative.Count;
+            var quantileList = pCumulative.Select(v => 0.0).ToList();
+            for (var errorIndex=0; errorIndex<countOfRecords; errorIndex++)
+            {
+                var p = (double)errorIndex / countOfRecords;
+                for (var pIndex=0; pIndex<countOfQuantiles; pIndex++)
+                {
+                    if (p <= pCumulative[pIndex])
+                    {
+                        quantileList[pIndex] = errorList[errorIndex];
+                    }
+                }
+            }
+
+            return quantileList;
+        }
     }
 }

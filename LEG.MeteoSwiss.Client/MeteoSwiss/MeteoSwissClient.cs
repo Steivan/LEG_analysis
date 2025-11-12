@@ -63,6 +63,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             {
                 if (year >= currentYear - 1)
                 {
+                    periodsToFetch.Add("recent");
                     periodsToFetch.Add("now");
                 }
                 else

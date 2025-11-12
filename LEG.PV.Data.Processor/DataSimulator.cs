@@ -6,7 +6,7 @@ namespace LEG.PV.Data.Processor;
 
 public class DataSimulator
 {
-    public static (List<PvRecord> dataRecords, List<bool> validRecords) GetPvSimulatedRecords(PvModelParams pvVarams, double installedPower = 10, double simulationsPeriod = 5)
+    public static (List<PvRecord> dataRecords, List<bool> validRecords) GetPvSimulatedRecords(PvModelParams pvVarams, double installedPower, double simulationsPeriod = 5)
     {
         const double daysPerYears = 365.2422;
         const int hoursPerDay = 24;

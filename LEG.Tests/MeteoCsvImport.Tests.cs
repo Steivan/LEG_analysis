@@ -1,8 +1,4 @@
-﻿using LEG.CoreLib;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using LEG.Common;
 using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
