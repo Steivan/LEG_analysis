@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PV.Calibration.Tool")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5d9c4d594fd01ad8d915c516c7f5537295de0d0f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+df1b7296bce99f97f333a70bced3e0d2e144f8a9")]
 [assembly: System.Reflection.AssemblyProductAttribute("PV.Calibration.Tool")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PV.Calibration.Tool")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

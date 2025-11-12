@@ -14,9 +14,9 @@ namespace LEG.Tests
         {
             // Arrange
             var csvContent =
-                "station_abbr;reference_timestamp;ta1tows0;tdetows0;uretows0;fkltowz1;fk1towz0;dv1towz0;fu3towz0;fu3towz1;gre000z0;sre000z0\r\n" +
-                "BAN;01.01.2020 00:00;5.7;-6.9;39.8;6.3;4.8;82;16.9;22.7;4;0\r\n" +
-                "BAN;01.01.2020 00:10;5.8;-6.9;39.4;4.7;3.5;103;12.2;16.9;3;0\r\n";
+                "station_abbr;reference_timestamp;tre200s0;ure200s0;tde200s0;prestas0;gre000z0;sre000z0\r\n" +
+                "SMA;01.01.2025 00:00;-2.8;99.1;-2.9;963.1;0;0\r\n" +
+                "SMA;01.01.2025 00:10;-2.9;99.1;-3;963.1;0;0\r\n";
             var tempFile = Path.GetTempFileName();
             File.WriteAllText(tempFile, csvContent);
 
@@ -27,13 +27,14 @@ namespace LEG.Tests
 
                 // Assert
                 Assert.AreEqual(2, result.Count);
-                Assert.AreEqual("BAN", result[0].StationAbbr);
-                Assert.AreEqual(new DateTime(2020, 1, 1, 0, 0, 0), result[0].ReferenceTimestamp);
-                Assert.AreEqual(5.7, result[0].Ta1Tows0.GetValueOrDefault(), 0.01);
-                Assert.AreEqual(-6.9, result[0].TdeTows0.GetValueOrDefault(), 0.01);
-                Assert.AreEqual(39.8, result[0].UreTows0.GetValueOrDefault(), 0.01);
-                Assert.AreEqual(4, result[0].Gre000z0.GetValueOrDefault(), 0.01);
-                Assert.AreEqual(0, result[0].Sre000z0.GetValueOrDefault(), 0.01);
+                Assert.AreEqual("SMA", result[0].StationAbbr);
+                Assert.AreEqual(new DateTime(2025, 1, 1, 0, 0, 0), result[0].ReferenceTimestamp);
+                Assert.AreEqual(-2.8, result[0].Temperature2m.GetValueOrDefault(), 0.01);
+                Assert.AreEqual(99.1, result[0].RelativeHumidity2m.GetValueOrDefault(), 0.01);
+                Assert.AreEqual(-2.9, result[0].DewPoint2m.GetValueOrDefault(), 0.01);
+                Assert.AreEqual(963.1, result[0].PressureAtStation.GetValueOrDefault(), 0.01);
+                Assert.AreEqual(0, result[0].GlobalRadiation.GetValueOrDefault(), 0.01);
+                Assert.AreEqual(0, result[0].SunshineDuration.GetValueOrDefault(), 0.01);
             }
             finally
             {
@@ -58,7 +59,7 @@ namespace LEG.Tests
             // ReferenceTimestamp is DateTime, so check for default value
             Assert.AreNotEqual(default, first.ReferenceTimestamp, "ReferenceTimestamp should not be default value.");
             // Optionally, add more asserts for plausibility
-            // Assert.IsTrue(first.Ta1Tows0 > -50 && first.Ta1Tows0 < 60, "Ta1Tows0 (temperature) out of plausible range.");
+            // Assert.IsTrue(first.Temperature2m > -50 && first.Temperature2m < 60, "Temperature2m (temperature) out of plausible range.");
         }
     }
 }

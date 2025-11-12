@@ -77,7 +77,7 @@ namespace MeteoConsoleApp
             };
             var groundStationsGrSelection = new List<string>()
             {
-                SCU // ARO, CHU, NAS, SCU
+                // ARO, CHU, NAS, SCU
             };
 
             // Stations to be processed
@@ -90,7 +90,7 @@ namespace MeteoConsoleApp
             const string downloadGranularity = "ht"; // "h" for hourly, "t" for 10-min
             // The 'forceDownload' flag is no longer needed as the new client always fetches the latest data.
 
-            const string aggregationId = "SCU";
+            const string aggregationId = "SMA";
             const bool isTower = false;
 
             // No command line arguments are provided

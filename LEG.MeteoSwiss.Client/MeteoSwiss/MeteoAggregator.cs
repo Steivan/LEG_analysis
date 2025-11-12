@@ -1,21 +1,19 @@
 ﻿using LEG.Common;
 using LEG.MeteoSwiss.Abstractions;
-using LEG.Common.Utils;
-using LEG.MeteoSwiss.Client.Forecast;
-using LEG.MeteoSwiss.Client.MeteoSwiss;
-using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("LEG.Tests")]
 
 namespace LEG.MeteoSwiss.Client.MeteoSwiss
 {
     public static class MeteoAggregator
     {
         public static List<WeatherCsvRecord> GetFilteredRecords(
-            string stationId, 
-            StationMetaInfo stationMetaInfo, 
-            int periodStartYear, 
-            int periodEndYear, 
-            string granularity = "t", 
+            string stationId,
+            StationMetaInfo stationMetaInfo,
+            int periodStartYear,
+            int periodEndYear,
+            string granularity = "t",
             bool isTower = false,
             bool includeRecent = true)
         {
@@ -86,57 +84,6 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
 
         public static void RunMeteoAggregationForPeriod(string stationId, StationMetaInfo stationMetaInfo, int periodStartYear, int periodEndYear, string granularity = "t", bool isTower = false)
         {
-            // Determine all relevant decades
-            var sreConversionFactor = granularity switch
-            {
-                // 10 minutes
-                "t" => 2.4,
-                // 1 hour
-                "h" => 24.0,
-                // 1 day
-                "d" => 1.0,
-                _ => 1.0,
-            };
-
-            // Helper to compute average, returns null if no valid data
-            double? SafeAverage(IEnumerable<double?> values)
-            {
-#pragma warning disable CS8629
-                var valid = values.Where(v => v.HasValue && !double.IsNaN(v.Value)).Select(v => v.Value!).ToList();
-#pragma warning restore CS8629
-                return valid.Count > 0 ? valid.Average() : (double?)null;
-            }
-
-            double? SafeMax(IEnumerable<double?> values)
-            {
-#pragma warning disable CS8629
-                var valid = values.Where(v => v.HasValue && !double.IsNaN(v.Value)).Select(v => v.Value!).ToList();
-#pragma warning restore CS8629
-                return valid.Count > 0 ? valid.Max() : (double?)null;
-            }
-
-            string FormatValue(object? value, int width)
-            {
-                if (value == null)
-                    return "n/a".PadLeft(width);
-
-                if (value is double d)
-                    return d.ToString("0.00").PadLeft(width);
-
-                if (value is double v)
-                    return v.ToString("0.00").PadLeft(width);
-
-                if (value is double?)
-                {
-                    var nullable = (double?)value;
-                    return nullable.HasValue
-                        ? nullable.Value.ToString("0.00").PadLeft(width)
-                        : "n/a".PadLeft(width);
-                }
-
-                return "n/a".PadLeft(width);
-            }
-
             var filteredRecords = GetFilteredRecords(stationId, stationMetaInfo, periodStartYear, periodEndYear, granularity, isTower, false);
             // --- Monthly averages ---
             var monthlyAverages = filteredRecords
@@ -145,18 +92,35 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                 {
                     g.Key.Year,
                     g.Key.Month,
-                    Ta1Tows0 = SafeAverage(g.Select(r => (double?)r.Ta1Tows0)),
-                    TdeTows0 = SafeAverage(g.Select(r => (double?)r.TdeTows0)),
-                    UreTows0 = SafeAverage(g.Select(r => (double?)r.UreTows0)),
-                    FklTowz1 = SafeAverage(g.Select(r => (double?)r.FklTowz1)),
-                    Fk1Towz0 = SafeAverage(g.Select(r => (double?)r.Fk1Towz0)),
-                    Dv1Towz0 = SafeAverage(g.Select(r => (double?)r.Dv1Towz0)),
-                    Fu3Towz0 = SafeMax(g.Select(r => (double?)r.Fu3Towz0)),
-                    Fu3Towz1 = SafeMax(g.Select(r => (double?)r.Fu3Towz1)),
-                    Gre000z0 = SafeAverage(g.Select(r => (double?)r.Gre000z0)),
-                    Sre000z0 = SafeAverage(g.Select(r => (double?)r.Sre000z0)) is double sre1
-                        ? sre1 * sreConversionFactor
-                        : (double?)null
+                    Temperature2m = SafeAverage(g.Select(r => r.Temperature2m)),
+                    Temperature5cm = SafeAverage(g.Select(r => r.Temperature5cm)),
+                    TemperatureSurface = SafeAverage(g.Select(r => r.TemperatureSurface)),
+                    WindChill = SafeAverage(g.Select(r => r.WindChill)),
+                    RelativeHumidity2m = SafeAverage(g.Select(r => r.RelativeHumidity2m)),
+                    DewPoint2m = SafeAverage(g.Select(r => r.DewPoint2m)),
+                    VaporPressure2m = SafeAverage(g.Select(r => r.VaporPressure2m)),
+                    PressureAtStation = SafeAverage(g.Select(r => r.PressureAtStation)),
+                    PressureQNH = SafeAverage(g.Select(r => r.PressureQNH)),
+                    PressureQFF = SafeAverage(g.Select(r => r.PressureQFF)),
+                    GeopotentialHeight850hPa = SafeAverage(g.Select(r => r.GeopotentialHeight850hPa)),
+                    GeopotentialHeight700hPa = SafeAverage(g.Select(r => r.GeopotentialHeight700hPa)),
+                    WindGust1s = SafeMax(g.Select(r => r.WindGust1s)),
+                    WindSpeedVectorial10min = SafeAverage(g.Select(r => r.WindSpeedVectorial10min)),
+                    WindSpeedScalar10min = SafeAverage(g.Select(r => r.WindSpeedScalar10min)),
+                    WindDirection = SafeVectorAverageWindDirection(g),
+                    FoehnIndex = SafeAverage(g.Select(r => r.FoehnIndex)),
+                    WindSpeed10min_kmh = SafeAverage(g.Select(r => r.WindSpeed10min_kmh)),
+                    WindGust3s = SafeMax(g.Select(r => r.WindGust3s)),
+                    WindGust1s_kmh = SafeMax(g.Select(r => r.WindGust1s_kmh)),
+                    WindGust3s_kmh = SafeMax(g.Select(r => r.WindGust3s_kmh)),
+                    Precipitation = SafeSum(g.Select(r => r.Precipitation)),
+                    SnowDepth = SafeAverage(g.Select(r => r.SnowDepth)),
+                    GlobalRadiation = SafeAverage(g.Select(r => r.GlobalRadiation)),
+                    DiffuseRadiation = SafeAverage(g.Select(r => r.DiffuseRadiation)),
+                    LongwaveRadiationIncoming = SafeAverage(g.Select(r => r.LongwaveRadiationIncoming)),
+                    LongwaveRadiationOutgoing = SafeAverage(g.Select(r => r.LongwaveRadiationOutgoing)),
+                    ShortwaveRadiationReflected = SafeAverage(g.Select(r => r.ShortwaveRadiationReflected)),
+                    SunshineDuration = SafeSum(g.Select(r => r.SunshineDuration)) / (DateTime.DaysInMonth(g.Key.Year, g.Key.Month) * 60.0)
                 })
                 .OrderBy(x => x.Year).ThenBy(x => x.Month)
                 .ToList();
@@ -167,37 +131,72 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                 .Select(g => new
                 {
                     Year = g.Key,
-                    Ta1Tows0 = SafeAverage(g.Select(r => (double?)r.Ta1Tows0)),
-                    TdeTows0 = SafeAverage(g.Select(r => (double?)r.TdeTows0)),
-                    UreTows0 = SafeAverage(g.Select(r => (double?)r.UreTows0)),
-                    FklTowz1 = SafeAverage(g.Select(r => (double?)r.FklTowz1)),
-                    Fk1Towz0 = SafeAverage(g.Select(r => (double?)r.Fk1Towz0)),
-                    Dv1Towz0 = SafeAverage(g.Select(r => (double?)r.Dv1Towz0)),
-                    Fu3Towz0 = SafeMax(g.Select(r => (double?)r.Fu3Towz0)),
-                    Fu3Towz1 = SafeMax(g.Select(r => (double?)r.Fu3Towz1)),
-                    Gre000z0 = SafeAverage(g.Select(r => (double?)r.Gre000z0)),
-                    Sre000z0 = SafeAverage(g.Select(r => (double?)r.Sre000z0)) is double sre2
-                        ? sre2 * sreConversionFactor
-                        : (double?)null
+                    Temperature2m = SafeAverage(g.Select(r => r.Temperature2m)),
+                    Temperature5cm = SafeAverage(g.Select(r => r.Temperature5cm)),
+                    TemperatureSurface = SafeAverage(g.Select(r => r.TemperatureSurface)),
+                    WindChill = SafeAverage(g.Select(r => r.WindChill)),
+                    RelativeHumidity2m = SafeAverage(g.Select(r => r.RelativeHumidity2m)),
+                    DewPoint2m = SafeAverage(g.Select(r => r.DewPoint2m)),
+                    VaporPressure2m = SafeAverage(g.Select(r => r.VaporPressure2m)),
+                    PressureAtStation = SafeAverage(g.Select(r => r.PressureAtStation)),
+                    PressureQNH = SafeAverage(g.Select(r => r.PressureQNH)),
+                    PressureQFF = SafeAverage(g.Select(r => r.PressureQFF)),
+                    GeopotentialHeight850hPa = SafeAverage(g.Select(r => r.GeopotentialHeight850hPa)),
+                    GeopotentialHeight700hPa = SafeAverage(g.Select(r => r.GeopotentialHeight700hPa)),
+                    WindGust1s = SafeMax(g.Select(r => r.WindGust1s)),
+                    WindSpeedVectorial10min = SafeAverage(g.Select(r => r.WindSpeedVectorial10min)),
+                    WindSpeedScalar10min = SafeAverage(g.Select(r => r.WindSpeedScalar10min)),
+                    WindDirection = SafeVectorAverageWindDirection(g),
+                    FoehnIndex = SafeAverage(g.Select(r => r.FoehnIndex)),
+                    WindSpeed10min_kmh = SafeAverage(g.Select(r => r.WindSpeed10min_kmh)),
+                    WindGust3s = SafeMax(g.Select(r => r.WindGust3s)),
+                    WindGust1s_kmh = SafeMax(g.Select(r => r.WindGust1s_kmh)),
+                    WindGust3s_kmh = SafeMax(g.Select(r => r.WindGust3s_kmh)),
+                    Precipitation = SafeSum(g.Select(r => r.Precipitation)),
+                    SnowDepth = SafeAverage(g.Select(r => r.SnowDepth)),
+                    GlobalRadiation = SafeAverage(g.Select(r => r.GlobalRadiation)),
+                    DiffuseRadiation = SafeAverage(g.Select(r => r.DiffuseRadiation)),
+                    LongwaveRadiationIncoming = SafeAverage(g.Select(r => r.LongwaveRadiationIncoming)),
+                    LongwaveRadiationOutgoing = SafeAverage(g.Select(r => r.LongwaveRadiationOutgoing)),
+                    ShortwaveRadiationReflected = SafeAverage(g.Select(r => r.ShortwaveRadiationReflected)),
+                    SunshineDuration = SafeSum(g.Select(r => r.SunshineDuration)) / ((DateTime.IsLeapYear(g.Key) ? 366 : 365) * 60.0)
                 })
                 .OrderBy(x => x.Year)
                 .ToList();
 
             // --- Overall averages ---
+            var totalDays = filteredRecords.Select(r => r.ReferenceTimestamp.Date).Distinct().Count();
             var overallAverage = new
             {
-                Ta1Tows0 = SafeAverage(filteredRecords.Select(r => (double?)r.Ta1Tows0)),
-                TdeTows0 = SafeAverage(filteredRecords.Select(r => (double?)r.TdeTows0)),
-                UreTows0 = SafeAverage(filteredRecords.Select(r => (double?)r.UreTows0)),
-                FklTowz1 = SafeAverage(filteredRecords.Select(r => (double?)r.FklTowz1)),
-                Fk1Towz0 = SafeAverage(filteredRecords.Select(r => (double?)r.Fk1Towz0)),
-                Dv1Towz0 = SafeAverage(filteredRecords.Select(r => (double?)r.Dv1Towz0)),
-                Fu3Towz0 = SafeMax(filteredRecords.Select(r => (double?)r.Fu3Towz0)),
-                Fu3Towz1 = SafeMax(filteredRecords.Select(r => (double?)r.Fu3Towz1)),
-                Gre000z0 = SafeAverage(filteredRecords.Select(r => (double?)r.Gre000z0)),
-                Sre000z0 = SafeAverage(filteredRecords.Select(r => (double?)r.Sre000z0)) is double sre3
-                    ? sre3 * sreConversionFactor
-                    : (double?)null
+                Temperature2m = SafeAverage(filteredRecords.Select(r => r.Temperature2m)),
+                Temperature5cm = SafeAverage(filteredRecords.Select(r => r.Temperature5cm)),
+                TemperatureSurface = SafeAverage(filteredRecords.Select(r => r.TemperatureSurface)),
+                WindChill = SafeAverage(filteredRecords.Select(r => r.WindChill)),
+                RelativeHumidity2m = SafeAverage(filteredRecords.Select(r => r.RelativeHumidity2m)),
+                DewPoint2m = SafeAverage(filteredRecords.Select(r => r.DewPoint2m)),
+                VaporPressure2m = SafeAverage(filteredRecords.Select(r => r.VaporPressure2m)),
+                PressureAtStation = SafeAverage(filteredRecords.Select(r => r.PressureAtStation)),
+                PressureQNH = SafeAverage(filteredRecords.Select(r => r.PressureQNH)),
+                PressureQFF = SafeAverage(filteredRecords.Select(r => r.PressureQFF)),
+                GeopotentialHeight850hPa = SafeAverage(filteredRecords.Select(r => r.GeopotentialHeight850hPa)),
+                GeopotentialHeight700hPa = SafeAverage(filteredRecords.Select(r => r.GeopotentialHeight700hPa)),
+                WindGust1s = SafeMax(filteredRecords.Select(r => r.WindGust1s)),
+                WindSpeedVectorial10min = SafeAverage(filteredRecords.Select(r => r.WindSpeedVectorial10min)),
+                WindSpeedScalar10min = SafeAverage(filteredRecords.Select(r => r.WindSpeedScalar10min)),
+                WindDirection = SafeVectorAverageWindDirection(filteredRecords),
+                FoehnIndex = SafeAverage(filteredRecords.Select(r => r.FoehnIndex)),
+                WindSpeed10min_kmh = SafeAverage(filteredRecords.Select(r => r.WindSpeed10min_kmh)),
+                WindGust3s = SafeMax(filteredRecords.Select(r => r.WindGust3s)),
+                WindGust1s_kmh = SafeMax(filteredRecords.Select(r => r.WindGust1s_kmh)),
+                WindGust3s_kmh = SafeMax(filteredRecords.Select(r => r.WindGust3s_kmh)),
+                Precipitation = SafeSum(filteredRecords.Select(r => r.Precipitation)),
+                SnowDepth = SafeAverage(filteredRecords.Select(r => r.SnowDepth)),
+                GlobalRadiation = SafeAverage(filteredRecords.Select(r => r.GlobalRadiation)),
+                DiffuseRadiation = SafeAverage(filteredRecords.Select(r => r.DiffuseRadiation)),
+                LongwaveRadiationIncoming = SafeAverage(filteredRecords.Select(r => r.LongwaveRadiationIncoming)),
+                LongwaveRadiationOutgoing = SafeAverage(filteredRecords.Select(r => r.LongwaveRadiationOutgoing)),
+                ShortwaveRadiationReflected = SafeAverage(filteredRecords.Select(r => r.ShortwaveRadiationReflected)),
+                SunshineDuration = totalDays > 0 ? SafeSum(filteredRecords.Select(r => r.SunshineDuration)) / (totalDays * 60.0) : null
             };
 
             // --- Monthly averages by calendar month (across all years) ---
@@ -205,37 +204,77 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             var monthlyAveragesByMonth = filteredRecords
                 .GroupBy(r => r.ReferenceTimestamp.Month)
                 .OrderBy(g => g.Key)
-                .Select(g => new
+                .Select(g =>
                 {
-                    Month = g.Key,
-                    Ta1Tows0 = SafeAverage(g.Select(r => (double?)r.Ta1Tows0)),
-                    TdeTows0 = SafeAverage(g.Select(r => (double?)r.TdeTows0)),
-                    UreTows0 = SafeAverage(g.Select(r => (double?)r.UreTows0)),
-                    FklTowz1 = SafeAverage(g.Select(r => (double?)r.FklTowz1)),
-                    Fk1Towz0 = SafeAverage(g.Select(r => (double?)r.Fk1Towz0)),
-                    Dv1Towz0 = SafeAverage(g.Select(r => (double?)r.Dv1Towz0)),
-                    Fu3Towz0 = SafeMax(g.Select(r => (double?)r.Fu3Towz0)),
-                    Fu3Towz1 = SafeMax(g.Select(r => (double?)r.Fu3Towz1)),
-                    Gre000z0 = SafeAverage(g.Select(r => (double?)r.Gre000z0)),
-                    Sre000z0 = SafeAverage(g.Select(r => (double?)r.Sre000z0)) is double sre4
-                        ? sre4 * sreConversionFactor
-                        : (double?)null
+                    var totalDaysInMonth = g.Select(r => r.ReferenceTimestamp.Date).Distinct().Count();
+                    return new
+                    {
+                        Month = g.Key,
+                        Temperature2m = SafeAverage(g.Select(r => r.Temperature2m)),
+                        Temperature5cm = SafeAverage(g.Select(r => r.Temperature5cm)),
+                        TemperatureSurface = SafeAverage(g.Select(r => r.TemperatureSurface)),
+                        WindChill = SafeAverage(g.Select(r => r.WindChill)),
+                        RelativeHumidity2m = SafeAverage(g.Select(r => r.RelativeHumidity2m)),
+                        DewPoint2m = SafeAverage(g.Select(r => r.DewPoint2m)),
+                        VaporPressure2m = SafeAverage(g.Select(r => r.VaporPressure2m)),
+                        PressureAtStation = SafeAverage(g.Select(r => r.PressureAtStation)),
+                        PressureQNH = SafeAverage(g.Select(r => r.PressureQNH)),
+                        PressureQFF = SafeAverage(g.Select(r => r.PressureQFF)),
+                        GeopotentialHeight850hPa = SafeAverage(g.Select(r => r.GeopotentialHeight850hPa)),
+                        GeopotentialHeight700hPa = SafeAverage(g.Select(r => r.GeopotentialHeight700hPa)),
+                        WindGust1s = SafeMax(g.Select(r => r.WindGust1s)),
+                        WindSpeedVectorial10min = SafeAverage(g.Select(r => r.WindSpeedVectorial10min)),
+                        WindSpeedScalar10min = SafeAverage(g.Select(r => r.WindSpeedScalar10min)),
+                        WindDirection = SafeVectorAverageWindDirection(g),
+                        FoehnIndex = SafeAverage(g.Select(r => r.FoehnIndex)),
+                        WindSpeed10min_kmh = SafeAverage(g.Select(r => r.WindSpeed10min_kmh)),
+                        WindGust3s = SafeMax(g.Select(r => r.WindGust3s)),
+                        WindGust1s_kmh = SafeMax(g.Select(r => r.WindGust1s_kmh)),
+                        WindGust3s_kmh = SafeMax(g.Select(r => r.WindGust3s_kmh)),
+                        Precipitation = SafeSum(g.Select(r => r.Precipitation)),
+                        SnowDepth = SafeAverage(g.Select(r => r.SnowDepth)),
+                        GlobalRadiation = SafeAverage(g.Select(r => r.GlobalRadiation)),
+                        DiffuseRadiation = SafeAverage(g.Select(r => r.DiffuseRadiation)),
+                        LongwaveRadiationIncoming = SafeAverage(g.Select(r => r.LongwaveRadiationIncoming)),
+                        LongwaveRadiationOutgoing = SafeAverage(g.Select(r => r.LongwaveRadiationOutgoing)),
+                        ShortwaveRadiationReflected = SafeAverage(g.Select(r => r.ShortwaveRadiationReflected)),
+                        SunshineDuration = totalDaysInMonth > 0 ? SafeSum(g.Select(r => r.SunshineDuration)) / (totalDaysInMonth * 60.0) : null
+                    };
                 })
                 .ToList();
 
             // Prepare field codes, labels, and units
             var fieldMeta = new[]
             {
-                new { Code = "Ta1Tows0", Label = "Air Temperature", Unit = "[°C]" },
-                new { Code = "TdeTows0", Label = "Dew Point", Unit = "[°C]" },
-                new { Code = "UreTows0", Label = "Rel. Humidity", Unit = "[%]" },
-                new { Code = "FklTowz1", Label = "Wind Speed 10m", Unit = "[km/h]" },
-                new { Code = "Fk1Towz0", Label = "Wind Speed 2m", Unit = "[km/h]" },
-                new { Code = "Dv1Towz0", Label = "Wind Direction", Unit = "[°]" },
-                new { Code = "Fu3Towz0", Label = "Gust Speed 2m", Unit = "[km/h]" },
-                new { Code = "Fu3Towz1", Label = "Gust Speed 10m", Unit = "[km/h]" },
-                new { Code = "Gre000z0", Label = "Global Radiation", Unit = "[W/m²]" },
-                new { Code = "Sre000z0", Label = "Sunshine Duration", Unit = "[h]" }
+                new { Code = "Temperature2m", Label = "Temp 2m", Unit = "[°C]" },
+                new { Code = "Temperature5cm", Label = "Temp 5cm", Unit = "[°C]" },
+                new { Code = "TemperatureSurface", Label = "Temp Sfc", Unit = "[°C]" },
+                new { Code = "WindChill", Label = "W. Chill", Unit = "[°C]" },
+                new { Code = "RelativeHumidity2m", Label = "Rel Hum", Unit = "[%]" },
+                new { Code = "DewPoint2m", Label = "Dew Point", Unit = "[°C]" },
+                new { Code = "VaporPressure2m", Label = "Vapor Prs", Unit = "[hPa]" },
+                new { Code = "PressureAtStation", Label = "Pressure", Unit = "[hPa]" },
+                new { Code = "PressureQNH", Label = "Prs QNH", Unit = "[hPa]" },
+                new { Code = "PressureQFF", Label = "Prs QFF", Unit = "[hPa]" },
+                new { Code = "GeopotentialHeight850hPa", Label = "GeoPot 850", Unit = "[gpm]" },
+                new { Code = "GeopotentialHeight700hPa", Label = "GeoPot 700", Unit = "[gpm]" },
+                new { Code = "WindSpeedVectorial10min", Label = "WSpd Vec", Unit = "[m/s]" },
+                new { Code = "WindSpeedScalar10min", Label = "WSpd Scal", Unit = "[m/s]" },
+                new { Code = "WindDirection", Label = "Wind Dir", Unit = "[°]" },
+                new { Code = "WindSpeed10min_kmh", Label = "WSpd 10min", Unit = "[km/h]" },
+                new { Code = "WindGust1s", Label = "Gust 1s", Unit = "[m/s]" },
+                new { Code = "WindGust3s", Label = "Gust 3s", Unit = "[m/s]" },
+                new { Code = "WindGust1s_kmh", Label = "Gust 1s", Unit = "[km/h]" },
+                new { Code = "WindGust3s_kmh", Label = "Gust 3s", Unit = "[km/h]" },
+                new { Code = "Precipitation", Label = "Precip", Unit = "[mm]" },
+                new { Code = "SnowDepth", Label = "Snow Dpt", Unit = "[cm]" },
+                new { Code = "GlobalRadiation", Label = "Glob Rad", Unit = "[W/m²]" },
+                new { Code = "DiffuseRadiation", Label = "Diff Rad", Unit = "[W/m²]" },
+                new { Code = "SunshineDuration", Label = "Sun Dur", Unit = "[h/day]" },
+                new { Code = "LongwaveRadiationIncoming", Label = "LW Rad In", Unit = "[W/m²]" },
+                new { Code = "LongwaveRadiationOutgoing", Label = "LW Rad Out", Unit = "[W/m²]" },
+                new { Code = "ShortwaveRadiationReflected", Label = "SW Rad Ref", Unit = "[W/m²]" },
+                new { Code = "FoehnIndex", Label = "Foehn Idx", Unit = "[code]" }
             };
 
             var colWidths = fieldMeta.Select(f => Math.Max(f.Label.Length, 10)).ToArray();
@@ -251,7 +290,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             Console.WriteLine("Monthly Averages:");
 
             // Header row: labels
-            Console.Write($"{"EvaluationYear-Mo",dateColWidth} ");
+            Console.Write($"{"Year-Mo",dateColWidth} ");
             for (int i = 0; i < fieldMeta.Length; i++)
                 Console.Write($"| {fieldMeta[i].Label.PadRight(colWidths[i])} ");
             Console.WriteLine();
@@ -263,7 +302,8 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             Console.WriteLine();
 
             // Separator
-            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => f.Label.Length + 3 + 1)));
+            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => colWidths[Array.IndexOf(fieldMeta, f)] + 3)));
+
 
             // Data rows with year separator
             int? lastYear = null;
@@ -271,7 +311,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             {
                 if (lastYear != null && avg.Year != lastYear)
                 {
-                    Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => f.Label.Length + 3 + 1)));
+                    Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => colWidths[Array.IndexOf(fieldMeta, f)] + 3)));
                 }
 
                 lastYear = avg.Year;
@@ -291,7 +331,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             }
 
             // Print separator line before printing annual averages
-            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => f.Label.Length + 3 + 1)));
+            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => colWidths[Array.IndexOf(fieldMeta, f)] + 3)));
 
             // Data rows
             foreach (var avg in annualAverages)
@@ -311,7 +351,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             }
 
             // Print separator line before overall average
-            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => f.Label.Length + 3 + 1)));
+            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => colWidths[Array.IndexOf(fieldMeta, f)] + 3)));
 
             // Print overall average row
             Console.Write($"{"Overall",dateColWidth} ");
@@ -344,7 +384,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             Console.WriteLine();
 
             // Separator
-            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => f.Label.Length + 3 + 1)));
+            Console.WriteLine(new string('-', dateColWidth + 1 + fieldMeta.Sum(f => colWidths[Array.IndexOf(fieldMeta, f)] + 3)));
 
             // Data rows
             foreach (var avg in monthlyAveragesByMonth)
@@ -363,6 +403,78 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
 
                 Console.WriteLine();
             }
+        }
+
+        // Helper to compute average, returns null if no valid data
+        internal static double? SafeAverage(IEnumerable<double?> values)
+        {
+#pragma warning disable CS8629
+            var valid = values.Where(v => v.HasValue && !double.IsNaN(v.Value)).Select(v => v.Value!).ToList();
+#pragma warning restore CS8629
+            return valid.Count > 0 ? valid.Average() : (double?)null;
+        }
+
+        internal static double? SafeMax(IEnumerable<double?> values)
+        {
+#pragma warning disable CS8629
+            var valid = values.Where(v => v.HasValue && !double.IsNaN(v.Value)).Select(v => v.Value!).ToList();
+#pragma warning restore CS8629
+            return valid.Count > 0 ? valid.Max() : (double?)null;
+        }
+
+        // Helper to compute sum, returns null if no valid data
+        internal static double? SafeSum(IEnumerable<double?> values)
+        {
+            var valid = values.Where(v => v.HasValue && !double.IsNaN(v.Value)).Select(v => v.Value!).ToList();
+            return valid.Count > 0 ? valid.Sum() : (double?)null;
+        }
+
+        // Helper to compute vector average for wind direction
+        internal static double? SafeVectorAverageWindDirection(IEnumerable<WeatherCsvRecord> records)
+        {
+            var vectors = records
+                .Where(r => r.WindDirection.HasValue && r.WindSpeedVectorial10min.HasValue && !double.IsNaN(r.WindDirection.Value) && !double.IsNaN(r.WindSpeedVectorial10min.Value))
+                .Select(r => new { Speed = r.WindSpeedVectorial10min.Value, Direction = r.WindDirection.Value * Math.PI / 180.0 }) // Convert direction to radians
+                .ToList();
+
+            if (vectors.Count == 0)
+                return null;
+
+            // Sum of U (East-West) and V (North-South) components
+            var sumU = vectors.Sum(v => v.Speed * Math.Sin(v.Direction));
+            var sumV = vectors.Sum(v => v.Speed * Math.Cos(v.Direction));
+
+            // Check for a near-zero vector magnitude to avoid undefined direction
+            if (Math.Abs(sumU) < 1e-10 && Math.Abs(sumV) < 1e-10)
+                return null; // Or 0, depending on desired behavior for calm/opposing winds
+
+            var avgU = sumU / vectors.Count;
+            var avgV = sumV / vectors.Count;
+
+            var avgDirectionRad = Math.Atan2(avgU, avgV);
+            var avgDirectionDeg = avgDirectionRad * 180.0 / Math.PI;
+
+            // Convert from mathematical angle to meteorological angle (0-360°)
+            return (avgDirectionDeg + 360) % 360;
+        }
+
+        private static string FormatValue(object? value, int width)
+        {
+            if (value == null)
+                return "n/a".PadLeft(width);
+
+            if (value is double d)
+                return d.ToString("0.00").PadLeft(width);
+
+            if (value is double?)
+            {
+                var nullable = (double?)value;
+                return nullable.HasValue
+                    ? nullable.Value.ToString("0.00").PadLeft(width)
+                    : "n/a".PadLeft(width);
+            }
+
+            return "n/a".PadLeft(width);
         }
     }
 }
