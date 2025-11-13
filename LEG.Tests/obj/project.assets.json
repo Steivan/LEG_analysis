@@ -868,6 +868,42 @@
           "bin/placeholder/LEG.CoreLib.Abstractions.dll": {}
         }
       },
+      "LEG.CoreLib.DataSource.Csv/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.CoreLib": "1.0.0",
+          "LEG.CoreLib.Abstractions": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LEG.CoreLib.DataSource.Csv.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.CoreLib.DataSource.Csv.dll": {}
+        }
+      },
+      "LEG.CoreLib.SampleData/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "LEG.Common": "1.0.0",
+          "LEG.CoreLib": "1.0.0",
+          "LEG.CoreLib.Abstractions": "1.0.0",
+          "LEG.HorizonProfiles.Abstractions": "1.0.0",
+          "LEG.HorizonProfiles.Client": "1.0.0",
+          "LEG.MeteoSwiss.Abstractions": "1.0.0",
+          "LEG.MeteoSwiss.Client": "1.0.0",
+          "LEG.SwissTopo.Abstractions": "1.0.0",
+          "LEG.SwissTopo.Client": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/LEG.CoreLib.SampleData.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/LEG.CoreLib.SampleData.dll": {}
+        }
+      },
       "LEG.E3Dc.Abstractions/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
@@ -980,6 +1016,12 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
+          "LEG.CoreLib.Abstractions": "1.0.0",
+          "LEG.CoreLib.DataSource.Csv": "1.0.0",
+          "LEG.CoreLib.SampleData": "1.0.0",
+          "LEG.E3Dc.Client": "1.0.0",
+          "LEG.HorizonProfiles.Client": "1.0.0",
+          "LEG.MeteoSwiss.Client": "1.0.0",
           "LEG.PV.Core.Models": "1.0.0"
         },
         "compile": {
@@ -2289,6 +2331,16 @@
       "type": "project",
       "path": "../LEG.CoreLib.Abstractions/LEG.CoreLib.Abstractions.csproj",
       "msbuildProject": "../LEG.CoreLib.Abstractions/LEG.CoreLib.Abstractions.csproj"
+    },
+    "LEG.CoreLib.DataSource.Csv/1.0.0": {
+      "type": "project",
+      "path": "../LEG.CoreLib.DataSource.Csv/LEG.CoreLib.DataSource.Csv.csproj",
+      "msbuildProject": "../LEG.CoreLib.DataSource.Csv/LEG.CoreLib.DataSource.Csv.csproj"
+    },
+    "LEG.CoreLib.SampleData/1.0.0": {
+      "type": "project",
+      "path": "../LEG.CoreLib.SampleData/LEG.CoreLib.SampleData.csproj",
+      "msbuildProject": "../LEG.CoreLib.SampleData/LEG.CoreLib.SampleData.csproj"
     },
     "LEG.E3Dc.Abstractions/1.0.0": {
       "type": "project",

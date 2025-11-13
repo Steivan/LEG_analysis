@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LEG.OxyPlotHelper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+df1b7296bce99f97f333a70bced3e0d2e144f8a9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c3dce25ac1cfa7221eb70d86c792021cc852760a")]
 [assembly: System.Reflection.AssemblyProductAttribute("LEG.OxyPlotHelper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LEG.OxyPlotHelper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

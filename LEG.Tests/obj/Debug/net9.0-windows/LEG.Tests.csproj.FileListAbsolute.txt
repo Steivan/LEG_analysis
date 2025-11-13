@@ -209,3 +209,7 @@ C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.PV.Core.Models.dll
 C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.PV.Data.Processor.dll
 C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.PV.Core.Models.pdb
 C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.PV.Data.Processor.pdb
+C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.CoreLib.DataSource.Csv.dll
+C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.CoreLib.SampleData.dll
+C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.CoreLib.DataSource.Csv.pdb
+C:\code\LEG_analysis\LEG.Tests\bin\Debug\net9.0-windows\LEG.CoreLib.SampleData.pdb

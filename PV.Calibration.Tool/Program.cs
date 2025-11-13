@@ -9,33 +9,42 @@ using LEG.MeteoSwiss.Client.MeteoSwiss;
 
 //ProcessSyntheticModelData();
 
-CalibrateE3DcData(1, "Senn");
-//CalibrateE3DcData(2, "SennV");
+await CalibrateE3DcData(1, "Senn");
+//await CalibrateE3DcData(2, "SennV");
 
-void CalibrateE3DcData(int folder, string label)
+//ProcessSyntheticModelData();
+
+async Task CalibrateE3DcData(int folder, string label)
 {
-    var pvDataRecords = E3DcLoadPeriodRecords.LoadRecords(folder);
-    Console.WriteLine($"Senn : {pvDataRecords.Count} records from {pvDataRecords.First().Timestamp} to {pvDataRecords.Last().Timestamp}");
+    const double installedPower = 8.4; // [kWp]
 
-    //var filePath = MeteoSwissConstants.OgdSmnTowerSamplePath + MeteoSwissConstants.OgdSmnTowerSampleFile;
+    var dataImporter = new DataImporter();
+    var (pvRecords, modelValidRecords) = await dataImporter.ImportE3DcData(folder);
 
-    // Initialize list with valid ground stations
-    MeteoSwissHelper.ValidGroundStations = MeteoSwissHelper.GetBaselineGroundStations();
+    var defaultPriors = new PvPriors();
+    var defaultModelParams = GetDefaultPriorModelParams();
 
-    // Load station metadata
-    var groundStationsMetaDict = StationMetaImporter.Import(MeteoSwissConstants.GroundStationsMetaFile);
+    var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
+            pvRecords,
+            installedPower,
+            defaultPriors,
+            defaultModelParams,
+            fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
+            snowParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.8),
+            outlierParams: (periodThreshold: 1.5, hourlyThreshold: 1.5, blockThreshold: 1.5)
+            );
 
-    var stationId = "SMA";
-    // Act
-    var weatherRecords = MeteoAggregator.GetFilteredRecords(
-        stationId,
-        groundStationsMetaDict[stationId],
-        2010,
-        2025,
-        "t",
-        false
+    ProcessPvData(
+        installedPower,
+        pvRecords,
+        modelValidRecords: modelValidRecords,
+        filteredValidRecors,
+        defaultModelParams,
+        defaultPriors,
+        tolerance: 1e-6,
+        maxIterations: 10,
+        initialMeanSquaredError
         );
-    Console.WriteLine($"Station : {stationId} {weatherRecords.Count} records from {weatherRecords.First().ReferenceTimestamp} to {weatherRecords.Last().ReferenceTimestamp}");
 }
 
 void ProcessSyntheticModelData(int simulationsPeriod = 5)
