@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<OutputType>Library</OutputType>
+		<RootNamespace>LEG.CoreLib</RootNamespace>
+		<AssemblyName>LEG.CoreLib</AssemblyName>
+		<Version>1.0.0</Version>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="NetTopologySuite" Version="2.6.0" />
+		<PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="Dapper" Version="2.1.66" />
+		<PackageReference Include="OxyPlot.Core" Version="2.2.0" />
+		<PackageReference Include="OxyPlot.WindowsForms" Version="2.2.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\LEG.Common\LEG.Common.csproj" />
+		<ProjectReference Include="..\LEG.CoreLib.Abstractions\LEG.CoreLib.Abstractions.csproj" />
+		<ProjectReference Include="..\LEG.HorizonProfiles.Abstractions\LEG.HorizonProfiles.Abstractions.csproj" />
+		<ProjectReference Include="..\LEG.MeteoSwiss.Abstractions\LEG.MeteoSwiss.Abstractions.csproj" />
+		<ProjectReference Include="..\LEG.MeteoSwiss.Client\LEG.MeteoSwiss.Client.csproj" />
+		<ProjectReference Include="..\LEG.SwissTopo.Abstractions\LEG.SwissTopo.Abstractions.csproj" />
+		<ProjectReference Include="..\LEG.SwissTopo.Client\LEG.SwissTopo.Client.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+</Project>

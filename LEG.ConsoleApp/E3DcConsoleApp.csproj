@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LEG.Common\LEG.Common.csproj" />
+    <ProjectReference Include="..\LEG.CoreLib.Abstractions\LEG.CoreLib.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.CoreLib\LEG.CoreLib.csproj" />
+    <ProjectReference Include="..\LEG.E3Dc.Abstractions\LEG.E3Dc.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.E3Dc.Client\LEG.E3Dc.Client.csproj" />
+    <ProjectReference Include="..\LEG.HorizonProfiles.Abstractions\LEG.HorizonProfiles.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.HorizonProfiles.Client\LEG.HorizonProfiles.Client.csproj" />
+    <ProjectReference Include="..\LEG.MeteoSwiss.Abstractions\LEG.MeteoSwiss.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.MeteoSwiss.Client\LEG.MeteoSwiss.Client.csproj" />
+    <ProjectReference Include="..\LEG.SwissTopo.Abstractions\LEG.SwissTopo.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.SwissTopo.Client\LEG.SwissTopo.Client.csproj" />
+  </ItemGroup>
+
+</Project>

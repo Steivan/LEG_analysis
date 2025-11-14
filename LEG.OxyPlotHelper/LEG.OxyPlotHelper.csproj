@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>LEG.OxyPlotHelper</RootNamespace>
+		<AssemblyName>LEG.OxyPlotHelper</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="OxyPlot.Core" Version="2.2.0" />
+		<PackageReference Include="OxyPlot.WindowsForms" Version="2.2.0" />
+	</ItemGroup>
+
+</Project>

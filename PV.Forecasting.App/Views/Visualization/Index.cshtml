@@ -1,0 +1,23 @@
+@model PV.Forecasting.App.Models.VisualizationViewModel
+@{
+    ViewData["Title"] = "Time Series Visualization";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-controller="Visualization" asp-action="Index" method="get">
+    <div style="margin-bottom: 20px;">
+        <span>Time Series:</span>
+        <select asp-for="SelectedTimeSeries" asp-items="Model.TimeSeriesOptions"></select>
+
+        <span>View:</span>
+        <select asp-for="SelectedView" asp-items="Model.ViewOptions"></select>
+
+        <input type="submit" value="Update" />
+    </div>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.PlotHtml))
+{
+    @Html.Raw(Model.PlotHtml)
+}

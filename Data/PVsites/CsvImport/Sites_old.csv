@@ -1,0 +1,46 @@
+SystemName,State, Address,Zip, Town, Lon, Lat,UtcShift, MeteoId, SunRiseId, SunSetId, Inverters, Roofs, Consumers
+default,study, default, default, default,10,47,-1, default_meteo, rise_default, set_default,1,1,0
+Bachlenstr,plan, Bachlenstr. 30,8124, Maur,8.67,47.34,-1, Maur_meteo, rise_default, set_default,1,2,1
+Bagnera,plan, Bagnera 187,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Bagnera, set_Bagnera,1,2,0
+Berger,plan, Lohwiesstr. 15,8123, Ebmatingen,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,2,0
+Bos-cha,plan, Bos-cha,7550, Bos-cha,10.17,46.78,-1, Bos_cha_meteo_all, rise_Bos-cha, set_Bos-cha,1,2,0
+Carla,study, Seglias xxx, 7xxx, Sils,9.77,46.43,-1, Clozza_meteo, rise_default, set_default,1,1,0
+Central,built, Stradun xxx,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Bagnera, set_Bagnera,1,1,0
+Clozza,built, Stradun 248,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Bagnera, set_Bagnera,1,2,0
+Crittin,plan, Bundtacherstr. 4a,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,4,0
+Dietenberg,built, Dietenberg 19,8563, Ligist,15.22,47,-1, Ligist_meteo, rise_default, set_default,1,2,0
+Ftan_1,plan, tbd, 75xx, Ftan,10.26,46.8,-1, Clozza_meteo, rise_Ftan, set_Ftan,1,2,0
+Ftan_2,plan, tbd, 75xx, Ftan,10.26,46.8,-1, Clozza_meteo, rise_Ftan, set_Ftan,1,1,0
+Fischlin,plan, Im Heuberg 3,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Fridlimatt,plan, Fridlimattstr.11&13,8122, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,4,0
+Freihofstr_22,plan, Freihofstr. 22,8700, Küsnacht,8.58,47.3,-1, Maur_meteo, rise_default, set_default,1,1,6
+Fuorcla,built, tbd, 7xxx, Samedan,9.84,46.43,-1, Clozza_meteo, rise_default, set_default,1,2,0
+GÃ¤ndli,study, Guldenenstr. 7, xxxx, Walenstadt,9.25,47.13,-1, default_meteo, rise_default, set_default,1,1,0
+Guldenen,built, Address,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,2,9
+Helbling,study, Wassbergstr. 12,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Hugelshofer,plan, Bachlenstr. 30,8124, Maur,8.67,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+ImGrund3-5,plan, Im Grund 3-5,8123, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,4,0
+ImGrund7-9,plan, Im Grund 7-9,8123, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,2,0
+Katzenfuss,plan, Auwisstrasse 11,8127, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,3,0
+Liuns1,plan, Liuns,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Vi, set_Vi,1,6,0
+Liuns2,plan, Liuns,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Vi, set_Vi,1,2,0
+Lohmann,plan, Bundtacher 9,8127, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,2,0
+Lotz,plan, Hohrütistr,8127, Küsnacht,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Maeder,plan, Zollikonstr. 29,8122, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,2,0
+Meier,plan, Alter Seeweg 17,8124, Maur,8.67,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Morf,built, tbd,8124, Maur,8.67,47.34,-1, Maur_meteo, rise_default, set_default,1,1,0
+Oeller,plan, Leeacherstr. 65,8123, Ebmatingen,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,4,0
+Pfadiheim,built, Wassbergstr. 70,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Pimunt,study, Pimunt 276,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Bagnera, set_Bagnera,1,2,0
+Reber,plan, Zollikonstr. 24,8122, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,8,0
+Rohner,built, Im Tiergärtli 16,8124, Maur,8.67,47.34,-1, Maur_meteo, rise_default, set_default,1,3,1
+Senn,built, Hubrainstr. 46,8124, Maur,8.67,47.34,-1, Senn_meteo, rise_default, set_default,1,2,1
+Senn_V,built, tbd,8124, Maur,8.67,47.34,-1, Senn_meteo, rise_default, set_default,1,2,1
+Stemmer,plan, Bundtstr. 18,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,2,4,12
+Studenrain,built, Zollikonstr. 31,8122, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,2,0
+Unterdorf36,plan, Unterdorfstr. 36,8124, Maur,8.63,47.35,-1, Maur_meteo, rise_default, set_default,1,2,0
+vanRijn,built, Schulhausstr. 7,8127, Maur,8.6,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Viletta,plan, Liuns,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Vi, set_Vi,1,1,0
+Vollrath,built, Unterdorfstr. 9,8124, Maur,8.67,47.35,-1, Maur_meteo, rise_default, set_default,1,1,0
+Walter,plan, Tof 751,7550, Scuol,10.3,46.8,-1, Clozza_meteo, rise_Vi, set_Vi,1,2,0
+ScuolSolar,plan, Salaniva,7550, Scuol,10.3,46.8,-1, Solar_meteo, rise_Solar, set_Solar,1,1,0

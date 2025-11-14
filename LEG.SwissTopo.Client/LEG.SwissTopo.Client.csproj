@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>LEG.SwissTopo.Client</RootNamespace>
+    <AssemblyName>LEG.SwissTopo.Client</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetTopologySuite" Version="2.6.0" />
+    <PackageReference Include="NetTopologySuite.Features" Version="2.2.0" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+    <PackageReference Include="NetTopologySuite.IO.PostGis" Version="2.1.0" />
+    <PackageReference Include="NetTopologySuite.IO.SqlServerBytes" Version="2.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LEG.Common\LEG.Common.csproj" />
+    <ProjectReference Include="..\LEG.SwissTopo.Abstractions\LEG.SwissTopo.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
