@@ -1,0 +1,8 @@
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.csproj.AssemblyReference.cache
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\rpswa.dswa.cache.json
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.GeneratedMSBuildEditorConfig.editorconfig
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.AssemblyInfoInputs.cache
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.AssemblyInfo.cs
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.csproj.CoreCompileInputs.cache
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.MvcApplicationPartsAssemblyInfo.cache
+C:\code\LEG_analysis\PV.Forecasting.App\obj\Debug\net9.0\PV.Forecasting.App.sourcelink.json
