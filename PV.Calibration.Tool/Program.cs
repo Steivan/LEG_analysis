@@ -1,25 +1,23 @@
-﻿using LEG.E3Dc.Client;
+﻿using MathNet.Numerics.Distributions;
 using LEG.PV.Data.Processor;
 using PV.Calibration.Tool;
 using static LEG.PV.Core.Models.PvJacobian;
 using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Data.Processor.DataRecords;
 using static PV.Calibration.Tool.BayesianCalibrator;
-using LEG.MeteoSwiss.Client.MeteoSwiss;
 
 //ProcessSyntheticModelData();
 
 await CalibrateE3DcData(1, "Senn");
-//await CalibrateE3DcData(2, "SennV");
+await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
 
 async Task CalibrateE3DcData(int folder, string label)
 {
-    const double installedPower = 8.4; // [kWp]
-
     var dataImporter = new DataImporter();
-    var (pvRecords, modelValidRecords) = await dataImporter.ImportE3DcData(folder);
+    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(folder, meteoDataLag: 0); // meteoDataLag in multiples of 5 minutes
+    var installedPower = installedKwP; // / periodsPerHour;
 
     var defaultPriors = new PvPriors();
     var defaultModelParams = GetDefaultPriorModelParams();
@@ -31,10 +29,11 @@ async Task CalibrateE3DcData(int folder, string label)
             defaultModelParams,
             fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
             snowParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.8),
-            outlierParams: (periodThreshold: 1.5, hourlyThreshold: 1.5, blockThreshold: 1.5)
+            outlierParams: (periodThreshold: 2.5, hourlyThreshold: 2.0, blockThreshold: 1.5)
             );
 
     ProcessPvData(
+        siteId,
         installedPower,
         pvRecords,
         modelValidRecords: modelValidRecords,
@@ -56,7 +55,9 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     u1: 0.4,
     lDegr: 0.01
     );
-    var installedPower = 10.0;      // [kWp]
+    var siteId = "SyntheticModelSite";
+    var installedKwP = 10.0;      // [kWp]
+    var installedPower = installedKwP * 1000;
 
     var (pvRecords, modelValidRecords) = DataSimulator.GetPvSimulatedRecords(thetaModel, installedPower, simulationsPeriod: simulationsPeriod);
 
@@ -74,6 +75,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
             );
 
     ProcessPvData(
+        siteId,
         installedPower,
         pvRecords,
         modelValidRecords: null,
@@ -141,6 +143,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
 }
 
 void ProcessPvData(
+    string siteId,
     double installedPower,
     List<PvRecord> pvRecords,
     List<bool>? modelValidRecords,
@@ -174,6 +177,9 @@ void ProcessPvData(
         U1Mean = meanU1,
         U1StdDev = sigmaU1
     };
+
+    Console.WriteLine();
+    Console.WriteLine($"PV Site: {siteId} with {installedPower / 1000:F2} kWp");
     Console.WriteLine("Bayesian Calibration: default priors / no filter");
     var (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
         pvRecords: pvRecords,
@@ -246,7 +252,7 @@ void ProcessPvData(
         thetaCalibratedList[^1],
         pCumulative);
     Console.WriteLine();
-    PrintQuantiles(pCumulative, quantiles);
+    PrintQuantiles(pCumulative, quantiles, 0, meanError);
 }
 
 // Helper functions for printing results
@@ -283,13 +289,14 @@ void PrintStatistics(double minError, double maxError, double meanError, double 
     Console.WriteLine($"Bin Size  : {binSize:F5}");
     Console.WriteLine();
 }
-void PrintQuantiles(List<double> pCumulative, List<double> quantiles)
+void PrintQuantiles(List<double> pCumulative, List<double> quantiles, double mean, double stdDev)
 {
+    var normal = new Normal(mean, stdDev);
     Console.WriteLine("Quantiles");
-    Console.WriteLine($"{"probability",12} {"quantile",12}");
+    Console.WriteLine($"{"probability",12} {"quantile",12} {"inverse N",12}");
     for (int i = 0; i < pCumulative.Count; i++)
     {
-        Console.WriteLine($"{pCumulative[i],12:P3} {quantiles[i],12:F5}");
+        Console.WriteLine($"{pCumulative[i],12:P3} {quantiles[i],12:F5} {normal.InverseCumulativeDistribution(pCumulative[i]),12:F5}");
     }
     Console.WriteLine();
 }

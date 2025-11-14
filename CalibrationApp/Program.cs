@@ -94,7 +94,7 @@ namespace CalibrationApp
             string sampleId, 
             int evaluationYear = 2025, 
             int minutesPerPeriod = 10,
-            int shiftTimeSupport = 1,
+            int shiftTimeSupport = 0,           // E3Dc: new data download on 13.11.2025 -> no shift
             bool siteAggregate = false)
         {
             var siteModel = await PvSiteModelGetters.GetSiteDataModelAsync(sampleId);

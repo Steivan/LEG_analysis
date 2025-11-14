@@ -38,7 +38,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 int evaluationStartHour = 4,
                 int evaluationEndHour = 22,
                 int minutesPerPeriod = 10,
-                int shiftTimeSupport = 0,
+                double shiftTimeSupport = 0,
                 bool print = false)
         {
             // Initialize horizon data: new approach for evaluating the time of sunrise and sunset 
@@ -141,7 +141,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 }
             }
 
-            var deltaMinutes = shiftTimeSupport * 60; // shift in minutes
+            var deltaMinutes = (int)(shiftTimeSupport * 60); // shift in minutes
             DateTime[] timeStamps = [.. Enumerable.Range(0, dimensionAnnualSupport)
                 .Select(i => date0.AddMinutes(deltaMinutes + minutesPerPeriod * i))];
 

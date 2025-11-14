@@ -155,6 +155,10 @@ namespace LEG.PV.Data.Processor
                         var hourlyIndex = periodIndex / periodsPerHour;
                         var blockIndex = periodIndex / periodsPerBlock;
                         var recordIndex = startIndex + periodIndex;
+                        if (recordIndex < 0 || recordIndex >= recordsCount)
+                        {
+                            continue;
+                        }
                         if (periodRatios[periodIndex] > periodThreshold || hourlyRatios[hourlyIndex] > hourlyThreshold || blockRatios[blockIndex] > blockThreshold)
                         {
                             initialValidRecords[recordIndex] = false;

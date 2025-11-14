@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HorizonProfiles")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c3dce25ac1cfa7221eb70d86c792021cc852760a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+17fc80e246ecf2e8f817071e8dc786016ee537b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("HorizonProfiles")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HorizonProfiles")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
