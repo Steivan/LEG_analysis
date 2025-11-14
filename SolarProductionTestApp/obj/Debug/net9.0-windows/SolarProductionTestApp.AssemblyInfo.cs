@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SolarProductionTestApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+17fc80e246ecf2e8f817071e8dc786016ee537b7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+64b87778d04503323dc93803239208d303634e44")]
 [assembly: System.Reflection.AssemblyProductAttribute("SolarProductionTestApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SolarProductionTestApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

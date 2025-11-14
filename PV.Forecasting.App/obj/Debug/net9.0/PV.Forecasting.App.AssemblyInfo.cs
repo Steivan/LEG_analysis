@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright ©  2025")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e1b4efdc54c68b6ba4c069dcc4da9b3f34f7a95")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+64b87778d04503323dc93803239208d303634e44")]
 [assembly: System.Reflection.AssemblyProductAttribute("PV.Forecasting.App")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PV.Forecasting.App")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
