@@ -1,11 +1,11 @@
 ﻿using LEG.CoreLib.SampleData;
 using LEG.CoreLib.SampleData.SampleData;
-using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.E3Dc.Client;
 using LEG.HorizonProfiles.Client;
-using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.PV.Data.Processor.DataRecords;
+using LEG.CoreLib.SolarCalculations.Calculations;
+using LEG.MeteoSwiss.Abstractions;
 
 namespace LEG.PV.Data.Processor
 {
