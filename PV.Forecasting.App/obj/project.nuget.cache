@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "dgSpecHash": "2txaRx2LRY4=",
+  "success": false,
+  "projectFilePath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Error",
+      "message": "Failed to download package 'System.Diagnostics.EventLog.10.0.0' from 'https://api.nuget.org/v3-flatcontainer/system.diagnostics.eventlog/10.0.0/system.diagnostics.eventlog.10.0.0.nupkg'.\r\nThe ServicePointManager does not support proxies with the https scheme.",
+      "projectPath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "filePath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "targetGraphs": []
+    },
+    {
+      "code": "Undefined",
+      "level": "Error",
+      "message": "Failed to download package 'System.Security.Cryptography.ProtectedData.10.0.0' from 'https://api.nuget.org/v3-flatcontainer/system.security.cryptography.protecteddata/10.0.0/system.security.cryptography.protecteddata.10.0.0.nupkg'.\r\nThe ServicePointManager does not support proxies with the https scheme.",
+      "projectPath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "filePath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "targetGraphs": []
+    },
+    {
+      "code": "Undefined",
+      "level": "Error",
+      "message": "Failed to download package 'System.Runtime.Caching.8.0.0' from 'https://api.nuget.org/v3-flatcontainer/system.runtime.caching/8.0.0/system.runtime.caching.8.0.0.nupkg'.\r\nThe ServicePointManager does not support proxies with the https scheme.",
+      "projectPath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "filePath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "Failed to retrieve information about 'System.Diagnostics.EventLog' from remote source 'https://api.nuget.org/v3-flatcontainer/system.diagnostics.eventlog/index.json'.\r\n  The ServicePointManager does not support proxies with the https scheme.",
+      "projectPath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "filePath": "C:\\code\\LEG_analysis\\PV.Forecasting.App\\PV.Forecasting.App.csproj",
+      "libraryId": "System.Diagnostics.EventLog",
+      "targetGraphs": []
+    }
+  ]
+}
