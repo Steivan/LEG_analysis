@@ -1,6 +1,0 @@
-SystemName, Ownwer, na, Jan, Feb, Mar, Apr, Mai, Jun, Jul, Aug, Sep, Okt, Nov, Dez
-a_flat,annual1, 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-a_household,annual2, 0, 36, 30, 33, 30, 28, 26, 27, 26, 28, 32, 33, 36
-a_general,annual3, 0, 36, 30, 33, 30, 28, 26, 27, 26, 28, 32, 33, 36
-a_heating,annual4, 0, 48, 41, 43, 39, 29, 20, 14, 12, 13, 25, 36, 45
-a_commerce,annual5, 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
