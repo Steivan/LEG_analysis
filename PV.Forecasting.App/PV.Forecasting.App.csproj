@@ -3,6 +3,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <OutputPath>bin\</OutputPath>
+    <AssemblyTitle>PV.Forecasting.App</AssemblyTitle>
+    <Product>PV.Forecasting.App</Product>
+    <Copyright>Copyright ©  2025</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Web.Debug.config">
