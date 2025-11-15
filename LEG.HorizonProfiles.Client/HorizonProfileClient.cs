@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LEG.Common.Utils;
 using LEG.HorizonProfiles.Abstractions;
+using System.Globalization;
 
 namespace LEG.HorizonProfiles.Client
 {
@@ -100,7 +100,7 @@ namespace LEG.HorizonProfiles.Client
         private async Task<double> GetAverageElevationAsync(double lat, double lon, double diameterKm)
         {
             var points = GenerateCirclePoints(lat, lon, diameterKm);
-            var locations = string.Join("|", points.Select(p => $"{p.Lat},{p.Lon}"));
+            var locations = string.Join("|", points.Select(p => $"{p.Lat.ToString(CultureInfo.InvariantCulture)},{p.Lon.ToString(CultureInfo.InvariantCulture)}"));
             var url = $"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={_apiKey}";
             var response = await RetryApiCallAsync(url);
             var json = JsonDocument.Parse(response);
