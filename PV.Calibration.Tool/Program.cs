@@ -16,7 +16,7 @@ ProcessSyntheticModelData();
 async Task CalibrateE3DcData(int folder, string label)
 {
     var dataImporter = new DataImporter();
-    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(folder, meteoDataLag: 0); // meteoDataLag in multiples of 5 minutes
+    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(folder); // meteoDataLag in multiples of 5 minutes
     var installedPower = installedKwP; // / periodsPerHour;
 
     var defaultPriors = new PvPriors();

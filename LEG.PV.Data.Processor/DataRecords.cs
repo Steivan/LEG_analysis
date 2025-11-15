@@ -14,6 +14,13 @@ namespace LEG.PV.Data.Processor
             public double WindVelocity { get; init; }        // v_wind [m/s]
             public double Age { get; init; }                 // Age [years]
             public double MeasuredPower { get; init; }       // P_meas [W]
+            public double ComputedPower (PvModelParams modelParams, double installedPower, double age)       // P_meas [W]
+            {
+                return PvJacobian.EffectiveCellPower(installedPower, 
+                    GeometryFactor, Irradiation, AmbientTemp, WindVelocity, 
+                    age,
+                    ethaSys: modelParams.Etha, gamma: modelParams.Gamma, u0: modelParams.U0, u1: modelParams.U1, lDegr: modelParams.LDegr);
+            }
         }
 
         public record PvModelParams

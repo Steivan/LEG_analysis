@@ -17,10 +17,11 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower, 
             int periodsPerHour)> 
-            ImportE3DcData(int folder, int meteoDataLag = 0)
+            ImportE3DcData(int folder)
         {
             const string meteoStationId = "SMA";
             const int meteoDataOffset = 60;
+            int meteoDataLag = 10;
 
             // Fetch pvProduction records
             folder = 1 + (folder - 1) % 2;
@@ -128,30 +129,47 @@ namespace LEG.PV.Data.Processor
             string stationId, List<DateTime> supportTimeStamps, int shiftMeteoTimeStamps = 60)                 // shift in minutes UTC -> local time
         {
 
-            void AllocateMeteoDataContainers(int iSupport, int iMeteo, int supportCount, int meteoInterval, 
+            void AllocateMeteoDataContainers(int iSupport, int iMeteo, int supportCount, int meteoInterval, int supportInterval,
                 DateTime supportTimeStamp, DateTime meteoTimeStamp, WeatherCsvRecord leftRecord, 
                 double[] supportDirectIrradiation, double[] supportDiffuseIrradiation, double[] supportTemperature, double[] supportWindSpeed)
             {
-                var rightOverlapRatio = (double)(meteoTimeStamp.AddMinutes(meteoInterval) - supportTimeStamp).Minutes / meteoInterval;
-                rightOverlapRatio = Math.Max(0.0, Math.Min(1.0, rightOverlapRatio));
-                var leftOverlapRatio = 1.0 - rightOverlapRatio;
+                var rightOverlapRatio = 1.0;
+                var leftOverlapRatio = 0.0;
+                var iRight = iSupport;
+                var iLeft = iRight - 1;
+                if (meteoTimeStamp < supportTimeStamp)
+                {
+                    rightOverlapRatio = (double)(meteoTimeStamp.AddMinutes(meteoInterval) - supportTimeStamp).Minutes / meteoInterval;
+                    rightOverlapRatio = Math.Max(0.0, Math.Min(1.0, rightOverlapRatio));
+                    leftOverlapRatio = 1.0 - rightOverlapRatio;
+                }
+                else if (meteoTimeStamp > supportTimeStamp)
+                {
+                    leftOverlapRatio = (double)(supportTimeStamp.AddMinutes(supportInterval) - meteoTimeStamp).Minutes / meteoInterval;
+                    leftOverlapRatio = Math.Max(0.0, Math.Min(1.0, leftOverlapRatio));
+                    rightOverlapRatio = 1.0 - leftOverlapRatio;
+                    iLeft++;
+                    iRight++;
+                }
+
                 var priorDiffuseIrradiation = leftRecord.DiffuseRadiation ?? 0.0;
                 var priorDirectIrradiation = Math.Max(0.0, (leftRecord.GlobalRadiation ?? 0.0) - priorDiffuseIrradiation);
                 var priorTemperature = leftRecord.Temperature2m ?? 0.0;
                 var priorWindSpeed = leftRecord.WindSpeed10min_kmh ?? 0.0;
-                if (iSupport > 0 && leftOverlapRatio > 0)
+
+                if (iLeft >= 0 && iLeft < supportCount && leftOverlapRatio > 0)
                 {
-                    supportDirectIrradiation[iSupport - 1] += priorDirectIrradiation * leftOverlapRatio;
-                    supportDiffuseIrradiation[iSupport - 1] += priorDiffuseIrradiation * leftOverlapRatio;
-                    supportTemperature[iSupport - 1] += priorTemperature * leftOverlapRatio;
-                    supportWindSpeed[iSupport - 1] += priorWindSpeed * leftOverlapRatio;
+                    supportDirectIrradiation[iLeft] += priorDirectIrradiation * leftOverlapRatio;
+                    supportDiffuseIrradiation[iLeft] += priorDiffuseIrradiation * leftOverlapRatio;
+                    supportTemperature[iLeft] += priorTemperature * leftOverlapRatio;
+                    supportWindSpeed[iLeft] += priorWindSpeed * leftOverlapRatio;
                 }
-                if (iSupport < supportCount && rightOverlapRatio > 0)
+                if (iRight >= 0 && iRight < supportCount && rightOverlapRatio > 0)
                 {
-                    supportDirectIrradiation[iSupport] += priorDirectIrradiation * rightOverlapRatio;
-                    supportDiffuseIrradiation[iSupport] += priorDiffuseIrradiation * leftOverlapRatio;
-                    supportTemperature[iSupport] += priorTemperature * rightOverlapRatio;
-                    supportWindSpeed[iSupport] += priorWindSpeed * rightOverlapRatio;
+                    supportDirectIrradiation[iRight] += priorDirectIrradiation * rightOverlapRatio;
+                    supportDiffuseIrradiation[iRight] += priorDiffuseIrradiation * rightOverlapRatio;
+                    supportTemperature[iRight] += priorTemperature * rightOverlapRatio;
+                    supportWindSpeed[iRight] += priorWindSpeed * rightOverlapRatio;
                 }
             }
 
@@ -203,14 +221,14 @@ namespace LEG.PV.Data.Processor
             }
             while (iSupport < supportCount && iMeteo < meteoCount && alignedMeteoTimeStamps[iMeteo] < upperBound)
             {
-                AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval,
+                AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval, supportInterval,
                     supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], weatherRecords[iMeteo],
                     supportDirectIrradiation, supportDiffuseIrradiation, supportTemperature, supportWindSpeed);
                 iSupport++;
                 while (iSupport < supportCount && iMeteo < meteoCount - 1 && alignedMeteoTimeStamps[iMeteo].AddMinutes(meteoInterval) <= supportTimeStamps[iSupport])
                 {
                     iMeteo++;
-                    AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval,
+                    AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval, supportInterval,
                         supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], weatherRecords[iMeteo],
                         supportDirectIrradiation, supportDiffuseIrradiation, supportTemperature, supportWindSpeed);
                 }

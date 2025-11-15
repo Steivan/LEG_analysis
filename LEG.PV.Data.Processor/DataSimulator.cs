@@ -6,7 +6,7 @@ namespace LEG.PV.Data.Processor;
 
 public class DataSimulator
 {
-    public static (List<PvRecord> dataRecords, List<bool> validRecords) GetPvSimulatedRecords(PvModelParams pvVarams, double installedPower, double simulationsPeriod = 5)
+    public static (List<PvRecord> dataRecords, List<bool> validRecords) GetPvSimulatedRecords(PvModelParams pvParams, double installedPower, double simulationsPeriod = 5)
     {
         const double daysPerYears = 365.2422;
         const int hoursPerDay = 24;
@@ -56,11 +56,11 @@ public class DataSimulator
         var pHourOutlier   = 0.001;
         var pBlockOutlier  = 0.001;
 
-        double etha = pvVarams.Etha;
-        double gamma = pvVarams.Gamma;
-        double u0 = pvVarams.U0;
-        double u1 = pvVarams.U1;
-        double lDegr = pvVarams.LDegr;
+        double etha = pvParams.Etha;
+        double gamma = pvParams.Gamma;
+        double u0 = pvParams.U0;
+        double u1 = pvParams.U1;
+        double lDegr = pvParams.LDegr;
 
         // initial values
         double irradiation = 500;
@@ -173,6 +173,7 @@ public class DataSimulator
                                 MeasuredPower = measuredPower
                             }
                             );
+                        var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower, age);
 
                         var isValidRecord = !isSnowyDay && !isFoggyPeriod && !isOutlier;
                         validRecords.Add(isValidRecord);

@@ -16,12 +16,12 @@ namespace PV.Forecasting.App.Controllers
         private static List<PvRecord>? _pvRecords;
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedView = "15-min", int? SelectedYear = null)
+        public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedPeriod = "Year", DateTime? SelectedDate = null, string SelectedView = "15-min")
         {
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(1, meteoDataLag: 0);
+                var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(1);
                 _pvRecords = pvRecords;
             }
 
@@ -30,16 +30,20 @@ namespace PV.Forecasting.App.Controllers
                 SelectedTimeSeries = GetTimeSeriesOptions().Select(o => o.Value).ToList()!;
             }
 
-            var minYear = _pvRecords.Min(r => r.Timestamp.Year);
-            var maxYear = _pvRecords.Max(r => r.Timestamp.Year);
-            var yearOptions = Enumerable.Range(minYear, maxYear - minYear + 1)
-                                        .Select(y => new SelectListItem(y.ToString(), y.ToString()))
-                                        .ToList();
+            var minDate = _pvRecords.Min(r => r.Timestamp.Date);
+            var maxDate = _pvRecords.Max(r => r.Timestamp.Date);
+            var currentDate = SelectedDate ?? minDate;
 
-            var currentYear = SelectedYear ?? minYear;
-            var recordsForYear = _pvRecords.Where(r => r.Timestamp.Year == currentYear).ToList();
+            var (startDate, endDate) = GetDateRange(currentDate, SelectedPeriod, minDate, maxDate);
+            var recordsForPeriod = _pvRecords.Where(r => r.Timestamp >= startDate && r.Timestamp < endDate).ToList();
 
-            var plotHtmls = CreateSubplots(recordsForYear, SelectedTimeSeries, SelectedView);
+            var viewOptions = GetFilteredViewOptions(SelectedPeriod);
+            if (!viewOptions.Any(v => v.Value == SelectedView))
+            {
+                SelectedView = viewOptions.First().Value!;
+            }
+
+            var plotHtmls = CreateSubplots(recordsForPeriod, SelectedTimeSeries, SelectedView, startDate, endDate);
 
             var model = new VisualizationViewModel
             {
@@ -47,17 +51,37 @@ namespace PV.Forecasting.App.Controllers
                 SelectedTimeSeries = SelectedTimeSeries,
                 SelectedView = SelectedView,
                 TimeSeriesOptions = GetTimeSeriesOptions(),
-                ViewOptions = GetViewOptions(),
-                YearOptions = yearOptions,
-                SelectedYear = currentYear,
-                MinYear = minYear,
-                MaxYear = maxYear
+                ViewOptions = viewOptions,
+                SelectedPeriod = SelectedPeriod,
+                PeriodOptions = GetPeriodOptions(),
+                SelectedDate = currentDate,
+                MinYear = minDate.Year,
+                MaxYear = maxDate.Year
             };
 
             return View(model);
         }
 
-        private Dictionary<string, string> CreateSubplots(List<PvRecord> records, List<string> timeSeriesNames, string viewName)
+        private (DateTime, DateTime) GetDateRange(DateTime date, string period, DateTime minDate, DateTime maxDate)
+        {
+            return period switch
+            {
+                "Day" => (date.Date, date.Date.AddDays(1)),
+                "Week" => (GetStartOfWeek(date), GetStartOfWeek(date).AddDays(7)),
+                "Month" => (new DateTime(date.Year, date.Month, 1), new DateTime(date.Year, date.Month, 1).AddMonths(1)),
+                "Year" => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 1, 1).AddYears(1)),
+                "All" => (minDate, maxDate.AddDays(1)),
+                _ => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 1, 1).AddYears(1))
+            };
+        }
+
+        private DateTime GetStartOfWeek(DateTime date)
+        {
+            int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+            return date.AddDays(-1 * diff).Date;
+        }
+
+        private Dictionary<string, string> CreateSubplots(List<PvRecord> records, List<string> timeSeriesNames, string viewName, DateTime startDate, DateTime endDate)
         {
             var plotHtmls = new Dictionary<string, string>();
             if (records is null || !records.Any()) return plotHtmls;
@@ -77,8 +101,8 @@ namespace PV.Forecasting.App.Controllers
 
                 var title = plt.Add.Text(timeSeriesName, 0.05, 0.95);
                 title.Alignment = Alignment.UpperLeft;
-                title.FontSize = 16;
-                title.Bold = true;
+                title.LabelFontSize = 16;
+                title.LabelBold = true;
 
                 if (isLastPlot)
                 {
@@ -96,37 +120,8 @@ namespace PV.Forecasting.App.Controllers
                 var scatter = plt.Add.Scatter(dates, values);
                 scatter.Color = plotColor;
 
-                if (viewName != "Yearly" && records.Any())
-                {
-                    var year = records.First().Timestamp.Year;
-                    var startDate = new DateTime(year, 1, 1);
-                    var endDate = new DateTime(year, 12, 31);
-                    plt.Axes.SetLimits(startDate.ToOADate(), endDate.ToOADate());
-
-                    // Add vertical lines for each month
-                    for (int month = 2; month <= 12; month++)
-                    {
-                        var monthStart = new DateTime(year, month, 1);
-                        var line = plt.Add.VerticalLine(monthStart.ToOADate());
-                        line.Color = Colors.Black.WithAlpha(0.1f);
-                    }
-
-                    // Create manual ticks for the 15th of each month
-                    var monthlyTicks = new List<Tick>();
-                    for (int month = 1; month <= 12; month++)
-                    {
-                        var tickPosition = new DateTime(year, month, 15).ToOADate();
-                        var tickLabel = new DateTime(year, month, 1).ToString("MMM");
-                        monthlyTicks.Add(new Tick(tickPosition, tickLabel));
-                    }
-                    plt.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(monthlyTicks.ToArray());
-                    plt.Axes.Bottom.TickLabelStyle.Rotation = 0;
-                    plt.Axes.Bottom.MajorTickStyle.Length = 0; // Hide tick marks
-                }
-                else
-                {
-                    plt.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.DateTimeAutomatic();
-                }
+                plt.Axes.SetLimits(startDate.ToOADate(), endDate.ToOADate());
+                plt.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.DateTimeAutomatic();
 
                 if (!isLastPlot)
                 {
@@ -139,7 +134,7 @@ namespace PV.Forecasting.App.Controllers
             float maxLeftAxisWidth = 0;
             foreach (var plt in plots)
             {
-                plt.GetImage(1, 1); // Render to a dummy image to calculate layout
+                var image = plt.GetImage(800, 250); // Render to a dummy image to calculate layout
                 maxLeftAxisWidth = Math.Max(maxLeftAxisWidth, plt.LastRender.DataRect.Left);
             }
 
@@ -191,8 +186,8 @@ namespace PV.Forecasting.App.Controllers
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
                 case "Weekly":
-                    return records.GroupBy(r => System.Globalization.ISOWeek.GetWeekOfYear(r.Timestamp))
-                                  .Select(g => new DataPointViewModel { Timestamp = g.First().Timestamp, Value = aggregationFunc(g.Select(valueSelector)) })
+                    return records.GroupBy(r => new { Year = System.Globalization.ISOWeek.GetYear(r.Timestamp), Week = System.Globalization.ISOWeek.GetWeekOfYear(r.Timestamp) })
+                                  .Select(g => new DataPointViewModel { Timestamp = System.Globalization.ISOWeek.ToDateTime(g.Key.Year, g.Key.Week, DayOfWeek.Monday), Value = aggregationFunc(g.Select(valueSelector)) })
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
                 case "Monthly":
@@ -234,6 +229,29 @@ namespace PV.Forecasting.App.Controllers
             new("Weekly", "Weekly"),
             new("Monthly", "Monthly"),
             new("Yearly", "Yearly")
+        ];
+
+        private List<SelectListItem> GetFilteredViewOptions(string period)
+        {
+            var allOptions = GetViewOptions();
+            return period switch
+            {
+                "Day" => allOptions.Where(o => o.Value == "15-min" || o.Value == "Hourly" || o.Value == "3-hourly").ToList(),
+                "Week" => allOptions.Where(o => o.Value != "Weekly" && o.Value != "Monthly" && o.Value != "Yearly").ToList(),
+                "Month" => allOptions.Where(o => o.Value != "Monthly" && o.Value != "Yearly").ToList(),
+                "Year" => allOptions.Where(o => o.Value != "Yearly").ToList(),
+                "All" => allOptions,
+                _ => allOptions
+            };
+        }
+
+        private List<SelectListItem> GetPeriodOptions() =>
+        [
+            new("Day", "Day"),
+            new("Week", "Week"),
+            new("Month", "Month"),
+            new("Year", "Year"),
+            new("All", "All")
         ];
         #endregion
     }

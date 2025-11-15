@@ -5,17 +5,24 @@
 
 <h2>@ViewData["Title"]</h2>
 
-<form asp-controller="Visualization" asp-action="Index" method="get">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<form asp-controller="Visualization" asp-action="Index" method="get" id="visualizationForm">
     <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
         <div>
-            <span>View:</span>
-            <select asp-for="SelectedView" asp-items="Model.ViewOptions"></select>
+            <span>Period:</span>
+            <select asp-for="SelectedPeriod" asp-items="Model.PeriodOptions"></select>
         </div>
         <div>
-            <span>Year:</span>
-            <button type="button" id="prevYear" onclick="changeYear(-1)">&lt;</button>
-            <select asp-for="SelectedYear" asp-items="Model.YearOptions"></select>
-            <button type="button" id="nextYear" onclick="changeYear(1)">&gt;</button>
+            <span>Date:</span>
+            <button type="button" id="prevPeriod" onclick="changeDate(-1)">&lt;</button>
+            <input type="text" id="SelectedDate" name="SelectedDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+            <button type="button" id="nextPeriod" onclick="changeDate(1)">&gt;</button>
+        </div>
+        <div>
+            <span>Resolution:</span>
+            <select asp-for="SelectedView" asp-items="Model.ViewOptions"></select>
         </div>
     </div>
     <div style="margin-bottom: 20px;">
@@ -40,51 +47,48 @@
 </div>
 
 <script>
-    function changeYear(offset) {
-        const yearSelect = document.getElementById('SelectedYear');
-        let currentYear = parseInt(yearSelect.value);
-        let newYear = currentYear + offset;
-
-        const minYear = @Model.MinYear;
-        const maxYear = @Model.MaxYear;
-
-        if (newYear >= minYear && newYear <= maxYear) {
-            yearSelect.value = newYear;
-            document.querySelector('form').submit();
-        }
-    }
-
-    function updateButtons() {
-        const yearSelect = document.getElementById('SelectedYear');
-        if (!yearSelect || !yearSelect.value) {
-            document.getElementById('prevYear').disabled = true;
-            document.getElementById('nextYear').disabled = true;
-            return;
-        }
-        let currentYear = parseInt(yearSelect.value);
-        const minYear = @Model.MinYear;
-        const maxYear = @Model.MaxYear;
-
-        document.getElementById('prevYear').disabled = currentYear <= minYear;
-        document.getElementById('nextYear').disabled = currentYear >= maxYear;
-    }
-
     document.addEventListener('DOMContentLoaded', function () {
-        updateButtons();
-        
-        ['SelectedView', 'SelectedYear'].forEach(id => {
+        flatpickr("#SelectedDate", {
+            dateFormat: "Y-m-d",
+            defaultDate: "@Model.SelectedDate.ToString("yyyy-MM-dd")",
+            onChange: function(selectedDates, dateStr, instance) {
+                document.getElementById('visualizationForm').submit();
+            }
+        });
+
+        ['SelectedPeriod', 'SelectedView'].forEach(id => {
             const select = document.getElementById(id);
             if (select) {
                 select.addEventListener('change', () => {
-                    document.querySelector('form').submit();
+                    document.getElementById('visualizationForm').submit();
                 });
             }
         });
 
         document.querySelectorAll('input[name="SelectedTimeSeries"]').forEach(checkbox => {
             checkbox.addEventListener('change', () => {
-                document.querySelector('form').submit();
+                // We can choose to submit on change or wait for the "Update" button.
+                // For now, let's keep the explicit update button for time series selection.
             });
         });
     });
+
+    function changeDate(offset) {
+        const dateInput = document.getElementById('SelectedDate');
+        const period = document.getElementById('SelectedPeriod').value;
+        let currentDate = new Date(dateInput.value);
+
+        if (period === 'Day') {
+            currentDate.setDate(currentDate.getDate() + offset);
+        } else if (period === 'Week') {
+            currentDate.setDate(currentDate.getDate() + (7 * offset));
+        } else if (period === 'Month') {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+        } else if (period === 'Year') {
+            currentDate.setFullYear(currentDate.getFullYear() + offset);
+        }
+
+        dateInput.value = currentDate.toISOString().split('T')[0];
+        document.getElementById('visualizationForm').submit();
+    }
 </script>
