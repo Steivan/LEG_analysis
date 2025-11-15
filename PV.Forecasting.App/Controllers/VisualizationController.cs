@@ -13,7 +13,7 @@ namespace PV.Forecasting.App.Controllers
 {
     public class VisualizationController : Controller
     {
-        private static List<PvRecord>? _pvRecords;
+        private static List<PvRecordCalculated>? _pvRecords;
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedPeriod = "Year", DateTime? SelectedDate = null, string SelectedView = "15-min")
@@ -21,8 +21,23 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(1);
+                var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcDataCalculated(1);
                 _pvRecords = pvRecords;
+            }
+
+            if (_pvRecords is null || !_pvRecords.Any())
+            {
+                // No data to display, return an empty model to prevent crashing.
+                ViewBag.ErrorMessage = "No data available to display.";
+                return View(new VisualizationViewModel
+                {
+                    TimeSeriesOptions = GetTimeSeriesOptions(),
+                    ViewOptions = GetFilteredViewOptions(SelectedPeriod),
+                    PeriodOptions = GetPeriodOptions(),
+                    SelectedPeriod = SelectedPeriod,
+                    SelectedView = SelectedView,
+                    SelectedDate = SelectedDate ?? DateTime.Today,
+                });
             }
 
             if (SelectedTimeSeries is null || !SelectedTimeSeries.Any())
@@ -81,25 +96,39 @@ namespace PV.Forecasting.App.Controllers
             return date.AddDays(-1 * diff).Date;
         }
 
-        private Dictionary<string, string> CreateSubplots(List<PvRecord> records, List<string> timeSeriesNames, string viewName, DateTime startDate, DateTime endDate)
+        private Dictionary<string, string> CreateSubplots(List<PvRecordCalculated> records, List<string> selectedTimeSeries, string viewName, DateTime startDate, DateTime endDate)
         {
             var plotHtmls = new Dictionary<string, string>();
             if (records is null || !records.Any()) return plotHtmls;
 
+            var plotGroups = new Dictionary<string, List<string>>
+            {
+                { "Power", new List<string> { "MeasuredPower", "ComputedPower" } },
+                { "Irradiation", new List<string> { "Irradiation" } },
+                { "Ambient Temperature", new List<string> { "AmbientTemp" } },
+                { "Wind Velocity", new List<string> { "WindVelocity" } }
+            };
+
+            var activePlotGroups = plotGroups
+                .Where(g => g.Value.Any(ts => selectedTimeSeries.Contains(ts)))
+                .ToDictionary(g => g.Key, g => g.Value);
+
+            if (!activePlotGroups.Any()) return plotHtmls;
+
             var plots = new List<Plot>();
-            var plotNames = new List<string>();
+            var plotGroupNames = activePlotGroups.Keys.ToList();
 
             // Pass 1: Create and configure all plots
-            for (int i = 0; i < timeSeriesNames.Count; i++)
+            for (int i = 0; i < activePlotGroups.Count; i++)
             {
-                var timeSeriesName = timeSeriesNames[i];
-                var isLastPlot = i == timeSeriesNames.Count - 1;
+                var groupName = plotGroupNames[i];
+                var timeSeriesInGroup = activePlotGroups[groupName];
+                var isLastPlot = i == activePlotGroups.Count - 1;
 
                 var plt = new Plot();
                 plots.Add(plt);
-                plotNames.Add(timeSeriesName);
 
-                var title = plt.Add.Text(timeSeriesName, 0.05, 0.95);
+                var title = plt.Add.Text(groupName, 0.05, 0.95);
                 title.Alignment = Alignment.UpperLeft;
                 title.LabelFontSize = 16;
                 title.LabelBold = true;
@@ -108,17 +137,26 @@ namespace PV.Forecasting.App.Controllers
                 {
                     plt.XLabel("Date");
                 }
-                plt.YLabel(timeSeriesName);
+                plt.YLabel(groupName);
 
-                bool isSum = timeSeriesName == "MeasuredPower" || timeSeriesName == "Irradiation";
-                Func<IEnumerable<double>, double> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
-                var data = AggregateData(records, viewName, r => GetPropertyValue(r, timeSeriesName), aggregationFunc);
-                var plotColor = GetColorForTimeSeries(timeSeriesName);
+                foreach (var timeSeriesName in timeSeriesInGroup)
+                {
+                    if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
-                var dates = data.Select(d => d.Timestamp.ToOADate()).ToArray();
-                var values = data.Select(d => d.Value).ToArray();
-                var scatter = plt.Add.Scatter(dates, values);
-                scatter.Color = plotColor;
+                    bool isSum = timeSeriesName is "MeasuredPower" or "Irradiation" or "ComputedPower";
+                    Func<IEnumerable<double>, double> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
+                    var data = AggregateData(records, viewName, r => GetPropertyValue(r, timeSeriesName), aggregationFunc);
+                    var plotColor = GetColorForTimeSeries(timeSeriesName);
+
+                    var dates = data.Select(d => d.Timestamp.ToOADate()).ToArray();
+                    var values = data.Select(d => d.Value).ToArray();
+                    var scatter = plt.Add.Scatter(dates, values);
+                    scatter.Color = plotColor;
+                    scatter.LegendText = timeSeriesName;
+                }
+
+                plt.Legend.IsVisible = true;
+                plt.Legend.Alignment = Alignment.UpperRight;
 
                 plt.Axes.SetLimits(startDate.ToOADate(), endDate.ToOADate());
                 plt.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.DateTimeAutomatic();
@@ -130,7 +168,6 @@ namespace PV.Forecasting.App.Controllers
             }
 
             // Pass 2: Synchronize axis limits and render
-            // Measure the largest left axis panel by performing a dry-run render
             float maxLeftAxisWidth = 0;
             foreach (var plt in plots)
             {
@@ -142,9 +179,9 @@ namespace PV.Forecasting.App.Controllers
             for (int i = 0; i < plots.Count; i++)
             {
                 var plt = plots[i];
-                var timeSeriesName = plotNames[i];
+                var groupName = plotGroupNames[i];
                 plt.Axes.Left.MinimumSize = maxLeftAxisWidth;
-                plotHtmls[timeSeriesName] = plt.GetPngHtml(800, 250);
+                plotHtmls[groupName] = plt.GetPngHtml(800, 250);
             }
 
             return plotHtmls;
@@ -155,6 +192,7 @@ namespace PV.Forecasting.App.Controllers
             return timeSeriesName switch
             {
                 "MeasuredPower" => Colors.Red,
+                "ComputedPower" => Colors.Purple,
                 "Irradiation" => Colors.Orange,
                 "AmbientTemp" => Colors.Blue,
                 "WindVelocity" => Colors.Green,
@@ -163,7 +201,7 @@ namespace PV.Forecasting.App.Controllers
         }
 
         #region Helper Methods
-        private List<DataPointViewModel> AggregateData(List<PvRecord> records, string view, Func<PvRecord, double> valueSelector, Func<IEnumerable<double>, double> aggregationFunc)
+        private List<DataPointViewModel> AggregateData(List<PvRecordCalculated> records, string view, Func<PvRecordCalculated, double> valueSelector, Func<IEnumerable<double>, double> aggregationFunc)
         {
             switch (view)
             {
@@ -206,15 +244,18 @@ namespace PV.Forecasting.App.Controllers
             }
         }
 
-        private double GetPropertyValue(PvRecord record, string propertyName)
+        private double GetPropertyValue(PvRecordCalculated record, string propertyName)
         {
-            var prop = typeof(PvRecord).GetProperty(propertyName);
-            return Convert.ToDouble(prop!.GetValue(record));
+            var prop = typeof(PvRecordCalculated).GetProperty(propertyName);
+            if (prop is null) return double.NaN; // Return NaN if property doesn't exist
+            var value = prop.GetValue(record);
+            return value is null ? double.NaN : Convert.ToDouble(value);
         }
 
         private List<SelectListItem> GetTimeSeriesOptions() =>
         [
             new("Measured Power", "MeasuredPower"),
+            new("Computed Power", "ComputedPower"),
             new("Irradiation", "Irradiation"),
             new("Ambient Temperature", "AmbientTemp"),
             new("Wind Velocity", "WindVelocity")
@@ -228,7 +269,7 @@ namespace PV.Forecasting.App.Controllers
             new("Daily", "Daily"),
             new("Weekly", "Weekly"),
             new("Monthly", "Monthly"),
-            new("Yearly", "Yearly")
+            new("Yearly", "Year")
         ];
 
         private List<SelectListItem> GetFilteredViewOptions(string period)

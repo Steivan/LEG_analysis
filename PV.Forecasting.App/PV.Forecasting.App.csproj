@@ -26,4 +26,7 @@
 		<PackageReference Include="ScottPlot" Version="5.1.57" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Plotting\" />
+	</ItemGroup>
 </Project>

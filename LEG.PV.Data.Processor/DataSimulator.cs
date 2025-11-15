@@ -161,19 +161,16 @@ public class DataSimulator
                         }
 
                         pvRecords.Add(
-                            new PvRecord
-                            {
-                                Timestamp = timeStamp,
-                                Index = pvRecords.Count,
-                                GeometryFactor = geometryFactor,
-                                Irradiation = irradiation,
-                                AmbientTemp = ambientTemp,
-                                WindVelocity = windVelocity,
-                                Age = age,
-                                MeasuredPower = measuredPower
-                            }
+                            new PvRecord(
+                                timeStamp, 
+                                pvRecords.Count, 
+                                geometryFactor, 
+                                irradiation, 
+                                ambientTemp, 
+                                windVelocity, 
+                                age, measuredPower)
                             );
-                        var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower, age);
+                        var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower);
 
                         var isValidRecord = !isSnowyDay && !isFoggyPeriod && !isOutlier;
                         validRecords.Add(isValidRecord);

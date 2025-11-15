@@ -1,11 +1,12 @@
 ﻿using LEG.CoreLib.SampleData;
 using LEG.CoreLib.SampleData.SampleData;
+using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.E3Dc.Client;
 using LEG.HorizonProfiles.Client;
-using LEG.MeteoSwiss.Client.MeteoSwiss;
-using static LEG.PV.Data.Processor.DataRecords;
-using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.MeteoSwiss.Abstractions;
+using LEG.MeteoSwiss.Client.MeteoSwiss;
+using System.Data;
+using static LEG.PV.Data.Processor.DataRecords;
 
 namespace LEG.PV.Data.Processor
 {
@@ -20,8 +21,8 @@ namespace LEG.PV.Data.Processor
             ImportE3DcData(int folder)
         {
             const string meteoStationId = "SMA";
-            const int meteoDataOffset = 60;
-            int meteoDataLag = 10;
+            const int meteoDataOffset = 60;             // Timestamps are UTC values
+            int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
 
             // Fetch pvProduction records
             folder = 1 + (folder - 1) % 2;
@@ -53,17 +54,16 @@ namespace LEG.PV.Data.Processor
                 var diffuseIrradiation = meteoParam.diffuseIrradiation ?? 0.0;
                 var globalIrradiation = directIrradiation + diffuseIrradiation;
                 var effectiveGeometryFactor = globalIrradiation > 0 ? (directIrradiation * geometryFactors[i] + diffuseIrradiation) / globalIrradiation : geometryFactors[i];
-                var pvRecord = new PvRecord
-                {
-                    Timestamp = timeStamps[i],
-                    Index = recordIndex,
-                    GeometryFactor = effectiveGeometryFactor,
-                    Irradiation = globalIrradiation,
-                    AmbientTemp = meteoParam.temperature ?? 0.0,
-                    WindVelocity = meteoParam.windVelocity ?? 0.0,
-                    Age = (double)i * minutesPerPeriod / 60.0 / 24 / 365.2422,
-                    MeasuredPower = pvDataRecord.SolarProduction
-                };
+                var pvRecord = new PvRecord (
+                    timeStamps[i], 
+                    recordIndex, 
+                    effectiveGeometryFactor, 
+                    globalIrradiation, 
+                    meteoParam.temperature ?? 0.0, 
+                    meteoParam.windVelocity ?? 0.0, 
+                    (double)i * minutesPerPeriod / 60.0 / 24 / 365.2422, 
+                    pvDataRecord.SolarProduction
+                    );
 
                 dataRecords.Add(pvRecord);
                 validRecords.Add(pvRecord.GeometryFactor > 0 || pvDataRecord.SolarProduction > 0);
@@ -72,6 +72,54 @@ namespace LEG.PV.Data.Processor
             return (siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
 
+        public async Task<(string siteId,
+            List<PvRecordCalculated> dataRecords,
+            List<bool> validRecords,
+            double installedPower,
+            int periodsPerHour)>
+            ImportE3DcDataCalculated(int folder)
+        {
+            List<PvModelParams> modelParams =  [
+                GetDefaultPriorModelParams(),
+                new(
+                    0.32,
+                    -0.0028,
+                    7.5,
+                    0.0,
+                    0.021
+                ),
+                new(
+                    0.3,
+                    -0.0015,
+                    3.0,
+                    0.0,
+                    0.022
+                )
+            ];
+            var (siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcData(folder);
+
+            var calculateddataRecords = new List<PvRecordCalculated>();
+            foreach (var record in dataRecords)
+            {
+                var computedPower = record.ComputedPower(modelParams[folder], installedPower);
+                var calculatedDataRecord = new PvRecordCalculated(
+                    record.Timestamp,
+                    record.Index,
+                    record.GeometryFactor,
+                    record.Irradiation,
+                    record.AmbientTemp,
+                    record.WindVelocity,
+                    record.Age,
+                    record.MeasuredPower,
+                    computedPower
+                );   
+
+                calculateddataRecords.Add(calculatedDataRecord);
+            }
+
+            return (siteId, calculateddataRecords, validRecords, installedPower, periodsPerHour);
+
+        }
         private async Task<(List<DateTime> timeStamps, List<double> geometryFactors, double installedPower)> pvProduction(
             string siteId,
             DateTime startTime,

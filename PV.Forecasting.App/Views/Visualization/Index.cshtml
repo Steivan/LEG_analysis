@@ -49,9 +49,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         flatpickr("#SelectedDate", {
+            altInput: true,
+            altFormat: "d.m.y",
             dateFormat: "Y-m-d",
             defaultDate: "@Model.SelectedDate.ToString("yyyy-MM-dd")",
             onChange: function(selectedDates, dateStr, instance) {
+                // The actual input value is already updated by flatpickr
                 document.getElementById('visualizationForm').submit();
             }
         });
@@ -88,7 +91,8 @@
             currentDate.setFullYear(currentDate.getFullYear() + offset);
         }
 
-        dateInput.value = currentDate.toISOString().split('T')[0];
-        document.getElementById('visualizationForm').submit();
+        // flatpickr will automatically update the visible input, but we need to set the hidden one
+        const fp = document.querySelector("#SelectedDate")._flatpickr;
+        fp.setDate(currentDate, true); // Set date and trigger change event
     }
 </script>
