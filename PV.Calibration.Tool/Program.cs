@@ -11,7 +11,7 @@ using static PV.Calibration.Tool.BayesianCalibrator;
 await CalibrateE3DcData(1, "Senn");
 await CalibrateE3DcData(2, "SennV");
 
-//ProcessSyntheticModelData();
+ProcessSyntheticModelData();
 
 async Task CalibrateE3DcData(int folder, string label)
 {

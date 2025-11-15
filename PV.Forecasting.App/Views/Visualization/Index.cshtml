@@ -6,18 +6,85 @@
 <h2>@ViewData["Title"]</h2>
 
 <form asp-controller="Visualization" asp-action="Index" method="get">
+    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
+        <div>
+            <span>View:</span>
+            <select asp-for="SelectedView" asp-items="Model.ViewOptions"></select>
+        </div>
+        <div>
+            <span>Year:</span>
+            <button type="button" id="prevYear" onclick="changeYear(-1)">&lt;</button>
+            <select asp-for="SelectedYear" asp-items="Model.YearOptions"></select>
+            <button type="button" id="nextYear" onclick="changeYear(1)">&gt;</button>
+        </div>
+    </div>
     <div style="margin-bottom: 20px;">
         <span>Time Series:</span>
-        <select asp-for="SelectedTimeSeries" asp-items="Model.TimeSeriesOptions"></select>
-
-        <span>View:</span>
-        <select asp-for="SelectedView" asp-items="Model.ViewOptions"></select>
-
-        <input type="submit" value="Update" />
+        @foreach (var option in Model.TimeSeriesOptions)
+        {
+            <input type="checkbox" name="SelectedTimeSeries" value="@option.Value" @(Model.SelectedTimeSeries.Contains(option.Value) ? "checked" : "") />
+            <label>@option.Text</label>
+        }
+        <input type="submit" value="Update" style="margin-left: 20px;" />
     </div>
 </form>
 
-@if (!string.IsNullOrEmpty(Model.PlotHtml))
-{
-    @Html.Raw(Model.PlotHtml)
-}
+<div style="display: flex; flex-direction: column;">
+    @if (Model.PlotHtmls.Any())
+    {
+        foreach (var plotHtml in Model.PlotHtmls.Values)
+        {
+            @Html.Raw(plotHtml)
+        }
+    }
+</div>
+
+<script>
+    function changeYear(offset) {
+        const yearSelect = document.getElementById('SelectedYear');
+        let currentYear = parseInt(yearSelect.value);
+        let newYear = currentYear + offset;
+
+        const minYear = @Model.MinYear;
+        const maxYear = @Model.MaxYear;
+
+        if (newYear >= minYear && newYear <= maxYear) {
+            yearSelect.value = newYear;
+            document.querySelector('form').submit();
+        }
+    }
+
+    function updateButtons() {
+        const yearSelect = document.getElementById('SelectedYear');
+        if (!yearSelect || !yearSelect.value) {
+            document.getElementById('prevYear').disabled = true;
+            document.getElementById('nextYear').disabled = true;
+            return;
+        }
+        let currentYear = parseInt(yearSelect.value);
+        const minYear = @Model.MinYear;
+        const maxYear = @Model.MaxYear;
+
+        document.getElementById('prevYear').disabled = currentYear <= minYear;
+        document.getElementById('nextYear').disabled = currentYear >= maxYear;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        updateButtons();
+        
+        ['SelectedView', 'SelectedYear'].forEach(id => {
+            const select = document.getElementById(id);
+            if (select) {
+                select.addEventListener('change', () => {
+                    document.querySelector('form').submit();
+                });
+            }
+        });
+
+        document.querySelectorAll('input[name="SelectedTimeSeries"]').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                document.querySelector('form').submit();
+            });
+        });
+    });
+</script>
