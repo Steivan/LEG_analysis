@@ -25,26 +25,54 @@
             <select asp-for="SelectedView" asp-items="Model.ViewOptions"></select>
         </div>
     </div>
-    <div style="margin-bottom: 20px;">
-        <span>Time Series:</span>
-        @foreach (var option in Model.TimeSeriesOptions)
+
+    <div style="display: flex; flex-direction: column;">
+        @if (Model.PlotHtmls.Any())
         {
-            <input type="checkbox" name="SelectedTimeSeries" value="@option.Value" @(Model.SelectedTimeSeries.Contains(option.Value) ? "checked" : "") />
-            <label>@option.Text</label>
+            var plotIndex = 0;
+            foreach (var plot in Model.PlotHtmls)
+            {
+                var groupName = plot.Key;
+                var (htmlWithLegend, htmlWithoutLegend) = plot.Value;
+                var seriesLabels = Model.TimeSeriesLabelsByGroup[groupName];
+
+                <div style="position: relative; margin-bottom: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+
+                    @* Container for controls *@
+                    <div style="position: absolute; top: 10px; right: 10px; z-index: 10; background-color: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; display: flex; flex-direction: column; gap: 5px;">
+
+                        @* Legend Toggle *@
+                        <div>
+                            <input type="checkbox" id="legendToggle-@plotIndex" checked onchange="toggleLegend(@plotIndex)">
+                            <label for="legendToggle-@plotIndex">Show Legend</label>
+                        </div>
+
+                        @* Per-plot Time Series Toggles *@
+                        <div style="border-top: 1px solid #ccc; padding-top: 5px;">
+                            @foreach (var seriesName in seriesLabels)
+                            {
+                                var displayName = System.Text.RegularExpressions.Regex.Replace(seriesName, "(\\B[A-Z])", " $1");
+                                <div>
+                                    <input type="checkbox" name="SelectedTimeSeries" value="@seriesName" @(Model.SelectedTimeSeries.Contains(seriesName) ? "checked" : "") />
+                                    <label>@displayName</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @* Render both plot versions *@
+                    <div id="@($"plot-{plotIndex}-with-legend")">@Html.Raw(htmlWithLegend)</div>
+                    <div id="@($"plot-{plotIndex}-without-legend")" style="display: none;">@Html.Raw(htmlWithoutLegend)</div>
+                </div>
+                plotIndex++;
+            }
         }
-        <input type="submit" value="Update" style="margin-left: 20px;" />
+        @* Add a single update button at the end *@
+        <div style="margin-top: 20px;">
+            <input type="submit" value="Update Plots" class="btn btn-primary" />
+        </div>
     </div>
 </form>
-
-<div style="display: flex; flex-direction: column;">
-    @if (Model.PlotHtmls.Any())
-    {
-        foreach (var plotHtml in Model.PlotHtmls.Values)
-        {
-            @Html.Raw(plotHtml)
-        }
-    }
-</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -66,13 +94,7 @@
                     document.getElementById('visualizationForm').submit();
                 });
             }
-        });
 
-        document.querySelectorAll('input[name="SelectedTimeSeries"]').forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                // We can choose to submit on change or wait for the "Update" button.
-                // For now, let's keep the explicit update button for time series selection.
-            });
         });
     });
 
@@ -94,5 +116,19 @@
         // flatpickr will automatically update the visible input, but we need to set the hidden one
         const fp = document.querySelector("#SelectedDate")._flatpickr;
         fp.setDate(currentDate, true); // Set date and trigger change event
+    }
+
+    function toggleLegend(plotIndex) {
+        const checkbox = document.getElementById(`legendToggle-${plotIndex}`);
+        const plotWithLegend = document.getElementById(`plot-${plotIndex}-with-legend`);
+        const plotWithoutLegend = document.getElementById(`plot-${plotIndex}-without-legend`);
+
+        if (checkbox.checked) {
+            plotWithLegend.style.display = 'block';
+            plotWithoutLegend.style.display = 'none';
+        } else {
+            plotWithLegend.style.display = 'none';
+            plotWithoutLegend.style.display = 'block';
+        }
     }
 </script>

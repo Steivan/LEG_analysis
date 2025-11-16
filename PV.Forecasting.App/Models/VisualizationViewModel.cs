@@ -6,10 +6,10 @@ namespace PV.Forecasting.App.Models
 {
     public class VisualizationViewModel
     {
-        public Dictionary<string, string> PlotHtmls { get; set; } = new();
+        public Dictionary<string, (string HtmlWithLegend, string HtmlWithoutLegend)> PlotHtmls { get; set; } = new();
+        public Dictionary<string, List<string>> TimeSeriesLabelsByGroup { get; set; } = new();
         public List<string> SelectedTimeSeries { get; set; } = new();
         public string SelectedView { get; set; } = "15-min";
-        public List<SelectListItem> TimeSeriesOptions { get; set; } = new();
         public List<SelectListItem> ViewOptions { get; set; } = new();
         public List<SelectListItem> YearOptions { get; set; } = new();
         public int SelectedYear { get; set; }

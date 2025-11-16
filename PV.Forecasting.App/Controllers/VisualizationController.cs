@@ -43,7 +43,6 @@ namespace PV.Forecasting.App.Controllers
                 ViewBag.ErrorMessage = "No data available to display.";
                 return View(new VisualizationViewModel
                 {
-                    TimeSeriesOptions = GetTimeSeriesOptions(),
                     ViewOptions = GetFilteredViewOptions(SelectedPeriod),
                     PeriodOptions = GetPeriodOptions(),
                     SelectedPeriod = SelectedPeriod,
@@ -54,7 +53,7 @@ namespace PV.Forecasting.App.Controllers
 
             if (SelectedTimeSeries is null || !SelectedTimeSeries.Any())
             {
-                SelectedTimeSeries = GetTimeSeriesOptions().Select(o => o.Value).ToList()!;
+                SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
             }
 
             var minDate = _pvRecords.Min(r => r.Timestamp.Date);
@@ -72,12 +71,16 @@ namespace PV.Forecasting.App.Controllers
 
             var plotHtmls = CreateSubplots(recordsForPeriod, SelectedTimeSeries, SelectedView, startDate, endDate);
 
+            var labelsByGroup = _pvRecordLabels
+                .Where(g => plotHtmls.ContainsKey(g.Key))
+                .ToDictionary(g => g.Key, g => g.Value);
+
             var model = new VisualizationViewModel
             {
                 PlotHtmls = plotHtmls,
+                TimeSeriesLabelsByGroup = labelsByGroup,
                 SelectedTimeSeries = SelectedTimeSeries,
                 SelectedView = SelectedView,
-                TimeSeriesOptions = GetTimeSeriesOptions(),
                 ViewOptions = viewOptions,
                 SelectedPeriod = SelectedPeriod,
                 PeriodOptions = GetPeriodOptions(),
@@ -108,9 +111,9 @@ namespace PV.Forecasting.App.Controllers
             return date.AddDays(-1 * diff).Date;
         }
 
-        private Dictionary<string, string> CreateSubplots(List<PvRecordLists> records, List<string> selectedTimeSeries, string viewName, DateTime startDate, DateTime endDate)
+        private Dictionary<string, (string HtmlWithLegend, string HtmlWithoutLegend)> CreateSubplots(List<PvRecordLists> records, List<string> selectedTimeSeries, string viewName, DateTime startDate, DateTime endDate)
         {
-            var plotHtmls = new Dictionary<string, string>();
+            var plotHtmls = new Dictionary<string, (string HtmlWithLegend, string HtmlWithoutLegend)>();
             if (records is null || !records.Any() || _pvRecordLabels is null) return plotHtmls;
 
             var activePlotGroups = _pvRecordLabels
@@ -160,9 +163,6 @@ namespace PV.Forecasting.App.Controllers
                     scatter.LegendText = timeSeriesName;
                 }
 
-                plt.Legend.IsVisible = true;
-                plt.Legend.Alignment = Alignment.UpperRight;
-
                 plt.Axes.SetLimits(startDate.ToOADate(), endDate.ToOADate());
                 plt.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.DateTimeAutomatic();
 
@@ -186,7 +186,16 @@ namespace PV.Forecasting.App.Controllers
                 var plt = plots[i];
                 var groupName = plotGroupNames[i];
                 plt.Axes.Left.MinimumSize = maxLeftAxisWidth;
-                plotHtmls[groupName] = plt.GetPngHtml(800, 250);
+
+                // Render with legend
+                plt.Legend.IsVisible = true;
+                var htmlWithLegend = plt.GetPngHtml(800, 250);
+
+                // Render without legend
+                plt.Legend.IsVisible = false;
+                var htmlWithoutLegend = plt.GetPngHtml(800, 250);
+
+                plotHtmls[groupName] = (htmlWithLegend, htmlWithoutLegend);
             }
 
             return plotHtmls;
@@ -270,23 +279,6 @@ namespace PV.Forecasting.App.Controllers
                 return null;
             }
             return list[index];
-        }
-
-        private List<SelectListItem> GetTimeSeriesOptions()
-        {
-            if (_pvRecordLabels is null) return new List<SelectListItem>();
-
-            var options = new List<SelectListItem>();
-            foreach (var group in _pvRecordLabels)
-            {
-                foreach (var label in group.Value)
-                {
-                    // A simple formatter to convert "MeasuredPower" to "Measured Power"
-                    var displayName = System.Text.RegularExpressions.Regex.Replace(label, "(\\B[A-Z])", " $1");
-                    options.Add(new SelectListItem(displayName, label));
-                }
-            }
-            return options;
         }
 
         private List<SelectListItem> GetViewOptions() =>

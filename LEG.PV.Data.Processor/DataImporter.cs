@@ -16,7 +16,7 @@ namespace LEG.PV.Data.Processor
         const int meteoDataOffset = 60;             // Timestamps are UTC values
         int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
         const string meteoStationId = "SMA";
-        List<string> referenceStationIds = ["KLO", "UEB", "HOE"];  // ZH: "HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"
+        List<string> referenceStationIds = ["KLO", "HOE", "UEB"];  // ZH: "HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"
 
         public async Task UpdateWeatherData(DateTime downloadStartDate, List<string> stationsList)
         {
