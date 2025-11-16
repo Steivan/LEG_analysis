@@ -216,17 +216,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 35.0,
                     Elev2: 0.0,
                     Area: 25.0,
-                    Peak: 8.67
-                ),
-                [SennV + "_2"] = new PvRoof(
-                    SystemName: SennV + "_2",
-                    EgrId: "",
-                    Inverter: SennV + "_2",
-                    Azi: -21.4,
-                    Elev: 9.0,
-                    Elev2: 0.0,
-                    Area: 25,
-                    Peak: 8.02
+                    Peak: 20.0
                 ),
 
                 [TestSite + "_1"] = new PvRoof(

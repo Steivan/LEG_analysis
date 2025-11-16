@@ -59,6 +59,39 @@ namespace LEG.PV.Data.Processor
             public double ComputedPower { get; init; }       // P_comp [W]
         }
 
+        public record PvRecordLists
+        {
+            public PvRecordLists(DateTime timestamp, int index, List<double> power, List<double> irradiation, List<double> temperature, List<double> windVelocity)
+            {
+                Timestamp = timestamp;
+                Index = index;
+                Power = power;
+                Irradiation = irradiation;
+                Temperature = temperature;
+                WindVelocity = windVelocity;
+            }
+
+            public DateTime Timestamp { get; init; }                // Timestamp [YYYY-MM-DD HH:MM:SS]
+            public int Index { get; init; }                         // Index [unitless]
+            public List<double> Power { get; init; }                // P [W]
+            public List<double> Irradiation { get; init; }          // G_POA [W/m²]
+            public List<double> Temperature { get; init; }         // T [°C]
+            public List<double> WindVelocity { get; init; }        // v_wind [m/s]
+        }
+        public record PvRecordLabels
+        {
+            public PvRecordLabels(List<string> powerLabels, List<string> irradiationLabels, List<string> temperatureLabels, List<string> windVelocityLabels)
+            {
+                PowerLabels = powerLabels;
+                IrradiationLabels = irradiationLabels;
+                TemperatureLabels = temperatureLabels;
+                WindVelocityLabels = windVelocityLabels;
+            }
+            public List<string> PowerLabels { get; init; }    
+            public List<string> IrradiationLabels { get; init; }  
+            public List<string> TemperatureLabels { get; init; } 
+            public List<string> WindVelocityLabels { get; init; }
+        }
         public record PvModelParams
         {
             public PvModelParams(double etha, double gamma, double u0, double u1, double lDegr)

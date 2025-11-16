@@ -134,9 +134,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     inverters: [PvInverterDataDict[SennV + "_1"]],
                     roofsPerInverter: new Dictionary<string, PvRoof[]>
                     {
-                        { SennV + "_1", [PvRoofDataDict[SennV + "_1"], PvRoofDataDict[SennV + "_2"]] }
+                        { SennV + "_1", [PvRoofDataDict[SennV + "_1"]] }
                     },
-                    consumers: [PvConsumerDataDict[SennV + "_1"]],
+                    consumers: [PvConsumerDataDict[SennV + "_1"], PvConsumerDataDict[SennV + "_2"]],
                     meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[SennV].MeteoId]
                 ),
 

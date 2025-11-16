@@ -12,6 +12,10 @@ namespace LEG.PV.Data.Processor
 {
     public class DataImporter
     {
+        const int meteoDataOffset = 60;             // Timestamps are UTC values
+        int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
+        const string meteoStationId = "SMA";
+        List<string> referenceStationIds = ["KLO", "UEB", "HOE"];  // ZH: "HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"
 
         public async Task<(string siteId, 
             List<PvRecord> dataRecords, 
@@ -20,10 +24,6 @@ namespace LEG.PV.Data.Processor
             int periodsPerHour)> 
             ImportE3DcData(int folder)
         {
-            const string meteoStationId = "SMA";
-            const int meteoDataOffset = 60;             // Timestamps are UTC values
-            int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
-
             // Fetch pvProduction records
             folder = 1 + (folder - 1) % 2;
             var pvDataRecords = E3DcLoadPeriodRecords.LoadRecords(folder);
@@ -73,7 +73,8 @@ namespace LEG.PV.Data.Processor
         }
 
         public async Task<(string siteId,
-            List<PvRecordCalculated> dataRecords,
+            List<PvRecordLists> dataRecords,
+            PvRecordLabels dataRecordLabels,
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
@@ -88,19 +89,37 @@ namespace LEG.PV.Data.Processor
                     0.0,
                     0.021
                 ),
-                new(
-                    0.3,
-                    -0.0015,
-                    3.0,
+                new(             // SennV: elevation 35° 
+                    0.254,
+                    -0.0012,
+                    3.2,
                     0.0,
-                    0.022
+                    0.0232
+                ),
+                new(             // SennV: elevation 29° 
+                    0.255,
+                    -0.00215,
+                    5.7,
+                    0.0,
+                    0.0253
                 )
             ];
             var (siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcData(folder);
 
-            var calculateddataRecords = new List<PvRecordCalculated>();
-            foreach (var record in dataRecords)
+            // Fetch reference weather parameters
+            var timeStamps = dataRecords.Select(r => r.Timestamp).ToList();
+            var referenceMeteoParamsList = new List<List<(double? directIrradiation, double? diffuseIrradiation, double? temperature, double? windVelocity)>>();
+            foreach (var referenceStationId in referenceStationIds)
             {
+                var referenceMeteoParams = LoadWeatherParameters(referenceStationId, timeStamps, shiftMeteoTimeStamps: meteoDataOffset + meteoDataLag);
+                referenceMeteoParamsList.Add(referenceMeteoParams);
+            }
+
+            //var calculateddataRecords = new List<PvRecordCalculated>();
+            var listsDataRecords = new List<PvRecordLists>();
+            for (var index=0;  index<dataRecords.Count; index++)
+            {
+                var record = dataRecords[index];
                 var computedPower = record.ComputedPower(modelParams[folder], installedPower);
                 var calculatedDataRecord = new PvRecordCalculated(
                     record.Timestamp,
@@ -112,12 +131,47 @@ namespace LEG.PV.Data.Processor
                     record.Age,
                     record.MeasuredPower,
                     computedPower
-                );   
+                );
+                List<double> irradiationList = [record.Irradiation];
+                List<double> temperatureList = [record.AmbientTemp];
+                List<double> windVelocityList = [record.WindVelocity];
+                foreach (var referenceMeteoParams in referenceMeteoParamsList)
+                {
+                    var data = referenceMeteoParams[index];
+                    var irradiation = (data.directIrradiation ?? 0.0) + (data.diffuseIrradiation ?? 0.0);
+                    var temperature = data.temperature ?? 0.0;
+                    var windVelocity = data.windVelocity ?? 0.0;
+                    irradiationList.Add(irradiation);
+                    temperatureList.Add(temperature);
+                    windVelocityList.Add(windVelocity);
+                }
+                var listsDataRecord = new PvRecordLists(
+                    record.Timestamp,
+                    record.Index,
+                    [record.MeasuredPower, computedPower],
+                    irradiationList,
+                    temperatureList,
+                    windVelocityList
+                );
 
-                calculateddataRecords.Add(calculatedDataRecord);
+                listsDataRecords.Add(listsDataRecord);
             }
+            List<string> irradiationLabels = [$"Irradiation_{meteoStationId}"];
+            List<string> temperatureLabels = [$"AmbientTemp_{meteoStationId}"];
+            List<string> windVelocityLabels = [$"WindVelocity_{ meteoStationId}"];
+            foreach (var referenceStationId in referenceStationIds)
+            {
+                irradiationLabels.Add($"Reference_{referenceStationId}");
+                temperatureLabels.Add($"Reference_{referenceStationId}");
+                windVelocityLabels.Add($"Reference_{referenceStationId}");
+            }
+            var dataRecordLabels = new PvRecordLabels(
+                ["MeasuredPower", "ComputedPower"],
+                irradiationLabels,
+                temperatureLabels,
+                windVelocityLabels);
 
-            return (siteId, calculateddataRecords, validRecords, installedPower, periodsPerHour);
+            return (siteId, listsDataRecords, dataRecordLabels, validRecords, installedPower, periodsPerHour);
 
         }
         private async Task<(List<DateTime> timeStamps, List<double> geometryFactors, double installedPower)> pvProduction(

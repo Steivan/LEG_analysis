@@ -13,7 +13,8 @@ namespace PV.Forecasting.App.Controllers
 {
     public class VisualizationController : Controller
     {
-        private static List<PvRecordCalculated>? _pvRecords;
+        private static List<PvRecordLists>? _pvRecords;
+        private static Dictionary<string, List<string>>? _pvRecordLabels;
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedPeriod = "Year", DateTime? SelectedDate = null, string SelectedView = "15-min")
@@ -21,8 +22,19 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcDataCalculated(1);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcDataCalculated(2);
                 _pvRecords = pvRecords;
+
+                if (pvRecordLabels is not null)
+                {
+                    _pvRecordLabels = new Dictionary<string, List<string>>
+                    {
+                        { "Power", pvRecordLabels.PowerLabels },
+                        { "Irradiation", pvRecordLabels.IrradiationLabels },
+                        { "Ambient Temperature", pvRecordLabels.TemperatureLabels },
+                        { "Wind Velocity", pvRecordLabels.WindVelocityLabels }
+                    };
+                }
             }
 
             if (_pvRecords is null || !_pvRecords.Any())
@@ -96,20 +108,12 @@ namespace PV.Forecasting.App.Controllers
             return date.AddDays(-1 * diff).Date;
         }
 
-        private Dictionary<string, string> CreateSubplots(List<PvRecordCalculated> records, List<string> selectedTimeSeries, string viewName, DateTime startDate, DateTime endDate)
+        private Dictionary<string, string> CreateSubplots(List<PvRecordLists> records, List<string> selectedTimeSeries, string viewName, DateTime startDate, DateTime endDate)
         {
             var plotHtmls = new Dictionary<string, string>();
-            if (records is null || !records.Any()) return plotHtmls;
+            if (records is null || !records.Any() || _pvRecordLabels is null) return plotHtmls;
 
-            var plotGroups = new Dictionary<string, List<string>>
-            {
-                { "Power", new List<string> { "MeasuredPower", "ComputedPower" } },
-                { "Irradiation", new List<string> { "Irradiation" } },
-                { "Ambient Temperature", new List<string> { "AmbientTemp" } },
-                { "Wind Velocity", new List<string> { "WindVelocity" } }
-            };
-
-            var activePlotGroups = plotGroups
+            var activePlotGroups = _pvRecordLabels
                 .Where(g => g.Value.Any(ts => selectedTimeSeries.Contains(ts)))
                 .ToDictionary(g => g.Key, g => g.Value);
 
@@ -139,14 +143,15 @@ namespace PV.Forecasting.App.Controllers
                 }
                 plt.YLabel(groupName);
 
-                foreach (var timeSeriesName in timeSeriesInGroup)
+                for (int j = 0; j < timeSeriesInGroup.Count; j++)
                 {
+                    var timeSeriesName = timeSeriesInGroup[j];
                     if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
-                    bool isSum = timeSeriesName is "MeasuredPower" or "Irradiation" or "ComputedPower";
+                    bool isSum = groupName is "Power" or "Irradiation";
                     Func<IEnumerable<double>, double> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
-                    var data = AggregateData(records, viewName, r => GetPropertyValue(r, timeSeriesName), aggregationFunc);
-                    var plotColor = GetColorForTimeSeries(timeSeriesName);
+                    var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, j), aggregationFunc);
+                    var plotColor = GetColorForTimeSeries(timeSeriesName, groupName, j);
 
                     var dates = data.Select(d => d.Timestamp.ToOADate()).ToArray();
                     var values = data.Select(d => d.Value).ToArray();
@@ -187,21 +192,26 @@ namespace PV.Forecasting.App.Controllers
             return plotHtmls;
         }
 
-        private Color GetColorForTimeSeries(string timeSeriesName)
+        private Color GetColorForTimeSeries(string timeSeriesName, string groupName, int seriesIndex)
         {
-            return timeSeriesName switch
+            // Power group has fixed, named colors
+            if (groupName == "Power")
             {
-                "MeasuredPower" => Colors.Red,
-                "ComputedPower" => Colors.Purple,
-                "Irradiation" => Colors.Orange,
-                "AmbientTemp" => Colors.Blue,
-                "WindVelocity" => Colors.Green,
-                _ => Colors.Black
-            };
+                return timeSeriesName switch
+                {
+                    "MeasuredPower" => Colors.Red,
+                    "ComputedPower" => Colors.Purple,
+                    _ => Colors.Black
+                };
+            }
+
+            // Other groups are colored by index (for different weather stations)
+            var palette = new ScottPlot.Palettes.Category10();
+            return palette.GetColor(seriesIndex);
         }
 
         #region Helper Methods
-        private List<DataPointViewModel> AggregateData(List<PvRecordCalculated> records, string view, Func<PvRecordCalculated, double> valueSelector, Func<IEnumerable<double>, double> aggregationFunc)
+        private List<DataPointViewModel> AggregateData(List<PvRecordLists> records, string view, Func<PvRecordLists, double> valueSelector, Func<IEnumerable<double>, double> aggregationFunc)
         {
             switch (view)
             {
@@ -244,22 +254,40 @@ namespace PV.Forecasting.App.Controllers
             }
         }
 
-        private double GetPropertyValue(PvRecordCalculated record, string propertyName)
+        private double GetValueFromRecord(PvRecordLists record, string groupName, int index)
         {
-            var prop = typeof(PvRecordCalculated).GetProperty(propertyName);
-            if (prop is null) return double.NaN; // Return NaN if property doesn't exist
-            var value = prop.GetValue(record);
-            return value is null ? double.NaN : Convert.ToDouble(value);
+            var list = groupName switch
+            {
+                "Power" => record.Power,
+                "Irradiation" => record.Irradiation,
+                "Ambient Temperature" => record.Temperature,
+                "Wind Velocity" => record.WindVelocity,
+                _ => null
+            };
+
+            if (list is null || index < 0 || index >= list.Count)
+            {
+                return double.NaN;
+            }
+            return list[index];
         }
 
-        private List<SelectListItem> GetTimeSeriesOptions() =>
-        [
-            new("Measured Power", "MeasuredPower"),
-            new("Computed Power", "ComputedPower"),
-            new("Irradiation", "Irradiation"),
-            new("Ambient Temperature", "AmbientTemp"),
-            new("Wind Velocity", "WindVelocity")
-        ];
+        private List<SelectListItem> GetTimeSeriesOptions()
+        {
+            if (_pvRecordLabels is null) return new List<SelectListItem>();
+
+            var options = new List<SelectListItem>();
+            foreach (var group in _pvRecordLabels)
+            {
+                foreach (var label in group.Value)
+                {
+                    // A simple formatter to convert "MeasuredPower" to "Measured Power"
+                    var displayName = System.Text.RegularExpressions.Regex.Replace(label, "(\\B[A-Z])", " $1");
+                    options.Add(new SelectListItem(displayName, label));
+                }
+            }
+            return options;
+        }
 
         private List<SelectListItem> GetViewOptions() =>
         [
