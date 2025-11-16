@@ -1,4 +1,5 @@
 ﻿using LEG.PV.Core.Models;
+using NetTopologySuite.Geometries;
 
 namespace LEG.PV.Data.Processor
 {
@@ -27,9 +28,18 @@ namespace LEG.PV.Data.Processor
             public double MeasuredPower { get; init; }       // P_meas [W]
             public double ComputedPower (PvModelParams modelParams, double installedPower)       // P_meas [W]
             {
-                return PvJacobian.EffectiveCellPower(installedPower, 
-                    GeometryFactor, Irradiation, AmbientTemp, WindVelocity, Age,
-                    ethaSys: modelParams.Etha, gamma: modelParams.Gamma, u0: modelParams.U0, u1: modelParams.U1, lDegr: modelParams.LDegr);
+                return PvJacobian.EffectiveCellPower(installedPower,
+                    GeometryFactor, 
+                    Irradiation, 
+                    AmbientTemp, 
+                    WindVelocity, 
+                    Age,
+                    modelParams.Etha,
+                    modelParams.Gamma,
+                    modelParams.U0,
+                    modelParams.U1,
+                    modelParams.LDegr
+                    );
             }
         }
 
@@ -61,7 +71,7 @@ namespace LEG.PV.Data.Processor
 
         public record PvRecordLists
         {
-            public PvRecordLists(DateTime timestamp, int index, List<double> power, List<double> irradiation, List<double> temperature, List<double> windVelocity)
+            public PvRecordLists(DateTime timestamp, int index, List<double?> power, List<double?> irradiation, List<double?> temperature, List<double?> windVelocity)
             {
                 Timestamp = timestamp;
                 Index = index;
@@ -73,10 +83,10 @@ namespace LEG.PV.Data.Processor
 
             public DateTime Timestamp { get; init; }                // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                         // Index [unitless]
-            public List<double> Power { get; init; }                // P [W]
-            public List<double> Irradiation { get; init; }          // G_POA [W/m²]
-            public List<double> Temperature { get; init; }         // T [°C]
-            public List<double> WindVelocity { get; init; }        // v_wind [m/s]
+            public List<double?> Power { get; init; }                // P [W]
+            public List<double?> Irradiation { get; init; }          // G_POA [W/m²]
+            public List<double?> Temperature { get; init; }         // T [°C]
+            public List<double?> WindVelocity { get; init; }        // v_wind [m/s]
         }
         public record PvRecordLabels
         {

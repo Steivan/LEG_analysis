@@ -149,7 +149,7 @@ namespace PV.Forecasting.App.Controllers
                     if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
                     bool isSum = groupName is "Power" or "Irradiation";
-                    Func<IEnumerable<double>, double> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
+                    Func<IEnumerable<double?>, double?> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
                     var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, j), aggregationFunc);
                     var plotColor = GetColorForTimeSeries(timeSeriesName, groupName, j);
 
@@ -211,7 +211,7 @@ namespace PV.Forecasting.App.Controllers
         }
 
         #region Helper Methods
-        private List<DataPointViewModel> AggregateData(List<PvRecordLists> records, string view, Func<PvRecordLists, double> valueSelector, Func<IEnumerable<double>, double> aggregationFunc)
+        private List<DataPointViewModel> AggregateData(List<PvRecordLists> records, string view, Func<PvRecordLists, double?> valueSelector, Func<IEnumerable<double?>, double?> aggregationFunc)
         {
             switch (view)
             {
@@ -254,7 +254,7 @@ namespace PV.Forecasting.App.Controllers
             }
         }
 
-        private double GetValueFromRecord(PvRecordLists record, string groupName, int index)
+        private double? GetValueFromRecord(PvRecordLists record, string groupName, int index)
         {
             var list = groupName switch
             {
@@ -267,7 +267,7 @@ namespace PV.Forecasting.App.Controllers
 
             if (list is null || index < 0 || index >= list.Count)
             {
-                return double.NaN;
+                return null;
             }
             return list[index];
         }

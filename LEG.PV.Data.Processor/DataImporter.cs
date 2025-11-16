@@ -6,6 +6,7 @@ using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
+using System.IO;
 using static LEG.PV.Data.Processor.DataRecords;
 
 namespace LEG.PV.Data.Processor
@@ -16,6 +17,29 @@ namespace LEG.PV.Data.Processor
         int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
         const string meteoStationId = "SMA";
         List<string> referenceStationIds = ["KLO", "UEB", "HOE"];  // ZH: "HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"
+
+        public async Task UpdateWeatherData(DateTime downloadStartDate, List<string> stationsList)
+        {
+            var apiClient = new MeteoSwissClient();
+            var meteoDataService = new MeteoDataService(apiClient);
+
+            foreach (var stationId in stationsList)
+            {
+                var downloadStartYear = downloadStartDate.Year;
+                var filePath = Path.Combine(MeteoSwissConstants.MeteoStationsDataFolder, $"stac_t_{stationId}_{DateTime.UtcNow.Year}.csv");
+
+                if (File.Exists(filePath))
+                {
+                    var fileInfo = new FileInfo(filePath);
+                    downloadStartYear = fileInfo.CreationTime.Year;
+                }
+
+                var startDate = new DateTime(downloadStartYear, 1, 1).ToString("o");
+                var endDate = new DateTime(DateTime.UtcNow.Year, 12, 31).ToString("o");
+
+                await meteoDataService.GetHistoricalWeatherAsync(startDate, endDate, stationId, "t");
+            }
+        }
 
         public async Task<(string siteId, 
             List<PvRecord> dataRecords, 
@@ -95,19 +119,13 @@ namespace LEG.PV.Data.Processor
                     3.2,
                     0.0,
                     0.0232
-                ),
-                new(             // SennV: elevation 29° 
-                    0.255,
-                    -0.00215,
-                    5.7,
-                    0.0,
-                    0.0253
                 )
             ];
             var (siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcData(folder);
 
             // Fetch reference weather parameters
             var timeStamps = dataRecords.Select(r => r.Timestamp).ToList();
+            await UpdateWeatherData(timeStamps[0], referenceStationIds);
             var referenceMeteoParamsList = new List<List<(double? directIrradiation, double? diffuseIrradiation, double? temperature, double? windVelocity)>>();
             foreach (var referenceStationId in referenceStationIds)
             {
@@ -115,36 +133,57 @@ namespace LEG.PV.Data.Processor
                 referenceMeteoParamsList.Add(referenceMeteoParams);
             }
 
-            //var calculateddataRecords = new List<PvRecordCalculated>();
+            // --- New Filtering Logic ---
+            // 1. Collect all series and their original labels
+            var allIrradiationSeries = new List<List<double?>>();
+            var allTemperatureSeries = new List<List<double?>>();
+            var allWindVelocitySeries = new List<List<double?>>();
+
+            for (int i = 0; i < referenceStationIds.Count; i++)
+            {
+                var stationData = referenceMeteoParamsList[i];
+                allIrradiationSeries.Add(stationData.Select(d => d.directIrradiation.HasValue || d.diffuseIrradiation.HasValue ? (d.directIrradiation ?? 0) + (d.diffuseIrradiation ?? 0) : (double?)null).ToList());
+                allTemperatureSeries.Add(stationData.Select(d => d.temperature).ToList());
+                allWindVelocitySeries.Add(stationData.Select(d => d.windVelocity).ToList());
+            }
+
+            // 2. Filter out series that are entirely null and get the valid labels
+            var finalIrradiationLabels = new List<string> { $"Irradiation_{meteoStationId}" };
+            var finalTemperatureLabels = new List<string> { $"AmbientTemp_{meteoStationId}" };
+            var finalWindVelocityLabels = new List<string> { $"WindVelocity_{ meteoStationId}" };
+
+            var validIrradiationSeries = allIrradiationSeries.Where((series, i) => {
+                if (series.Any(val => val.HasValue)) { finalIrradiationLabels.Add($"Reference_{referenceStationIds[i]}"); return true; }
+                return false;
+            }).ToList();
+
+            var validTemperatureSeries = allTemperatureSeries.Where((series, i) => {
+                if (series.Any(val => val.HasValue)) { finalTemperatureLabels.Add($"Reference_{referenceStationIds[i]}"); return true; }
+                return false;
+            }).ToList();
+
+            var validWindVelocitySeries = allWindVelocitySeries.Where((series, i) => {
+                if (series.Any(val => val.HasValue)) { finalWindVelocityLabels.Add($"Reference_{referenceStationIds[i]}"); return true; }
+                return false;
+            }).ToList();
+            // --- End New Filtering Logic ---
+
             var listsDataRecords = new List<PvRecordLists>();
-            for (var index=0;  index<dataRecords.Count; index++)
+            for (var index = 0; index < dataRecords.Count; index++)
             {
                 var record = dataRecords[index];
                 var computedPower = record.ComputedPower(modelParams[folder], installedPower);
-                var calculatedDataRecord = new PvRecordCalculated(
-                    record.Timestamp,
-                    record.Index,
-                    record.GeometryFactor,
-                    record.Irradiation,
-                    record.AmbientTemp,
-                    record.WindVelocity,
-                    record.Age,
-                    record.MeasuredPower,
-                    computedPower
-                );
-                List<double> irradiationList = [record.Irradiation];
-                List<double> temperatureList = [record.AmbientTemp];
-                List<double> windVelocityList = [record.WindVelocity];
-                foreach (var referenceMeteoParams in referenceMeteoParamsList)
-                {
-                    var data = referenceMeteoParams[index];
-                    var irradiation = (data.directIrradiation ?? 0.0) + (data.diffuseIrradiation ?? 0.0);
-                    var temperature = data.temperature ?? 0.0;
-                    var windVelocity = data.windVelocity ?? 0.0;
-                    irradiationList.Add(irradiation);
-                    temperatureList.Add(temperature);
-                    windVelocityList.Add(windVelocity);
-                }
+
+                // Build lists for the current record, including the base series and the valid reference series
+                List<double?> irradiationList = [record.Irradiation];
+                irradiationList.AddRange(validIrradiationSeries.Select(series => series[index]));
+
+                List<double?> temperatureList = [record.AmbientTemp];
+                temperatureList.AddRange(validTemperatureSeries.Select(series => series[index]));
+
+                List<double?> windVelocityList = [record.WindVelocity];
+                windVelocityList.AddRange(validWindVelocitySeries.Select(series => series[index]));
+
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
                     record.Index,
@@ -156,24 +195,16 @@ namespace LEG.PV.Data.Processor
 
                 listsDataRecords.Add(listsDataRecord);
             }
-            List<string> irradiationLabels = [$"Irradiation_{meteoStationId}"];
-            List<string> temperatureLabels = [$"AmbientTemp_{meteoStationId}"];
-            List<string> windVelocityLabels = [$"WindVelocity_{ meteoStationId}"];
-            foreach (var referenceStationId in referenceStationIds)
-            {
-                irradiationLabels.Add($"Reference_{referenceStationId}");
-                temperatureLabels.Add($"Reference_{referenceStationId}");
-                windVelocityLabels.Add($"Reference_{referenceStationId}");
-            }
+
             var dataRecordLabels = new PvRecordLabels(
                 ["MeasuredPower", "ComputedPower"],
-                irradiationLabels,
-                temperatureLabels,
-                windVelocityLabels);
+                finalIrradiationLabels,
+                finalTemperatureLabels,
+                finalWindVelocityLabels);
 
             return (siteId, listsDataRecords, dataRecordLabels, validRecords, installedPower, periodsPerHour);
-
         }
+
         private async Task<(List<DateTime> timeStamps, List<double> geometryFactors, double installedPower)> pvProduction(
             string siteId,
             DateTime startTime,
@@ -232,8 +263,8 @@ namespace LEG.PV.Data.Processor
         {
 
             void AllocateMeteoDataContainers(int iSupport, int iMeteo, int supportCount, int meteoInterval, int supportInterval,
-                DateTime supportTimeStamp, DateTime meteoTimeStamp, WeatherCsvRecord leftRecord, 
-                double[] supportDirectIrradiation, double[] supportDiffuseIrradiation, double[] supportTemperature, double[] supportWindSpeed)
+                DateTime supportTimeStamp, DateTime meteoTimeStamp, WeatherCsvRecord leftRecord,
+                double?[] supportDirectIrradiation, double?[] supportDiffuseIrradiation, double?[] supportTemperature, double?[] supportWindSpeed)
             {
                 var rightOverlapRatio = 1.0;
                 var leftOverlapRatio = 0.0;
@@ -254,24 +285,26 @@ namespace LEG.PV.Data.Processor
                     iRight++;
                 }
 
-                var priorDiffuseIrradiation = leftRecord.DiffuseRadiation ?? 0.0;
-                var priorDirectIrradiation = Math.Max(0.0, (leftRecord.GlobalRadiation ?? 0.0) - priorDiffuseIrradiation);
-                var priorTemperature = leftRecord.Temperature2m ?? 0.0;
-                var priorWindSpeed = leftRecord.WindSpeed10min_kmh ?? 0.0;
+                var priorDiffuseIrradiation = leftRecord.DiffuseRadiation;
+                var priorDirectIrradiation = leftRecord.GlobalRadiation.HasValue && leftRecord.DiffuseRadiation.HasValue
+                    ? Math.Max(0.0, leftRecord.GlobalRadiation.Value - leftRecord.DiffuseRadiation.Value)
+                    : leftRecord.GlobalRadiation;
+                var priorTemperature = leftRecord.Temperature2m;
+                var priorWindSpeed = leftRecord.WindSpeed10min_kmh;
 
                 if (iLeft >= 0 && iLeft < supportCount && leftOverlapRatio > 0)
                 {
-                    supportDirectIrradiation[iLeft] += priorDirectIrradiation * leftOverlapRatio;
-                    supportDiffuseIrradiation[iLeft] += priorDiffuseIrradiation * leftOverlapRatio;
-                    supportTemperature[iLeft] += priorTemperature * leftOverlapRatio;
-                    supportWindSpeed[iLeft] += priorWindSpeed * leftOverlapRatio;
+                    if (priorDirectIrradiation.HasValue) supportDirectIrradiation[iLeft] = (supportDirectIrradiation[iLeft] ?? 0) + priorDirectIrradiation.Value * leftOverlapRatio;
+                    if (priorDiffuseIrradiation.HasValue) supportDiffuseIrradiation[iLeft] = (supportDiffuseIrradiation[iLeft] ?? 0) + priorDiffuseIrradiation.Value * leftOverlapRatio;
+                    if (priorTemperature.HasValue) supportTemperature[iLeft] = (supportTemperature[iLeft] ?? 0) + priorTemperature.Value * leftOverlapRatio;
+                    if (priorWindSpeed.HasValue) supportWindSpeed[iLeft] = (supportWindSpeed[iLeft] ?? 0) + priorWindSpeed.Value * leftOverlapRatio;
                 }
                 if (iRight >= 0 && iRight < supportCount && rightOverlapRatio > 0)
                 {
-                    supportDirectIrradiation[iRight] += priorDirectIrradiation * rightOverlapRatio;
-                    supportDiffuseIrradiation[iRight] += priorDiffuseIrradiation * rightOverlapRatio;
-                    supportTemperature[iRight] += priorTemperature * rightOverlapRatio;
-                    supportWindSpeed[iRight] += priorWindSpeed * rightOverlapRatio;
+                    if (priorDirectIrradiation.HasValue) supportDirectIrradiation[iRight] = (supportDirectIrradiation[iRight] ?? 0) + priorDirectIrradiation.Value * rightOverlapRatio;
+                    if (priorDiffuseIrradiation.HasValue) supportDiffuseIrradiation[iRight] = (supportDiffuseIrradiation[iRight] ?? 0) + priorDiffuseIrradiation.Value * rightOverlapRatio;
+                    if (priorTemperature.HasValue) supportTemperature[iRight] = (supportTemperature[iRight] ?? 0) + priorTemperature.Value * rightOverlapRatio;
+                    if (priorWindSpeed.HasValue) supportWindSpeed[iRight] = (supportWindSpeed[iRight] ?? 0) + priorWindSpeed.Value * rightOverlapRatio;
                 }
             }
 
@@ -313,10 +346,10 @@ namespace LEG.PV.Data.Processor
             var iSupport = 0;
             var iMeteo = 0;
             var leftRecord = weatherRecords[0];
-            var supportDirectIrradiation = new double[supportCount];
-            var supportDiffuseIrradiation = new double[supportCount];
-            var supportTemperature = new double[supportCount];
-            var supportWindSpeed = new double[supportCount];
+            var supportDirectIrradiation = new double?[supportCount];
+            var supportDiffuseIrradiation = new double?[supportCount];
+            var supportTemperature = new double?[supportCount];
+            var supportWindSpeed = new double?[supportCount];
             while (iMeteo < meteoCount - 1 && alignedMeteoTimeStamps[iMeteo].AddMinutes(meteoInterval) <= firstSupportTimestamp)
             {
                 iMeteo++;
