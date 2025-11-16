@@ -6,16 +6,18 @@ using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
-using System.IO;
 using static LEG.PV.Data.Processor.DataRecords;
 
 namespace LEG.PV.Data.Processor
 {
     public class DataImporter
     {
+        // see also file: C:\code\LEG_analysis\Data\MeteoData\StationsData\klo_sma_hoe_ueb_recent_16.11.2025.xlsx
         const int meteoDataOffset = 60;             // Timestamps are UTC values
         int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
-        const string meteoStationId = "SMA";
+        const string meteoStationId = "SMA";        // "KLO", "HOE", "SMA"
+        const string diffuseStationId = "KLO";      // "KLO", "UEB"
+        bool useDiffuseIrradiation = !true;
         List<string> referenceStationIds = ["KLO", "HOE", "UEB"];  // ZH: "HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"
 
         public async Task UpdateWeatherData(DateTime downloadStartDate, List<string> stationsList)
@@ -64,8 +66,13 @@ namespace LEG.PV.Data.Processor
 
             // Fetch weather parameters
             meteoDataLag = 5 * (int)Math.Round((double)meteoDataLag / 5);
+            var meteoDiffuseParams = new List<(double? directIrradiation, double? diffuseIrradiation, double? temperature, double? windVelocity)>();
             var meteoParams = LoadWeatherParameters(meteoStationId, timeStamps, shiftMeteoTimeStamps: meteoDataOffset + meteoDataLag);
-
+            if (useDiffuseIrradiation)
+            {
+                meteoDiffuseParams = LoadWeatherParameters(diffuseStationId, timeStamps, shiftMeteoTimeStamps: meteoDataOffset + meteoDataLag);
+            }
+           
             // Merge data
             var dataRecords = new List<PvRecord>();
             var validRecords = new List<bool>();
@@ -73,16 +80,18 @@ namespace LEG.PV.Data.Processor
             for (var i=0; i < pvDataRecords.Count; i++)
             {
                 var meteoParam = meteoParams[i];
+                var diffuseParam = useDiffuseIrradiation ? meteoDiffuseParams[i] : meteoParams[i];
                 var pvDataRecord = pvDataRecords[i];
                 var directIrradiation = meteoParam.directIrradiation ?? 0.0;
-                var diffuseIrradiation = meteoParam.diffuseIrradiation ?? 0.0;
+                var diffuseIrradiation = diffuseParam.diffuseIrradiation ?? 0.0;
                 var globalIrradiation = directIrradiation + diffuseIrradiation;
                 var effectiveGeometryFactor = globalIrradiation > 0 ? (directIrradiation * geometryFactors[i] + diffuseIrradiation) / globalIrradiation : geometryFactors[i];
                 var pvRecord = new PvRecord (
                     timeStamps[i], 
                     recordIndex, 
-                    effectiveGeometryFactor, 
-                    globalIrradiation, 
+                    effectiveGeometryFactor,        // applied to global irradiation = direct + diffuse
+                    directIrradiation,
+                    diffuseIrradiation,
                     meteoParam.temperature ?? 0.0, 
                     meteoParam.windVelocity ?? 0.0, 
                     (double)i * minutesPerPeriod / 60.0 / 24 / 365.2422, 
@@ -148,9 +157,9 @@ namespace LEG.PV.Data.Processor
             }
 
             // 2. Filter out series that are entirely null and get the valid labels
-            var finalIrradiationLabels = new List<string> { $"Irradiation_{meteoStationId}" };
-            var finalTemperatureLabels = new List<string> { $"AmbientTemp_{meteoStationId}" };
-            var finalWindVelocityLabels = new List<string> { $"WindVelocity_{ meteoStationId}" };
+            var finalIrradiationLabels = new List<string> { $"Total_{meteoStationId}", $"Diffuse_{diffuseStationId}" };
+            var finalTemperatureLabels = new List<string> { $"{meteoStationId}" };
+            var finalWindVelocityLabels = new List<string> { $"{ meteoStationId}" };
 
             var validIrradiationSeries = allIrradiationSeries.Where((series, i) => {
                 if (series.Any(val => val.HasValue)) { finalIrradiationLabels.Add($"Reference_{referenceStationIds[i]}"); return true; }
@@ -175,7 +184,7 @@ namespace LEG.PV.Data.Processor
                 var computedPower = record.ComputedPower(modelParams[folder], installedPower);
 
                 // Build lists for the current record, including the base series and the valid reference series
-                List<double?> irradiationList = [record.Irradiation];
+                List<double?> irradiationList = [record.Irradiation, record.DiffuseIrradiation];
                 irradiationList.AddRange(validIrradiationSeries.Select(series => series[index]));
 
                 List<double?> temperatureList = [record.AmbientTemp];

@@ -165,7 +165,8 @@ public class DataSimulator
                                 timeStamp, 
                                 pvRecords.Count, 
                                 geometryFactor, 
-                                irradiation, 
+                                irradiation,                // Direct irradiation
+                                0.0,                        // Diffuse irradiation not modeled
                                 ambientTemp, 
                                 windVelocity, 
                                 age, measuredPower)

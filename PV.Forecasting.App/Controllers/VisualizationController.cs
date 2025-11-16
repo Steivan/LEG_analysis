@@ -17,7 +17,7 @@ namespace PV.Forecasting.App.Controllers
         private static Dictionary<string, List<string>>? _pvRecordLabels;
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedPeriod = "Year", DateTime? SelectedDate = null, string SelectedView = "15-min")
+        public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedPeriod = "All", DateTime? SelectedDate = null, string SelectedView = "Weekly")
         {
             if (_pvRecords is null)
             {
@@ -173,10 +173,12 @@ namespace PV.Forecasting.App.Controllers
             }
 
             // Pass 2: Synchronize axis limits and render
+            const int imageWidth = 2000;
+            const int imageHeight = 250;
             float maxLeftAxisWidth = 0;
             foreach (var plt in plots)
             {
-                var image = plt.GetImage(800, 250); // Render to a dummy image to calculate layout
+                var image = plt.GetImage(imageWidth, imageHeight); // Render to a dummy image to calculate layout
                 maxLeftAxisWidth = Math.Max(maxLeftAxisWidth, plt.LastRender.DataRect.Left);
             }
 
@@ -189,11 +191,11 @@ namespace PV.Forecasting.App.Controllers
 
                 // Render with legend
                 plt.Legend.IsVisible = true;
-                var htmlWithLegend = plt.GetPngHtml(800, 250);
+                var htmlWithLegend = plt.GetPngHtml(imageWidth, imageHeight);
 
                 // Render without legend
                 plt.Legend.IsVisible = false;
-                var htmlWithoutLegend = plt.GetPngHtml(800, 250);
+                var htmlWithoutLegend = plt.GetPngHtml(imageWidth, imageHeight);
 
                 plotHtmls[groupName] = (htmlWithLegend, htmlWithoutLegend);
             }
