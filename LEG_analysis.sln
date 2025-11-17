@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.CoreLib", "LEG.CoreLib\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.Tests", "LEG.Tests\LEG.Tests.csproj", "{A0C9C30F-3D45-41EE-BAC9-E74F83E619FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E3DcConsoleApp", "LEG.ConsoleApp\E3DcConsoleApp.csproj", "{52F6E7B3-2B06-4083-AAF7-9325CB288178}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.ConsoleApp", "LEG.ConsoleApp\LEG.ConsoleApp.csproj", "{52F6E7B3-2B06-4083-AAF7-9325CB288178}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingFinderTestApp", "BuildingFinderTestApp\BuildingFinderTestApp.csproj", "{BB86D2C9-D065-47D8-A764-7495FF4D487A}"
 EndProject
