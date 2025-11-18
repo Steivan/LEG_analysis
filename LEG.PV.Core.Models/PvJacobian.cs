@@ -7,6 +7,8 @@ public class PvJacobian
 {
     public static (double gDirectPoa, double gDiffusePoa) GetDecomposedGpoa(double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double cosSunElevation)
     {
+        return (globalHorizontalIrradiance, 0.0);       // TODO: Temporary fix until a proper decomposition method is implemented
+
         var directHorizontalIrradiance = Math.Max(0, globalHorizontalIrradiance - diffuseHorizontalIrradiance);
         var gDirectPoa = cosSunElevation > 0 ? directHorizontalIrradiance / cosSunElevation : 0.0;
         var gDiffusePoa = diffuseHorizontalIrradiance;

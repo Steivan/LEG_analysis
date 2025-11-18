@@ -9,7 +9,8 @@ namespace LEG.PV.Data.Processor
         {
             public PvRecord(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
-                double globalHorizontalIrradiance, double diffuseHorizontalIrradiation, double ambientTemp, double windVelocity, double age, double measuredPower)
+                double globalHorizontalIrradiance, double diffuseHorizontalIrradiation, double ambientTemp, double windVelocity, 
+                double age, double measuredPower)
             {
                 Timestamp = timestamp;
                 Index = index;
@@ -56,8 +57,10 @@ namespace LEG.PV.Data.Processor
 
         public record PvRecordCalculated
         {
-            public PvRecordCalculated(DateTime timestamp, int index, double directGeometryFactor, double diffuseGeometryFactor, double
-                    cosSunElevation, double globalHorizontalIrradiance, double diffuseHorizontalIrradiatio, double ambientTemp, double windVelocity, double age, double measuredPower, double computedPower)
+            public PvRecordCalculated(DateTime timestamp, int index, 
+                double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
+                double globalHorizontalIrradiance, double diffuseHorizontalIrradiatio, double ambientTemp, double windVelocity, 
+                double age, double measuredPower, double computedPower)
             {
                 Timestamp = timestamp;
                 Index = index;

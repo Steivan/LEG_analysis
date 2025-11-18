@@ -17,7 +17,7 @@ namespace LEG.PV.Data.Processor
         int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
         const string meteoStationId = "SMA";        // "KLO", "HOE", "SMA"
         const string diffuseStationId = "KLO";      // "KLO", "UEB"
-        bool useDiffuseIrradiation = !true;
+        bool useDiffuseIrradiation = true;
         List<string> referenceStationIds = ["KLO", "HOE", "UEB"];  // ZH: "HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"
 
         public async Task UpdateWeatherData(DateTime downloadStartDate, List<string> stationsList)
@@ -62,7 +62,7 @@ namespace LEG.PV.Data.Processor
 
             // Fetch geometry factors
             var siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
-            var (timeStamps, geometryFactors, cosSunElevations, installedPower) = await pvProduction(siteId, firstDateTime, lastDateime, minutesPerPeriod, shiftSupportTimeStamps: 0);
+            var (timeStamps, directGeometryFactors, diffuseGeometryFactor, cosSunElevations, installedPower) = await pvProduction(siteId, firstDateTime, lastDateime, minutesPerPeriod, shiftSupportTimeStamps: 0);
 
             // Fetch weather parameters
             meteoDataLag = 5 * (int)Math.Round((double)meteoDataLag / 5);
@@ -84,13 +84,10 @@ namespace LEG.PV.Data.Processor
                 var pvDataRecord = pvDataRecords[i];
                 var directIrradiation = meteoParam.directIrradiation ?? 0.0;
                 var diffuseIrradiation = diffuseParam.diffuseIrradiation ?? 0.0;
-                var globalIrradiation = directIrradiation + diffuseIrradiation;
-                var effectiveGeometryFactor = globalIrradiation > 0 ? (directIrradiation * geometryFactors[i] + diffuseIrradiation) / globalIrradiation : geometryFactors[i];
-                var diffuseGeometryFactor = 0.0;        // TODO: to be implemented properly
                 var pvRecord = new PvRecord (
                     timeStamps[i], 
-                    recordIndex, 
-                    effectiveGeometryFactor,        // applied to global irradiation = direct + diffuse
+                    recordIndex,
+                    directGeometryFactors[i],
                     diffuseGeometryFactor,
                     cosSunElevations[i],
                     directIrradiation,
@@ -217,7 +214,7 @@ namespace LEG.PV.Data.Processor
             return (siteId, listsDataRecords, dataRecordLabels, validRecords, installedPower, periodsPerHour);
         }
 
-        private async Task<(List<DateTime> timeStamps, List<double> geometryFactors, List<double> cosSunElevations, double installedPower)> pvProduction(
+        private async Task<(List<DateTime> timeStamps, List<double> directGeometryFactors, double diffuseGeometryFactor, List<double> cosSunElevations, double installedPower)> pvProduction(
             string siteId,
             DateTime startTime,
             DateTime endTime,
@@ -236,7 +233,8 @@ namespace LEG.PV.Data.Processor
             var horizonControlProvider = new SampleSiteHorizonControlProvider();
 
             var timeStamps = new List<DateTime>();
-            var geometryFactors = new List<double>();
+            var directGeometryFactors = new List<double>();
+            var diffuseGeometryFactor = 0.0;
             var cosSunElevations = new List<double>();
 
             var installedKwP = 0.0;
@@ -257,19 +255,20 @@ namespace LEG.PV.Data.Processor
 
                 installedKwP = results.PeakPowerPerRoof.Sum();
 
+                diffuseGeometryFactor = results.DiffuseGeometryFactor; 
                 for (int i = 0; i < results.TimeStamps.Length; i++)
                 {
                     var ts = results.TimeStamps[i];
                     if (ts >= startTime && ts <= endTime && ts.Year == year)
                     {
                         timeStamps.Add(ts);
-                        geometryFactors.Add(results.TheoreticalIrradiationPerRoofAndInterval[0, i]);
+                        directGeometryFactors.Add(results.DirectGeometryFactors[i]);
                         cosSunElevations.Add(results.CosSunElevations[i]);
                     }
                 }
             }
 
-            return (timeStamps, geometryFactors, cosSunElevations, installedKwP * 1000);
+            return (timeStamps, directGeometryFactors, diffuseGeometryFactor, cosSunElevations, installedKwP * 1000);
         }
 
         private List<(double? directIrradiation, double? diffuseIrradiation, double? temperature, double? windVelocity)> LoadWeatherParameters(

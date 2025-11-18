@@ -1,7 +1,6 @@
 ﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.OxyPlotHelper;
 using OxyPlot;
-using OxyPlot.Series;
 using static LEG.OxyPlotHelper.MultiPanelPlotContext;
 
 namespace CalibrationApp

@@ -68,6 +68,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
 
             var (azi, elev, elev2, size, peak) = GetRoofArrays(roofsList);
             var (_, _, factorModel) = FourierHelpers.GetFourierMeteo(pvSiteModel.MeteoProfile);
+            var peakSum = peak.Sum();
 
             var countPerMonth = new int[13];
             var countPerHour = new int[25];
@@ -91,6 +92,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             var validRecordsCount = (DateTime.IsLeapYear(evaluationYear) ? 366 : 365) * stepsPerDay;
             var theoreticalIrradiationFactor = new double[nrRoofs, dimensionAnnualSupport];
             var effectiveIrradiationFactor = new double[nrRoofs, dimensionAnnualSupport];
+            var directGeometryFactors = new double[dimensionAnnualSupport];
+            var diffuseGeometryFactor = 0.0;
             var cosSunElevations = new double[dimensionAnnualSupport];
 
             Console.Write($"Calculating gain profiles for site {siteId} / {evaluationYear}: ...");
@@ -147,6 +150,24 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 }
             }
 
+            // Compute geometry factors
+            for (var i = 0; i < dimensionAnnualSupport; i++)
+            {
+                var weightedDirectGeometryFactor =0.0;
+                for (var roof = 0; roof < nrRoofs; roof++)
+                {
+                    weightedDirectGeometryFactor += theoreticalIrradiationFactor[roof, i] * peak[roof];
+                }
+                directGeometryFactors[i] = peakSum > 0 ? weightedDirectGeometryFactor / peakSum : 0.0;
+            }
+
+            var weightedDiffuseGeometryFactor = 0.0;
+            for (var roof = 0; roof < nrRoofs; roof++)
+            {
+                weightedDiffuseGeometryFactor += peak[roof] * (1 + Math.Cos(GeoUtils.DegToRad(elev[roof]))) / 2;
+            }
+            diffuseGeometryFactor = peakSum > 0 ? weightedDiffuseGeometryFactor / peakSum : 0.0;
+
             var deltaMinutes = (int)(shiftTimeSupport * 60); // shift in minutes
             DateTime[] timeStamps = [.. Enumerable.Range(0, dimensionAnnualSupport)
                 .Select(i => date0.AddMinutes(deltaMinutes + minutesPerPeriod * i))];
@@ -162,6 +183,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 TimeStamps: timeStamps, 
                 TheoreticalIrradiationPerRoofAndInterval: theoreticalIrradiationFactor,
                 EffectiveIrradiationPerRoofAndInterval: effectiveIrradiationFactor,
+                DirectGeometryFactors: directGeometryFactors,
+                DiffuseGeometryFactor: diffuseGeometryFactor,
                 CosSunElevations: cosSunElevations,
                 CountPerMonth: countPerMonth,
                 CountPerHour: countPerHour
@@ -191,6 +214,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     timeStamps,
                     theoreticalIrradiationPerRoofAndInterval,
                     effectiveIrradiationPerRoofAndInterval,
+                    directGeometryFactors,
+                    diffuseGeometryFactor,
                     cosSunElevations,
                     countPerMonth,
                     countPerHour
