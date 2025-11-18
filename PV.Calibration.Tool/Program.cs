@@ -189,6 +189,16 @@ void ProcessPvData(
         installedPower: installedPower,
         tolerance: tolerance,
         maxIterations: maxIterations);
+
+        //public static (List<PvModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
+        //    List<PvRecord> pvRecords,
+        //    PvPriors pvPriors,
+        //    JacobianFunc jacobianFunc,
+        //    List<bool>? validRecords = null,
+        //    double installedPower = 10.0,
+        //    double tolerance = 1e-6,
+        //    int maxIterations = 50)
+
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 
     var (minError, maxError, meanError0, binSize, binCenters, binCounts) = (0.0, 0.0, 0.0, 0.0, new double[] { }, new int[] { });

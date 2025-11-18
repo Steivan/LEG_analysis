@@ -5,16 +5,25 @@ namespace LEG.PV.Core.Models;
 
 public class PvJacobian
 {
+    public static (double gDirectPoa, double gDiffusePoa) GetDecomposedGpoa(double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double cosSunElevation)
+    {
+        var directHorizontalIrradiance = Math.Max(0, globalHorizontalIrradiance - diffuseHorizontalIrradiance);
+        var gDirectPoa = cosSunElevation > 0 ? directHorizontalIrradiance / cosSunElevation : 0.0;
+        var gDiffusePoa = diffuseHorizontalIrradiance;
 
+        return (gDirectPoa, gDiffusePoa);
+    }
     // Effective Power
-    public static double EffectiveCellPower(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double EffectiveCellPower(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return 0.0;
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var degradedPower = installedPower * (1 - lDegr * age);
         var cellTemp = ambientTemp + gPoa / (u0 + u1 * windVelocity);
@@ -25,8 +34,9 @@ public class PvJacobian
     }
 
     // Numerical Derivative
-    public static double GetNumericalDerivative(int paramIndexinstalledPower, double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double GetNumericalDerivative(int paramIndexinstalledPower, double installedPower, 
+        double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys, double gamma, double u0, double u1, double lDegr,
         double sigmaEtha, double sigmaGamma, double sigmaU0, double sigmaU1, double sigmaLDegr)
     {
@@ -72,25 +82,27 @@ public class PvJacobian
             default:
                 throw new ArgumentOutOfRangeException(nameof(paramIndexinstalledPower), "Invalid parameter index");
         }
-        var f1 = EffectiveCellPower(installedPower, geometryFactor,
-            irradiation, ambientTemp, windVelocity, age,
+        var f1 = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+            globalHorizontalIrradiance, diffuseHorizontalIrradiance, ambientTemp, windVelocity, age,
             ethaSys: ethaSys1, gamma: gamma1, u0: u01, u1: u11, lDegr: lDegr1);
-        var f2 = EffectiveCellPower(installedPower, geometryFactor,
-            irradiation, ambientTemp, windVelocity, age,
+        var f2 = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+            globalHorizontalIrradiance, diffuseHorizontalIrradiance, ambientTemp, windVelocity, age,
             ethaSys: ethaSys2, gamma: gamma2, u0: u02, u1: u12, lDegr: lDegr2);
 
         return (f1 - f2) / delta;
     }
 
     // Derivativs for Jacobian
-    public static double DerEthaSys(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double DerEthaSys(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return 0.0;
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var degradedPower = installedPower * (1 - lDegr * age);
         var cellTemp = ambientTemp + gPoa / (u0 + u1 * windVelocity);
@@ -100,14 +112,16 @@ public class PvJacobian
         return derEtha;
     }
 
-    public static double DerGamma(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double DerGamma(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return 0.0;
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var degradedPower = installedPower * (1 - lDegr * age);
         var cellTemp = ambientTemp + gPoa / (u0 + u1 * windVelocity);
@@ -116,14 +130,16 @@ public class PvJacobian
 
         return derGamma;
     }
-    public static double DerU0(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double DerU0(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return 0.0;
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var degradedPower = installedPower * (1 - lDegr * age);
         var cellTemp = ambientTemp + gPoa / (u0 + u1 * windVelocity);
@@ -132,14 +148,16 @@ public class PvJacobian
 
         return derU0;
     }
-    public static double DerU1(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double DerU1(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return 0.0;
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var degradedPower = installedPower * (1 - lDegr * age);
         var cellTemp = ambientTemp + gPoa / (u0 + u1 * windVelocity);
@@ -150,14 +168,16 @@ public class PvJacobian
         return derU1;
     }
 
-    public static double DerLDegr(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+    public static double DerLDegr(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return 0.0;
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var derDegradedPower = installedPower * (-age);
         var cellTemp = ambientTemp + gPoa / (u0 + u1 * windVelocity);
@@ -169,14 +189,16 @@ public class PvJacobian
 
     // EffectivePower and Jacobian
     public static (double effP, double derEtha, double derGamma, double derU0, double derU1, double derLDegr)
-        PvJacobianFunc(double installedPower, double geometryFactor,
-        double irradiation, double ambientTemp, double windVelocity, double age,
+        PvJacobianFunc(double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+        double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windVelocity, double age,
         double ethaSys = meanEthaSys, double gamma = meanGamma, double u0 = meanU0, double u1 = meanU1, double lDegr = meanLDegr)
     {
-        if (geometryFactor <= 0)
+        if (directGeometryFactor <= 0 && cosSunElevation <= 0)
             return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(globalHorizontalIrradiance, diffuseHorizontalIrradiance, cosSunElevation);
 
-        var gPoa = geometryFactor * irradiation;
+        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiation;
         var derDegradedPower = - installedPower * age;
         var degradedPower = installedPower + derDegradedPower * lDegr;

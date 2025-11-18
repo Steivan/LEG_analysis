@@ -1,53 +1,34 @@
-﻿from e3dc import E3DC
-from datetime import datetime
+﻿# e3dc_download.py – MINIMAL AUTH TEST
+from e3dc import E3DC
 import argparse
-import os
+import sys
 
-# === PARSE ARGUMENTS ===
-parser = argparse.ArgumentParser(description="Download E3DC data")
-parser.add_argument("--serial", required=True, help="Serial number (Anlagen-ID)")
-parser.add_argument("--start", required=True, help="Start date (YYYY-MM-DD)")
-parser.add_argument("--end", required=True, help="End date (YYYY-MM-DD)")
-parser.add_argument("--output", required=True, help="Output CSV path")
-parser.add_argument("--username", required=True, help="Portal username")
-parser.add_argument("--password", required=True, help="Portal password")
-
+parser = argparse.ArgumentParser()
+parser.add_argument("--serial", required=True)
+parser.add_argument("--user", required=True)
+parser.add_argument("--password", required=True)
 args = parser.parse_args()
 
-# === CONFIG ===
-USERNAME = args.username
-PASSWORD = args.password
-SERIAL = args.serial
-START_DATE = datetime.strptime(args.start, "%Y-%m-%d").date()
-END_DATE = datetime.strptime(args.end, "%Y-%m-%d").date()
-OUTPUT_FILE = args.output
-# ===============
+print(f"Testing connection for {args.serial} with user '{args.user}'...")
 
-os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
-
-print(f"Downloading for {SERIAL} from {START_DATE} to {END_DATE} → {OUTPUT_FILE}")
-
-# Connect to station
-station = E3DC(E3DC.CONNECT_WEB,
-               username=USERNAME,
-               password=PASSWORD,
-               serialNumber=SERIAL)
-
-# Get data
-data = station.get_db_data(startDate=START_DATE, endDate=END_DATE)
-
-# Save CSV
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-    f.write("Timestamp;PV Production;Battery Charge;Battery Discharge;Grid Feed-in;Grid Purchase;House Consumption;Autarky;Self-Consumption\n")
-    for row in data["data"]:
-        f.write(f"{row['timestamp']};"
-                f"{row.get('solarProduction', 0)};"
-                f"{row.get('batPowerIn', 0)};"
-                f"{row.get('batPowerOut', 0)};"
-                f"{row.get('gridPowerOut', 0)};"
-                f"{row.get('gridPowerIn', 0)};"
-                f"{row.get('consumption', 0)};"
-                f"{row.get('autarky', 0)};"
-                f"{row.get('selfConsumption', 0)}\n")
-
-print(f"Saved {len(data['data'])} rows → {OUTPUT_FILE}")
+try:
+    e3dc = E3DC(
+        E3DC.CONNECT_WEB,
+        username=args.user,
+        password=args.password,
+        serialNumber=args.serial,
+        isPasswordMd5=False,
+        configuration={}
+    )
+    
+    # This line triggers the full auth + first request – if it works, you're golden
+    status = e3dc.poll(keepAlive=True)
+    print("+ CONNECTION SUCCESS!")
+    print("Live status snippet:", list(status.keys())[:5])  # Shows first 5 keys (e.g., 'batteryPower', 'pvPower')
+    e3dc.disconnect()
+    sys.exit(0)
+    
+except Exception as e:
+    print("X CONNECTION FAILED")
+    print("Exact error:", str(e))
+    sys.exit(1)

@@ -12,6 +12,7 @@ public record SolarProductionDetails(
     DateTime[] TimeStamps,                              // [StepsPerHour * 24 * 366]
     double[,] TheoreticalIrradiationPerRoofAndInterval,       // [DimensionRoofs, StepsPerHour * 24 * 366]
     double[,] EffectiveIrradiationPerRoofAndInterval,
+    double[] CosSunElevations,
     int[] CountPerMonth,
     int[] CountPerHour
 );

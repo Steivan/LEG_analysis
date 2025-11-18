@@ -1,7 +1,8 @@
-﻿using LEG.CoreLib.SolarCalculations.Utilities;
-using LEG.CoreLib.HorizonProfiles;
-using LEG.HorizonProfiles.Abstractions;
+﻿using LEG.Common.Utils;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
+using LEG.CoreLib.HorizonProfiles;
+using LEG.CoreLib.SolarCalculations.Utilities;
+using LEG.HorizonProfiles.Abstractions;
 
 namespace LEG.CoreLib.SolarCalculations.Calculations
 {
@@ -90,6 +91,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             var validRecordsCount = (DateTime.IsLeapYear(evaluationYear) ? 366 : 365) * stepsPerDay;
             var theoreticalIrradiationFactor = new double[nrRoofs, dimensionAnnualSupport];
             var effectiveIrradiationFactor = new double[nrRoofs, dimensionAnnualSupport];
+            var cosSunElevations = new double[dimensionAnnualSupport];
 
             Console.Write($"Calculating gain profiles for site {siteId} / {evaluationYear}: ...");
             for (var dayIndex = 0; dayIndex < dimensionDays; dayIndex++)
@@ -121,22 +123,26 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
 
                     var (sunAziDeg, sunElevDeg) = AstroGeometry.GetSolarAziElev(indexYear, indexMonth, indexDay, indexHour, indexMinute,
                         indexSecond, utcShift, lon, lat);
+                    var cosSunElevation = Math.Cos(GeoUtils.DegToRad(sunElevDeg));
 
                     var horizonElevDeg = SunRiseSetFromProfile.HorizonElevation(sunAziDeg, siteAzimuths, siteAngles);
-                    if (sunElevDeg < horizonElevDeg)
-                    {
-                        continue;
-                    }
 
-                    // sun is above horizon
+                    // sun is above horizon / above horizon profile
                     var indexAnnualSupport = indexTimeLag * stepsPerDay + indexHour * stepsPerHour + indexMinute / minutesPerPeriod;
-                    for (var roof = 1; roof <= nrRoofs; roof++)
+                    if (cosSunElevation > 0)
                     {
-                        var geometryFactor = AstroGeometry.GetCosAngleToSun(sunAziDeg, sunElevDeg, azi[roof - 1], elev[roof - 1], 0);
-                        var combinedFactor = geometryFactor * factorSun;
+                        cosSunElevations[indexAnnualSupport] = cosSunElevation;
+                    }
+                    if (sunElevDeg > horizonElevDeg)
+                    {
+                        for (var roof = 1; roof <= nrRoofs; roof++)
+                        {
+                            var geometryFactor = AstroGeometry.GetCosAngleToSun(sunAziDeg, sunElevDeg, azi[roof - 1], elev[roof - 1], 0);
+                            var combinedFactor = geometryFactor * factorSun;
 
-                        theoreticalIrradiationFactor[roof - 1, indexAnnualSupport] = geometryFactor;
-                        effectiveIrradiationFactor[roof - 1, indexAnnualSupport] = combinedFactor;
+                            theoreticalIrradiationFactor[roof - 1, indexAnnualSupport] = geometryFactor;
+                            effectiveIrradiationFactor[roof - 1, indexAnnualSupport] = combinedFactor;
+                        }
                     }
                 }
             }
@@ -156,6 +162,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 TimeStamps: timeStamps, 
                 TheoreticalIrradiationPerRoofAndInterval: theoreticalIrradiationFactor,
                 EffectiveIrradiationPerRoofAndInterval: effectiveIrradiationFactor,
+                CosSunElevations: cosSunElevations,
                 CountPerMonth: countPerMonth,
                 CountPerHour: countPerHour
             );
@@ -184,6 +191,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     timeStamps,
                     theoreticalIrradiationPerRoofAndInterval,
                     effectiveIrradiationPerRoofAndInterval,
+                    cosSunElevations,
                     countPerMonth,
                     countPerHour
                 )

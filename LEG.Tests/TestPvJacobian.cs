@@ -12,8 +12,11 @@ namespace LEG.Tests
         public void TestJacobian()
         {
             var installedPower = 10.0;      // [kWp]
-            var geometryFactor = 0.7;
-            var irradiation = 800.0;        // [W/m^2]
+            var directGeometryFactor = 0.7;
+            var diffuseGeometryFactor =1.0;
+            var cosSunElevation = 1.0;       // [unitless]
+            var directIrradiation = 800.0;        // [W/m^2]
+            var diffuseIrradiation = 0.0;       // [W/m^2]
             var ambientTemp = 35.0;         // [°C]
             var windVelocity = 100;         // [km/h]
             var age = 5.0;                  // [y]
@@ -25,51 +28,51 @@ namespace LEG.Tests
             var (meanLDegr, sigmaLDegr, minLDegr, maxLDegr) = GetPriorsLDegr();
 
             // Calculate effective power
-            var effectivePower = EffectiveCellPower(installedPower, geometryFactor,
-                    irradiation, ambientTemp, windVelocity, age,
+            var effectivePower = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
 
             // Calculate analytical derivatives
-            var derEtha = DerEthaSys(installedPower, geometryFactor,
-                    irradiation, ambientTemp, windVelocity, age,
+            var derEtha = DerEthaSys(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
-            var derGamma = DerGamma(installedPower, geometryFactor,
-                    irradiation, ambientTemp, windVelocity, age,
+            var derGamma = DerGamma(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
-            var derU0 = DerU0(installedPower, geometryFactor,
-                    irradiation, ambientTemp, windVelocity, age,
+            var derU0 = DerU0(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
-            var derU1 = DerU1(installedPower, geometryFactor,
-                    irradiation, ambientTemp, windVelocity, age,
+            var derU1 = DerU1(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
-            var derLDegr = DerLDegr(installedPower, geometryFactor,
-                    irradiation, ambientTemp, windVelocity, age,
+            var derLDegr = DerLDegr(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
 
             // Calculate Jacobian derivatives
             var (effectivePowerJac, derEthaJac, derGammaJac, derU0Jac, derU1Jac, derLDegrJac) = PvJacobianFunc(
-                    installedPower, geometryFactor, irradiation, ambientTemp, windVelocity, age,
+                    installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation, directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
 
             // Calculate numerical derivatives
-            var derEthaNum = GetNumericalDerivative(0, installedPower, geometryFactor,
-                irradiation, ambientTemp, windVelocity, age,
+            var derEthaNum = GetNumericalDerivative(0, installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
-            var derGammaNum = GetNumericalDerivative(1, installedPower, geometryFactor,
-                irradiation, ambientTemp, windVelocity, age,
+            var derGammaNum = GetNumericalDerivative(1, installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
-            var derU0Num = GetNumericalDerivative(2, installedPower, geometryFactor,
-                irradiation, ambientTemp, windVelocity, age,
+            var derU0Num = GetNumericalDerivative(2, installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
-            var derU1Num = GetNumericalDerivative(3, installedPower, geometryFactor,
-                irradiation, ambientTemp, windVelocity, age,
+            var derU1Num = GetNumericalDerivative(3, installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
-            var derLDegrNum = GetNumericalDerivative(4, installedPower, geometryFactor,
-                irradiation, ambientTemp, windVelocity, age,
+            var derLDegrNum = GetNumericalDerivative(4, installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                directIrradiation, diffuseIrradiation, ambientTemp, windVelocity, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
 

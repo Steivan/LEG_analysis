@@ -63,7 +63,8 @@ public class DataSimulator
         double lDegr = pvParams.LDegr;
 
         // initial values
-        double irradiation = 500;
+        var globalHorizontalIrradiance = 500.0;
+        var diffuseHorizontalIrradiance = 0.0;
         double windVelocity = 10;
         var random = new Random();
         var pvRecords = new List<PvRecord>();
@@ -122,11 +123,13 @@ public class DataSimulator
                         var diurnalVariation = -Math.Cos(omegaDay * timeOfDay);
 
                         // Geometry factor combines annual and diurnal variations
-                        var geometryFactor = Math.Max(0.0, annualSolarAmplitude * annualVariation + diurnalSolarAmplitude * diurnalVariation); // Simplified model
+                        var directGeometryFactor = Math.Max(0.0, annualSolarAmplitude * annualVariation + diurnalSolarAmplitude * diurnalVariation); // Simplified model
+                        var diffuseGeometryFactor = 1.0; // Simplified model        TODO: improve diffuse model
+                        var cosSunElevation = 1.0; // Simplified model, assuming assuming direct irradiation is G_DNI and not G_DHI
 
                         // Update irradiation with some randomness
-                        var newRandomIrradiation = irradiation * weightPreviousIrradiation + (1.0 - weightPreviousIrradiation) * random.NextDouble() * maxIrradiation;
-                        irradiation = Math.Max(0.0, Math.Min(maxIrradiation, newRandomIrradiation)); // Smooth changes
+                        var newRandomIrradiation = globalHorizontalIrradiance * weightPreviousIrradiation + (1.0 - weightPreviousIrradiation) * random.NextDouble() * maxIrradiation;
+                        globalHorizontalIrradiance = Math.Max(0.0, Math.Min(maxIrradiation, newRandomIrradiation)); // Smooth changes
 
                         // Calculate ambient temperature
                         var ambientTemp = averageTemp + annualTempAmplitude * annualVariation + diurnalTempAmplitude * diurnalVariation; // [°C]
@@ -137,8 +140,8 @@ public class DataSimulator
                         windVelocity = Math.Max(0.0, Math.Min(maxWindVelocity, newWindVelocity));
 
                         // Calculate theoretical effective power
-                        var calculatedPower = EffectiveCellPower(installedPower, geometryFactor,
-                            irradiation, ambientTemp, windVelocity, age,
+                        var calculatedPower = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                            globalHorizontalIrradiance, diffuseHorizontalIrradiance, ambientTemp, windVelocity, age,
                             ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
                         // Add some noise to the measured power
@@ -164,9 +167,11 @@ public class DataSimulator
                             new PvRecord(
                                 timeStamp, 
                                 pvRecords.Count, 
-                                geometryFactor, 
-                                irradiation,                // Direct irradiation
-                                0.0,                        // Diffuse irradiation not modeled
+                                directGeometryFactor,
+                                diffuseGeometryFactor,
+                                cosSunElevation,
+                                globalHorizontalIrradiance,               // Direct irradiation
+                                diffuseHorizontalIrradiance,                        // Diffuse irradiation not modeled
                                 ambientTemp, 
                                 windVelocity, 
                                 age, measuredPower)

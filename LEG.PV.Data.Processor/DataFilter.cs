@@ -19,7 +19,7 @@ namespace LEG.PV.Data.Processor
 
             for (var recordId = 0; recordId < recordsCount; recordId++)
             {      
-                if (pvRecords[recordId].GeometryFactor <= 0.0)
+                if (pvRecords[recordId].DirectGeometryFactor <= 0.0)
                 {
                     initialValidRecords[recordId] = false;
                 }

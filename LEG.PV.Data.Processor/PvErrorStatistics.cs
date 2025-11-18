@@ -13,7 +13,7 @@ namespace LEG.PV.Data.Processor
             double installedPower,
             PvModelParams pvModelParams)
         {
-            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactor > 0.0).ToList();
+            initialValidRecords ??= pvRecords.Select(r => r.DirectGeometryFactor > 0.0).ToList();
 
             var errorList = new List<double>();
             for (var recordIndex = 0; recordIndex < pvRecords.Count; recordIndex++) 
@@ -23,8 +23,11 @@ namespace LEG.PV.Data.Processor
                 var pvRecord = pvRecords[recordIndex];
                 var modeledPower = EffectiveCellPower(
                     installedPower,
-                    pvRecord.GeometryFactor,
-                    pvRecord.Irradiation,
+                    pvRecord.DirectGeometryFactor,
+                    pvRecord.DiffuseGeometryFactor,
+                    pvRecord.CosSunElevation,
+                    pvRecord.GlobalHorizontalIrradiance,
+                    pvRecord.DiffuseHorizontalIrradiation,
                     pvRecord.AmbientTemp,
                     pvRecord.WindVelocity,
                     pvRecord.Age,
@@ -95,7 +98,7 @@ namespace LEG.PV.Data.Processor
             PvModelParams pvModelParams,
             int countOfBins = 100)
         {
-            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactor > 0.0).ToList();
+            initialValidRecords ??= pvRecords.Select(r => r.DirectGeometryFactor > 0.0).ToList();
 
             var errorList = GetErrorList(
                 pvRecords,
@@ -134,7 +137,7 @@ namespace LEG.PV.Data.Processor
         PvModelParams pvModelParams,
         List<double> pCumulative)
         {
-            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactor > 0.0).ToList();
+            initialValidRecords ??= pvRecords.Select(r => r.DirectGeometryFactor > 0.0).ToList();
 
             var errorList = GetErrorList(
                 pvRecords,

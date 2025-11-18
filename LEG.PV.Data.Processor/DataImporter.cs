@@ -62,7 +62,7 @@ namespace LEG.PV.Data.Processor
 
             // Fetch geometry factors
             var siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
-            var (timeStamps, geometryFactors, installedPower) = await pvProduction(siteId, firstDateTime, lastDateime, minutesPerPeriod, shiftSupportTimeStamps: 0);
+            var (timeStamps, geometryFactors, cosSunElevations, installedPower) = await pvProduction(siteId, firstDateTime, lastDateime, minutesPerPeriod, shiftSupportTimeStamps: 0);
 
             // Fetch weather parameters
             meteoDataLag = 5 * (int)Math.Round((double)meteoDataLag / 5);
@@ -86,10 +86,13 @@ namespace LEG.PV.Data.Processor
                 var diffuseIrradiation = diffuseParam.diffuseIrradiation ?? 0.0;
                 var globalIrradiation = directIrradiation + diffuseIrradiation;
                 var effectiveGeometryFactor = globalIrradiation > 0 ? (directIrradiation * geometryFactors[i] + diffuseIrradiation) / globalIrradiation : geometryFactors[i];
+                var diffuseGeometryFactor = 0.0;        // TODO: to be implemented properly
                 var pvRecord = new PvRecord (
                     timeStamps[i], 
                     recordIndex, 
                     effectiveGeometryFactor,        // applied to global irradiation = direct + diffuse
+                    diffuseGeometryFactor,
+                    cosSunElevations[i],
                     directIrradiation,
                     diffuseIrradiation,
                     meteoParam.temperature ?? 0.0, 
@@ -99,7 +102,7 @@ namespace LEG.PV.Data.Processor
                     );
 
                 dataRecords.Add(pvRecord);
-                validRecords.Add(pvRecord.GeometryFactor > 0 || pvDataRecord.SolarProduction > 0);
+                validRecords.Add(pvRecord.DirectGeometryFactor > 0 || pvDataRecord.SolarProduction > 0);
             }
 
             return (siteId, dataRecords, validRecords, installedPower, periodsPerHour);
@@ -184,7 +187,7 @@ namespace LEG.PV.Data.Processor
                 var computedPower = record.ComputedPower(modelParams[folder], installedPower);
 
                 // Build lists for the current record, including the base series and the valid reference series
-                List<double?> irradiationList = [record.Irradiation, record.DiffuseIrradiation];
+                List<double?> irradiationList = [record.GlobalHorizontalIrradiance, record.DiffuseHorizontalIrradiation];
                 irradiationList.AddRange(validIrradiationSeries.Select(series => series[index]));
 
                 List<double?> temperatureList = [record.AmbientTemp];
@@ -214,7 +217,7 @@ namespace LEG.PV.Data.Processor
             return (siteId, listsDataRecords, dataRecordLabels, validRecords, installedPower, periodsPerHour);
         }
 
-        private async Task<(List<DateTime> timeStamps, List<double> geometryFactors, double installedPower)> pvProduction(
+        private async Task<(List<DateTime> timeStamps, List<double> geometryFactors, List<double> cosSunElevations, double installedPower)> pvProduction(
             string siteId,
             DateTime startTime,
             DateTime endTime,
@@ -234,6 +237,7 @@ namespace LEG.PV.Data.Processor
 
             var timeStamps = new List<DateTime>();
             var geometryFactors = new List<double>();
+            var cosSunElevations = new List<double>();
 
             var installedKwP = 0.0;
             for (var year = startTime.Year; year <= endTime.Year; year++)
@@ -260,11 +264,12 @@ namespace LEG.PV.Data.Processor
                     {
                         timeStamps.Add(ts);
                         geometryFactors.Add(results.TheoreticalIrradiationPerRoofAndInterval[0, i]);
+                        cosSunElevations.Add(results.CosSunElevations[i]);
                     }
                 }
             }
 
-            return (timeStamps, geometryFactors, installedKwP * 1000);
+            return (timeStamps, geometryFactors, cosSunElevations, installedKwP * 1000);
         }
 
         private List<(double? directIrradiation, double? diffuseIrradiation, double? temperature, double? windVelocity)> LoadWeatherParameters(
