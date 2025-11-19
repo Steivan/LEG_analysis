@@ -30,9 +30,9 @@ namespace PV.Forecasting.App.Controllers
                     _pvRecordLabels = new Dictionary<string, List<string>>
                     {
                         { "Power", pvRecordLabels.PowerLabels },
-                        { "Irradiation", pvRecordLabels.IrradiationLabels },
+                        { "Irradiance", pvRecordLabels.IrradianceLabels },
                         { "Ambient Temperature", pvRecordLabels.TemperatureLabels },
-                        { "Wind Velocity", pvRecordLabels.WindVelocityLabels }
+                        { "Wind Velocity", pvRecordLabels.WindSpeedLabels }
                     };
                 }
             }
@@ -151,7 +151,7 @@ namespace PV.Forecasting.App.Controllers
                     var timeSeriesName = timeSeriesInGroup[j];
                     if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
-                    bool isSum = groupName is "Power" or "Irradiation";
+                    bool isSum = groupName is "Power" or "Irradiance";
                     Func<IEnumerable<double?>, double?> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
                     var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, j), aggregationFunc);
                     var plotColor = GetColorForTimeSeries(timeSeriesName, groupName, j);
@@ -270,9 +270,9 @@ namespace PV.Forecasting.App.Controllers
             var list = groupName switch
             {
                 "Power" => record.Power,
-                "Irradiation" => record.Irradiation,
+                "Irradiance" => record.Irradiance,
                 "Ambient Temperature" => record.Temperature,
-                "Wind Velocity" => record.WindVelocity,
+                "Wind Velocity" => record.WindSpeed,
                 _ => null
             };
 

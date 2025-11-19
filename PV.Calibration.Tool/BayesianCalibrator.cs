@@ -18,7 +18,7 @@ namespace PV.Calibration.Tool
         public delegate (double Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
             double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
             double globalHorizontalIrradiance, double diffuseHorizontalIrradiance,
-            double ambientTemp, double windVelocity, double age,
+            double ambientTemp, double windSpeed, double age,
             double ethaSys, double gamma, double u0, double u1, double lDegr);
 
         public record PvPriors
@@ -95,7 +95,7 @@ namespace PV.Calibration.Tool
                     var pvRecord = pvRecords[i];
                     // Call the user's provided Jacobian function
                     var (peff, d_etha, d_gamma, d_u0, d_u1, d_lDegr) = jacobianFunc(
-                        installedPower, pvRecord.DirectGeometryFactor, pvRecord.DiffuseGeometryFactor, pvRecord.CosSunElevation, pvRecord.GlobalHorizontalIrradiance, pvRecord.DiffuseHorizontalIrradiation, pvRecord.AmbientTemp, pvRecord.WindVelocity, pvRecord.Age,
+                        installedPower, pvRecord.DirectGeometryFactor, pvRecord.DiffuseGeometryFactor, pvRecord.CosSunElevation, pvRecord.GlobalHorizontalIrradiance, pvRecord.DiffuseHorizontalIrradiance, pvRecord.AmbientTemp, pvRecord.WindSpeed, pvRecord.Age,
                         etha, gamma, u0, u1, lDegr);
 
                     // Residual Vector r

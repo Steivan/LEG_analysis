@@ -90,8 +90,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             // Annual support dimensions
             var dimensionAnnualSupport = maxDaysPerYear * stepsPerDay;
             var validRecordsCount = (DateTime.IsLeapYear(evaluationYear) ? 366 : 365) * stepsPerDay;
-            var theoreticalIrradiationFactor = new double[nrRoofs, dimensionAnnualSupport];
-            var effectiveIrradiationFactor = new double[nrRoofs, dimensionAnnualSupport];
+            var theoreticalIrradianceFactor = new double[nrRoofs, dimensionAnnualSupport];
+            var effectiveIrradianceFactor = new double[nrRoofs, dimensionAnnualSupport];
             var directGeometryFactors = new double[dimensionAnnualSupport];
             var diffuseGeometryFactor = 0.0;
             var cosSunElevations = new double[dimensionAnnualSupport];
@@ -143,8 +143,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                             var geometryFactor = AstroGeometry.GetCosAngleToSun(sunAziDeg, sunElevDeg, azi[roof - 1], elev[roof - 1], 0);
                             var combinedFactor = geometryFactor * factorSun;
 
-                            theoreticalIrradiationFactor[roof - 1, indexAnnualSupport] = geometryFactor;
-                            effectiveIrradiationFactor[roof - 1, indexAnnualSupport] = combinedFactor;
+                            theoreticalIrradianceFactor[roof - 1, indexAnnualSupport] = geometryFactor;
+                            effectiveIrradianceFactor[roof - 1, indexAnnualSupport] = combinedFactor;
                         }
                     }
                 }
@@ -156,7 +156,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 var weightedDirectGeometryFactor =0.0;
                 for (var roof = 0; roof < nrRoofs; roof++)
                 {
-                    weightedDirectGeometryFactor += theoreticalIrradiationFactor[roof, i] * peak[roof];
+                    weightedDirectGeometryFactor += theoreticalIrradianceFactor[roof, i] * peak[roof];
                 }
                 directGeometryFactors[i] = peakSum > 0 ? weightedDirectGeometryFactor / peakSum : 0.0;
             }
@@ -181,8 +181,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 ValidRecordsCount: validRecordsCount,
                 PeakPowerPerRoof: peak,
                 TimeStamps: timeStamps, 
-                TheoreticalIrradiationPerRoofAndInterval: theoreticalIrradiationFactor,
-                EffectiveIrradiationPerRoofAndInterval: effectiveIrradiationFactor,
+                TheoreticalIrradiancePerRoofAndInterval: theoreticalIrradianceFactor,
+                EffectiveIrradiancePerRoofAndInterval: effectiveIrradianceFactor,
                 DirectGeometryFactors: directGeometryFactors,
                 DiffuseGeometryFactor: diffuseGeometryFactor,
                 CosSunElevations: cosSunElevations,
@@ -212,8 +212,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     validRecordsCount,
                     peakPowerPerRoof,
                     timeStamps,
-                    theoreticalIrradiationPerRoofAndInterval,
-                    effectiveIrradiationPerRoofAndInterval,
+                    theoreticalIrradiancePerRoofAndInterval,
+                    effectiveIrradiancePerRoofAndInterval,
                     directGeometryFactors,
                     diffuseGeometryFactor,
                     cosSunElevations,
@@ -242,9 +242,9 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 for (var iRoof = 1; iRoof <= nrRoofs; iRoof++)
                 {
                     theoreticalAggregation[iRoof, iMonth, iHour] +=
-                        theoreticalIrradiationPerRoofAndInterval[iRoof - 1, i];
+                        theoreticalIrradiancePerRoofAndInterval[iRoof - 1, i];
                     effectiveAggregation[iRoof, iMonth, iHour] +=
-                        effectiveIrradiationPerRoofAndInterval[iRoof - 1, i];
+                        effectiveIrradiancePerRoofAndInterval[iRoof - 1, i];
                 }
             }
 

@@ -35,17 +35,17 @@ public class DataSimulator
         const double annualSolarAmplitude = 0.1;
         const double diurnalSolarAmplitude = 0.9;
 
-        const double maxIrradiation = 1000;     // [W/m^2]
-        const double weightPreviousIrradiation = 0.7;
+        const double maxIrradiance = 1361;     // [W/m^2] Solar constant
+        const double weightPreviousIrradiance = 0.7;
 
         const double averageTemp = 15;          // [°C]
         const double annualTempAmplitude = 10;  // [°C]
         const double diurnalTempAmplitude = 5;  // [°C]
 
-        const double maxWindVelocity = 150;     // [km/h]
+        const double maxWindSpeed = 150;     // [km/h]
         const double maxNewWindGust = 10;       // [km/h]
         const double windGustProbability = 0.1;
-        const double weightPreviousWindVelocity = 0.95;
+        const double weightPreviousWindSpeed = 0.95;
 
         const double randomNoiseStdDev = 0.1;
 
@@ -65,7 +65,7 @@ public class DataSimulator
         // initial values
         var globalHorizontalIrradiance = 500.0;
         var diffuseHorizontalIrradiance = 0.0;
-        double windVelocity = 10;
+        double windSpeed = 10;
         var random = new Random();
         var pvRecords = new List<PvRecord>();
         var validRecords = new List<bool>();
@@ -128,20 +128,20 @@ public class DataSimulator
                         var cosSunElevation = 1.0; // Simplified model, assuming assuming direct irradiation is G_DNI and not G_DHI
 
                         // Update irradiation with some randomness
-                        var newRandomIrradiation = globalHorizontalIrradiance * weightPreviousIrradiation + (1.0 - weightPreviousIrradiation) * random.NextDouble() * maxIrradiation;
-                        globalHorizontalIrradiance = Math.Max(0.0, Math.Min(maxIrradiation, newRandomIrradiation)); // Smooth changes
+                        var newRandomIrradiance = globalHorizontalIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * random.NextDouble() * maxIrradiance;
+                        globalHorizontalIrradiance = Math.Max(0.0, Math.Min(maxIrradiance, newRandomIrradiance)); // Smooth changes
 
                         // Calculate ambient temperature
                         var ambientTemp = averageTemp + annualTempAmplitude * annualVariation + diurnalTempAmplitude * diurnalVariation; // [°C]
 
                         // Update wind velocity with some randomness
                         var newWindGustVelocity = (random.NextDouble() < windGustProbability) ? random.NextDouble() * maxNewWindGust : 0.0;
-                        var newWindVelocity = windVelocity * weightPreviousWindVelocity + newWindGustVelocity;
-                        windVelocity = Math.Max(0.0, Math.Min(maxWindVelocity, newWindVelocity));
+                        var newWindSpeed = windSpeed * weightPreviousWindSpeed + newWindGustVelocity;
+                        windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, newWindSpeed));
 
                         // Calculate theoretical effective power
                         var calculatedPower = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                            globalHorizontalIrradiance, diffuseHorizontalIrradiance, ambientTemp, windVelocity, age,
+                            globalHorizontalIrradiance, diffuseHorizontalIrradiance, ambientTemp, windSpeed, age,
                             ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
                         // Add some noise to the measured power
@@ -173,7 +173,8 @@ public class DataSimulator
                                 globalHorizontalIrradiance,               // Direct irradiation
                                 diffuseHorizontalIrradiance,                        // Diffuse irradiation not modeled
                                 ambientTemp, 
-                                windVelocity, 
+                                windSpeed, 
+                                weight: 1.0,                    // TODO: implement weighting
                                 age, measuredPower)
                             );
                         var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower);

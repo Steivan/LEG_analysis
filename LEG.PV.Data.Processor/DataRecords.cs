@@ -1,5 +1,6 @@
 ﻿using LEG.PV.Core.Models;
 using NetTopologySuite.Geometries;
+using OxyPlot;
 
 namespace LEG.PV.Data.Processor
 {
@@ -9,7 +10,7 @@ namespace LEG.PV.Data.Processor
         {
             public PvRecord(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
-                double globalHorizontalIrradiance, double diffuseHorizontalIrradiation, double ambientTemp, double windVelocity, 
+                double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windSpeed, double weight, 
                 double age, double measuredPower)
             {
                 Timestamp = timestamp;
@@ -18,9 +19,10 @@ namespace LEG.PV.Data.Processor
                 DiffuseGeometryFactor = diffuseGeometryFactor;
                 CosSunElevation = cosSunElevation;
                 GlobalHorizontalIrradiance = globalHorizontalIrradiance;
-                DiffuseHorizontalIrradiation = diffuseHorizontalIrradiation;
+                DiffuseHorizontalIrradiance = diffuseHorizontalIrradiance;
                 AmbientTemp = ambientTemp;
-                WindVelocity = windVelocity;
+                WindSpeed = windSpeed;
+                Weight = weight;
                 Age = age;
                 MeasuredPower = measuredPower;
             }
@@ -30,9 +32,10 @@ namespace LEG.PV.Data.Processor
             public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double CosSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
             public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
-            public double DiffuseHorizontalIrradiation { get; init; }                                     // [W/m²]
+            public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
-            public double WindVelocity { get; init; }                                           // v_wind [m/s]
+            public double WindSpeed { get; init; }                                           // v_wind [m/s]
+            public double Weight { get; init; }
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]
             public double ComputedPower (PvModelParams modelParams, double installedPower)      // P_meas [W]
@@ -42,9 +45,9 @@ namespace LEG.PV.Data.Processor
                     DiffuseGeometryFactor,
                     CosSunElevation,
                     GlobalHorizontalIrradiance,
-                    DiffuseHorizontalIrradiation,
+                    DiffuseHorizontalIrradiance,
                     AmbientTemp,
-                    WindVelocity,
+                    WindSpeed,
                     Age,
                     modelParams.Etha,
                     modelParams.Gamma,
@@ -59,7 +62,7 @@ namespace LEG.PV.Data.Processor
         {
             public PvRecordCalculated(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
-                double globalHorizontalIrradiance, double diffuseHorizontalIrradiatio, double ambientTemp, double windVelocity, 
+                double globalHorizontalIrradiance, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, 
                 double age, double measuredPower, double computedPower)
             {
                 Timestamp = timestamp;
@@ -68,9 +71,9 @@ namespace LEG.PV.Data.Processor
                 DiffuseGeometryFactor = diffuseGeometryFactor;
                 CosSunElevation = cosSunElevation;
                 GlobalHorizontalIrradiance = globalHorizontalIrradiance;
-                DiffuseHorizontalIrradiation = diffuseHorizontalIrradiatio;
+                DiffuseHorizontalIrradiance = diffuseHorizontalIrradiatio;
                 AmbientTemp = ambientTemp;
-                WindVelocity = windVelocity;
+                WindSpeed = windSpeed;
                 Age = age;
                 MeasuredPower = measuredPower;
                 ComputedPower = computedPower;
@@ -82,47 +85,48 @@ namespace LEG.PV.Data.Processor
             public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double CosSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
             public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
-            public double DiffuseHorizontalIrradiation { get; init; }                                     // [W/m²]
+            public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
-            public double WindVelocity { get; init; }                                           // v_wind [m/s]
+            public double WindSpeed { get; init; }                                           // v_wind [m/s]
+            public double Weight => 1.0;
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]
             public double ComputedPower { get; init; }                                          // P_comp [W]
-            public double Irradiation => GlobalHorizontalIrradiance + DiffuseHorizontalIrradiation;                // G_POA [W/m²]
+            public double Irradiance => GlobalHorizontalIrradiance + DiffuseHorizontalIrradiance;                // G_POA [W/m²]
         }
 
         public record PvRecordLists
         {
-            public PvRecordLists(DateTime timestamp, int index, List<double?> power, List<double?> irradiation, List<double?> temperature, List<double?> windVelocity)
+            public PvRecordLists(DateTime timestamp, int index, List<double?> power, List<double?> irradiance, List<double?> temperature, List<double?> windSpeed)
             {
                 Timestamp = timestamp;
                 Index = index;
                 Power = power;
-                Irradiation = irradiation;
+                Irradiance = irradiance;
                 Temperature = temperature;
-                WindVelocity = windVelocity;
+                WindSpeed = windSpeed;
             }
 
             public DateTime Timestamp { get; init; }                // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                         // Index [unitless]
-            public List<double?> Power { get; init; }                // P [W]
-            public List<double?> Irradiation { get; init; }          // G_POA [W/m²]
+            public List<double?> Power { get; init; }               // P [W]
+            public List<double?> Irradiance { get; init; }          // G_POA [W/m²]
             public List<double?> Temperature { get; init; }         // T [°C]
-            public List<double?> WindVelocity { get; init; }        // v_wind [m/s]
+            public List<double?> WindSpeed { get; init; }           // v_wind [m/s]
         }
         public record PvRecordLabels
         {
-            public PvRecordLabels(List<string> powerLabels, List<string> irradiationLabels, List<string> temperatureLabels, List<string> windVelocityLabels)
+            public PvRecordLabels(List<string> powerLabels, List<string> irradiationLabels, List<string> temperatureLabels, List<string> windSpeedLabels)
             {
                 PowerLabels = powerLabels;
-                IrradiationLabels = irradiationLabels;
+                IrradianceLabels = irradiationLabels;
                 TemperatureLabels = temperatureLabels;
-                WindVelocityLabels = windVelocityLabels;
+                WindSpeedLabels = windSpeedLabels;
             }
             public List<string> PowerLabels { get; init; }    
-            public List<string> IrradiationLabels { get; init; }  
+            public List<string> IrradianceLabels { get; init; }  
             public List<string> TemperatureLabels { get; init; } 
-            public List<string> WindVelocityLabels { get; init; }
+            public List<string> WindSpeedLabels { get; init; }
         }
         public record PvModelParams
         {

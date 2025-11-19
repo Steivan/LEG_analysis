@@ -131,7 +131,7 @@ namespace LEG.PV.Data.Processor
                     }
                     var age = (record.Timestamp - firstRecordDate).Days / daysPerYear;
                     pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, record.DirectGeometryFactor,
-                        record.GlobalHorizontalIrradiance, record.DiffuseHorizontalIrradiation, record.AmbientTemp, record.WindVelocity, age,
+                        record.GlobalHorizontalIrradiance, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, age,
                         pvModelParams.Etha, pvModelParams.Gamma, pvModelParams.U0, pvModelParams.U1, pvModelParams.LDegr);
                     pMeasured[timeIndex] = record.MeasuredPower;
                     hasPeriodData[timeIndex] = pTheoretical[timeIndex] > 0;
