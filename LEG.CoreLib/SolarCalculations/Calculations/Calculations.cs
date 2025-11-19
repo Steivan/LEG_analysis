@@ -126,7 +126,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
 
                     var (sunAziDeg, sunElevDeg) = AstroGeometry.GetSolarAziElev(indexYear, indexMonth, indexDay, indexHour, indexMinute,
                         indexSecond, utcShift, lon, lat);
-                    var cosSunElevation = Math.Cos(GeoUtils.DegToRad(sunElevDeg));
+                    var cosSunElevation = Math.Cos(GeoUtils.DegToRad(90.0 - sunElevDeg));  // cos(solar zenith angle)
 
                     var horizonElevDeg = SunRiseSetFromProfile.HorizonElevation(sunAziDeg, siteAzimuths, siteAngles);
 

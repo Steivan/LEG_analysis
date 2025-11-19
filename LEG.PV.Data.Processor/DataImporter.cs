@@ -116,6 +116,20 @@ namespace LEG.PV.Data.Processor
             List<PvModelParams> modelParams =  [
                 GetDefaultPriorModelParams(),
                 new(
+                    0.157,
+                    -0.00196,
+                    108.3,
+                    0.0,
+                    0.016
+                ),
+                new(             // SennV: elevation 35° 
+                    0.12,
+                    -0.002,
+                    100,
+                    0.0,
+                    0.01
+                ),
+                new(
                     0.32,
                     -0.0028,
                     7.5,
