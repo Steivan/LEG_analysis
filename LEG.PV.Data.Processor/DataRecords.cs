@@ -10,18 +10,20 @@ namespace LEG.PV.Data.Processor
         {
             public PvRecord(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
-                double globalHorizontalIrradiance, double diffuseHorizontalIrradiance, double ambientTemp, double windSpeed, double weight, 
+                double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiance, double ambientTemp, double windSpeed, double snowDepth, double weight, 
                 double age, double measuredPower)
             {
                 Timestamp = timestamp;
                 Index = index;
                 DirectGeometryFactor = directGeometryFactor;
+                SunshineDuration = sunshineDuration;
                 DiffuseGeometryFactor = diffuseGeometryFactor;
                 CosSunElevation = cosSunElevation;
                 GlobalHorizontalIrradiance = globalHorizontalIrradiance;
                 DiffuseHorizontalIrradiance = diffuseHorizontalIrradiance;
                 AmbientTemp = ambientTemp;
                 WindSpeed = windSpeed;
+                SnowDepth = snowDepth;
                 Weight = weight;
                 Age = age;
                 MeasuredPower = measuredPower;
@@ -32,9 +34,11 @@ namespace LEG.PV.Data.Processor
             public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double CosSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
             public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
+            public double SunshineDuration { get; init; }                                      // [min / ten min]
             public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
             public double WindSpeed { get; init; }                                           // v_wind [m/s]
+            public double SnowDepth { get; init; }                                           // d_snow [cm]
             public double Weight { get; init; }
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]
@@ -62,7 +66,7 @@ namespace LEG.PV.Data.Processor
         {
             public PvRecordCalculated(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
-                double globalHorizontalIrradiance, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, 
+                double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, double snowDepth,
                 double age, double measuredPower, double computedPower)
             {
                 Timestamp = timestamp;
@@ -71,9 +75,11 @@ namespace LEG.PV.Data.Processor
                 DiffuseGeometryFactor = diffuseGeometryFactor;
                 CosSunElevation = cosSunElevation;
                 GlobalHorizontalIrradiance = globalHorizontalIrradiance;
+                SunshineDuration = sunshineDuration;
                 DiffuseHorizontalIrradiance = diffuseHorizontalIrradiatio;
                 AmbientTemp = ambientTemp;
                 WindSpeed = windSpeed;
+                SnowDepth = snowDepth;
                 Age = age;
                 MeasuredPower = measuredPower;
                 ComputedPower = computedPower;
@@ -85,9 +91,11 @@ namespace LEG.PV.Data.Processor
             public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double CosSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
             public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
+            public double SunshineDuration { get; init; }                                      // [min / ten min]
             public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
             public double WindSpeed { get; init; }                                           // v_wind [m/s]
+            public double SnowDepth { get; init; }                                           // d_snow [cm]
             public double Weight => 1.0;
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]

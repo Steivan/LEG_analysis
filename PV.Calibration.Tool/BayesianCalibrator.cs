@@ -17,8 +17,8 @@ namespace PV.Calibration.Tool
         // NOTE: The geometryFactor (GPOA/Gref) is implicitly included in the inputs.
         public delegate (double Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
             double installedPower, double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
-            double globalHorizontalIrradiance, double diffuseHorizontalIrradiance,
-            double ambientTemp, double windSpeed, double age,
+            double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiance,
+            double ambientTemp, double windSpeed, double snowDepth, double age,
             double ethaSys, double gamma, double u0, double u1, double lDegr);
 
         public record PvPriors
@@ -95,19 +95,33 @@ namespace PV.Calibration.Tool
                     var pvRecord = pvRecords[i];
                     // Call the user's provided Jacobian function
                     var (peff, d_etha, d_gamma, d_u0, d_u1, d_lDegr) = jacobianFunc(
-                        installedPower, pvRecord.DirectGeometryFactor, pvRecord.DiffuseGeometryFactor, pvRecord.CosSunElevation, pvRecord.GlobalHorizontalIrradiance, pvRecord.DiffuseHorizontalIrradiance, pvRecord.AmbientTemp, pvRecord.WindSpeed, pvRecord.Age,
+                        installedPower, 
+                        pvRecord.DirectGeometryFactor, 
+                        pvRecord.SunshineDuration,
+                        pvRecord.DiffuseGeometryFactor, 
+                        pvRecord.CosSunElevation, 
+                        pvRecord.GlobalHorizontalIrradiance, 
+                        pvRecord.DiffuseHorizontalIrradiance, 
+                        pvRecord.AmbientTemp, 
+                        pvRecord.WindSpeed,   
+                        pvRecord.SnowDepth,
+                        pvRecord.Age,
                         etha, gamma, u0, u1, lDegr);
 
+                    // Weighting (if applicable)
+                    var weight = pvRecord.Weight;
+                    //weight = 1.0;
+
                     // Residual Vector r
-                    Y[i] = pvRecord.MeasuredPower;
-                    Peff_model[i] = peff;
+                    Y[i] = pvRecord.MeasuredPower *weight;      // TODO: Apply weighting
+                    Peff_model[i] = peff * weight;
 
                     // Jacobian Matrix J
-                    J[i, 0] = d_etha;
-                    J[i, 1] = d_gamma;
-                    J[i, 2] = d_u0;
-                    J[i, 3] = d_u1;
-                    J[i, 4] = d_lDegr;
+                    J[i, 0] = d_etha * weight;
+                    J[i, 1] = d_gamma * weight;
+                    J[i, 2] = d_u0 * weight;
+                    J[i, 3] = d_u1 * weight;
+                    J[i, 4] = d_lDegr * weight;
                 }
 
                 Vector<double> residual = Y.Subtract(Peff_model);

@@ -8,7 +8,7 @@ using static PV.Calibration.Tool.BayesianCalibrator;
 
 //ProcessSyntheticModelData();
 
-//await CalibrateE3DcData(1, "Senn");
+await CalibrateE3DcData(1, "Senn");
 await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
@@ -100,6 +100,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     )
 {
     var filteredValidRecors = DataFilter.ExcludeSubHorizonRecords(pvRecords);
+    var countTrue = filteredValidRecors.Count(v => v == true);
 
     var initialMeanSquaredError0 = PvErrorStatistics.ComputeMeanError(
         pvRecords,
@@ -118,17 +119,19 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         thresholdType: fogParams.thresholdType,
         loThreshold: fogParams.loThreshold,
         hiThreshold: fogParams.hiThreshold);
+    countTrue = filteredValidRecors.Count(v => v == true);
 
-    filteredValidRecors = DataFilter.ExcludeSnowyRecords(
-        pvRecords,
-        filteredValidRecors,
-        installedPower,
-        defaultModelParams,
-        patternType: 0,
-        relativeThreshold: false,
-        thresholdType: snowParams.thresholdType,
-        loThreshold: snowParams.loThreshold,
-        hiThreshold: snowParams.hiThreshold);
+    //filteredValidRecors = DataFilter.ExcludeSnowyRecords(
+    //    pvRecords,
+    //    filteredValidRecors,
+    //    installedPower,
+    //    defaultModelParams,
+    //    patternType: 0,
+    //    relativeThreshold: false,
+    //    thresholdType: snowParams.thresholdType,
+    //    loThreshold: snowParams.loThreshold,
+    //    hiThreshold: snowParams.hiThreshold);
+    //countTrue = filteredValidRecors.Count(v => v == true);
 
     filteredValidRecors = DataFilter.ExcludeOutlierRecords(
         pvRecords,
@@ -138,6 +141,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         periodThreshold: outlierParams.periodThreshold,
         hourlyThreshold: outlierParams.hourlyThreshold,
         blockThreshold: outlierParams.blockThreshold);
+    countTrue = filteredValidRecors.Count(v => v == true);
 
     return (filteredValidRecors, initialMeanSquaredError0);
 }

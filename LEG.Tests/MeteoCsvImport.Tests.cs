@@ -33,7 +33,7 @@ namespace LEG.Tests
                 Assert.AreEqual(99.1, result[0].RelativeHumidity2m.GetValueOrDefault(), 0.01);
                 Assert.AreEqual(-2.9, result[0].DewPoint2m.GetValueOrDefault(), 0.01);
                 Assert.AreEqual(963.1, result[0].PressureAtStation.GetValueOrDefault(), 0.01);
-                Assert.AreEqual(0, result[0].GlobalRadiation.GetValueOrDefault(), 0.01);
+                Assert.AreEqual(0, result[0].GlobalIrradiance.GetValueOrDefault(), 0.01);
                 Assert.AreEqual(0, result[0].SunshineDuration.GetValueOrDefault(), 0.01);
             }
             finally

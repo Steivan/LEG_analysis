@@ -97,6 +97,7 @@ public class DataSimulator
                 }
             }
             var isSnowyDay = (firstSnowDay <= dayOfMonth && dayOfMonth <= lastSnowDay);
+            var snowDepth = isSnowyDay ? 20.0 : 0.0; // [cm]
 
 
             var annualVariation = -Math.Cos(omegaYear * (startLag + day));
@@ -130,6 +131,7 @@ public class DataSimulator
                         // Update irradiation with some randomness
                         var newRandomIrradiance = globalHorizontalIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * random.NextDouble() * maxIrradiance;
                         globalHorizontalIrradiance = Math.Max(0.0, Math.Min(maxIrradiance, newRandomIrradiance)); // Smooth changes
+                        var sunshineDuration = Math.Max(0.0, Math.Min(1.0, globalHorizontalIrradiance / cosSunElevation / maxIrradiance)) * minutesPerPeriod; // [min]
 
                         // Calculate ambient temperature
                         var ambientTemp = averageTemp + annualTempAmplitude * annualVariation + diurnalTempAmplitude * diurnalVariation; // [°C]
@@ -141,7 +143,7 @@ public class DataSimulator
 
                         // Calculate theoretical effective power
                         var calculatedPower = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                            globalHorizontalIrradiance, diffuseHorizontalIrradiance, ambientTemp, windSpeed, age,
+                            globalHorizontalIrradiance, sunshineDuration, diffuseHorizontalIrradiance, ambientTemp, windSpeed, snowDepth, age,
                             ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
                         // Add some noise to the measured power
@@ -171,9 +173,11 @@ public class DataSimulator
                                 diffuseGeometryFactor,
                                 cosSunElevation,
                                 globalHorizontalIrradiance,               // Direct irradiation
+                                sunshineDuration,                                       // Sunshine duration not modeled
                                 diffuseHorizontalIrradiance,                        // Diffuse irradiation not modeled
                                 ambientTemp, 
                                 windSpeed, 
+                                isSnowyDay ? 20.0 : 0.0,                 // Snow depth
                                 weight: 1.0,                    // TODO: implement weighting
                                 age, measuredPower)
                             );

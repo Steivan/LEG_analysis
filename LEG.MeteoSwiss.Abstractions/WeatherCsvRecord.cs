@@ -158,13 +158,13 @@ namespace LEG.MeteoSwiss.Abstractions
         /// Global radiation; ten minutes mean in W/m².
         /// </summary>
         [Name("gre000z0"), TypeConverter(typeof(NullableDoubleConverter))]
-        public double? GlobalRadiation { get; set; }
+        public double? GlobalIrradiance { get; set; }
 
         /// <summary>
         /// Diffuse radiation; ten minutes mean in W/m².
         /// </summary>
         [Name("ods000z0"), TypeConverter(typeof(NullableDoubleConverter))]
-        public double? DiffuseRadiation { get; set; }
+        public double? DiffuseIrradiance { get; set; }
 
         /// <summary>
         /// Longwave incoming radiation; ten minutes mean in W/m².
