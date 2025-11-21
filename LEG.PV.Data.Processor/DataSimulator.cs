@@ -126,9 +126,9 @@ public class DataSimulator
                         // Geometry factor combines annual and diurnal variations
                         var directGeometryFactor = Math.Max(0.0, annualSolarAmplitude * annualVariation + diurnalSolarAmplitude * diurnalVariation); // Simplified model
                         var diffuseGeometryFactor = 1.0; // Simplified model        TODO: improve diffuse model
-                        var cosSunElevation = 1.0; // Simplified model, assuming assuming direct irradiation is G_DNI and not G_DHI
+                        var cosSunElevation = 1.0; // Simplified model, assuming assuming direct irradiance is G_DNI and not G_DHI
 
-                        // Update irradiation with some randomness
+                        // Update irradiance with some randomness
                         var newRandomIrradiance = globalHorizontalIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * random.NextDouble() * maxIrradiance;
                         globalHorizontalIrradiance = Math.Max(0.0, Math.Min(maxIrradiance, newRandomIrradiance)); // Smooth changes
                         var sunshineDuration = Math.Max(0.0, Math.Min(1.0, globalHorizontalIrradiance / cosSunElevation / maxIrradiance)) * minutesPerPeriod; // [min]
@@ -142,7 +142,7 @@ public class DataSimulator
                         windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, newWindSpeed));
 
                         // Calculate theoretical effective power
-                        var calculatedPower = EffectiveCellPower(installedPower, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
                             globalHorizontalIrradiance, sunshineDuration, diffuseHorizontalIrradiance, ambientTemp, windSpeed, snowDepth, age,
                             ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
@@ -172,16 +172,16 @@ public class DataSimulator
                                 directGeometryFactor,
                                 diffuseGeometryFactor,
                                 cosSunElevation,
-                                globalHorizontalIrradiance,               // Direct irradiation
+                                globalHorizontalIrradiance,               // Direct irradiance
                                 sunshineDuration,                                       // Sunshine duration not modeled
-                                diffuseHorizontalIrradiance,                        // Diffuse irradiation not modeled
+                                diffuseHorizontalIrradiance,                        // Diffuse irradiance not modeled
                                 ambientTemp, 
                                 windSpeed, 
                                 isSnowyDay ? 20.0 : 0.0,                 // Snow depth
                                 weight: 1.0,                    // TODO: implement weighting
                                 age, measuredPower)
                             );
-                        var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower);
+                        var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower, periodsPerHour);
 
                         var isValidRecord = !isSnowyDay && !isFoggyPeriod && !isOutlier;
                         validRecords.Add(isValidRecord);

@@ -31,6 +31,7 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool> initialValidRecords,
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams,
             int patternType = 0,
             bool relativeThreshold = true,      // use a relative threshold for detecting records impacted by (morning) fog
@@ -43,6 +44,7 @@ namespace LEG.PV.Data.Processor
             var (diurnalIndicesList, periodsPerDay, indexOffset) = GetDiurnalPatterns(
                 pvRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams,
                 patternType: patternType,
                 relativeThreshold: relativeThreshold,
@@ -78,6 +80,7 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool> initialValidRecords,
             double installedPower,
+            int periosPerHour,
             PvModelParams pvModelParams,
             int patternType = 0,
             bool relativeThreshold = false,     // use an absolute threshold for detecting records impacted by snow covering the roof
@@ -90,6 +93,7 @@ namespace LEG.PV.Data.Processor
             var (diurnalIndicesList, periodsPerDay, indexOffset) = GetDiurnalPatterns(
                 pvRecords,
                 installedPower,
+                periosPerHour,
                 pvModelParams,
                 patternType: patternType,
                 relativeThreshold: relativeThreshold,
@@ -126,6 +130,7 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool> initialValidRecords,
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams,
             double periodThreshold = 2.0,
             double hourlyThreshold = 1.75,
@@ -136,9 +141,10 @@ namespace LEG.PV.Data.Processor
             var (periodRatiosList, hourlyRatiosList, blockRatiosList, periodsPerDay, hoursPerDay, blocksPerDay, indexOffset) = CalculateDiurnalRatios(
                 pvRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams);
 
-            var periodsPerHour = periodsPerDay / hoursPerDay;
+            //var periodsPerHour = periodsPerDay / hoursPerDay;
             var periodsPerBlock = periodsPerDay / blocksPerDay;
 
             var countDays = (pvRecords.Last().Timestamp - pvRecords.First().Timestamp).Days + 1;

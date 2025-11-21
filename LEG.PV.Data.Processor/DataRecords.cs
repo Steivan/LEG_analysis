@@ -30,34 +30,39 @@ namespace LEG.PV.Data.Processor
             }
             public DateTime Timestamp { get; init; }                                            // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                                                     // Index [unitless]
-            public double DirectGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
-            public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
+            public double DirectGeometryFactor { get; init; }                                   // G_POA / G_ref [unitless]
+            public double DiffuseGeometryFactor { get; init; }                                  // G_POA / G_ref [unitless]
             public double CosSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
-            public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
-            public double SunshineDuration { get; init; }                                      // [min / ten min]
-            public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]
+            public double GlobalHorizontalIrradiance { get; init; }                             // [W/m²]
+            public double SunshineDuration { get; init; }                                       // [min / ten min]
+            public double DiffuseHorizontalIrradiance { get; init; }                            // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
-            public double WindSpeed { get; init; }                                           // v_wind [m/s]
-            public double SnowDepth { get; init; }                                           // d_snow [cm]
+            public double WindSpeed { get; init; }                                              // v_wind [m/s]
+            public double SnowDepth { get; init; }                                              // d_snow [cm]
             public double Weight { get; init; }
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]
-            public double ComputedPower (PvModelParams modelParams, double installedPower)      // P_meas [W]
+            public double ComputedPower(                                                        // P_meas [W]
+                PvModelParams modelParams, 
+                double installedPower,
+                int periodsPerHour) 
             {
-                return PvJacobian.EffectiveCellPower(installedPower,
+                return PvJacobian.EffectiveCellPower(installedPower, periodsPerHour,
                     DirectGeometryFactor,
                     DiffuseGeometryFactor,
                     CosSunElevation,
                     GlobalHorizontalIrradiance,
+                    SunshineDuration,
                     DiffuseHorizontalIrradiance,
                     AmbientTemp,
                     WindSpeed,
+                    SnowDepth,
                     Age,
-                    modelParams.Etha,
-                    modelParams.Gamma,
-                    modelParams.U0,
-                    modelParams.U1,
-                    modelParams.LDegr
+                    ethaSys: modelParams.Etha,
+                    gamma: modelParams.Gamma,
+                    u0: modelParams.U0,
+                    u1: modelParams.U1,
+                    lDegr: modelParams.LDegr
                     );
             }
         }
@@ -124,10 +129,10 @@ namespace LEG.PV.Data.Processor
         }
         public record PvRecordLabels
         {
-            public PvRecordLabels(List<string> powerLabels, List<string> irradiationLabels, List<string> temperatureLabels, List<string> windSpeedLabels)
+            public PvRecordLabels(List<string> powerLabels, List<string> irradianceLabels, List<string> temperatureLabels, List<string> windSpeedLabels)
             {
                 PowerLabels = powerLabels;
-                IrradianceLabels = irradiationLabels;
+                IrradianceLabels = irradianceLabels;
                 TemperatureLabels = temperatureLabels;
                 WindSpeedLabels = windSpeedLabels;
             }

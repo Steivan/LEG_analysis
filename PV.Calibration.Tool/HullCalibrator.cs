@@ -10,6 +10,7 @@ namespace PV.Calibration.Tool
         public static (double EthaSystem, double LDeg, double EthaSystemUncertainty, double LDegUncertainty) CalibrateTrend(
             List<PvRecord> pvRecords, 
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams)
         {
             const double daysPerYear = 365.2522;
@@ -20,8 +21,8 @@ namespace PV.Calibration.Tool
             var nrYears = lastRecordDate.Year - firstRecordDate.Year + 1;
 
             var minutesPerPeriod = (secondRecordDate - firstRecordDate).Minutes;
-            var recordsPerHour = 60 / minutesPerPeriod;
-            var recordsPerDay = 24 * recordsPerHour;
+            //var periodsPerHour = 60 / minutesPerPeriod;
+            var recordsPerDay = 24 * periodsPerHour;
 
             var maxMeasuredPerPeriod = new double[nrYears, 12, recordsPerDay];
             var maxTheoreticalPerPeriod = new double[nrYears, 12, recordsPerDay];
@@ -35,10 +36,11 @@ namespace PV.Calibration.Tool
                 var yearIndex = record.Timestamp.Year - firstRecordDate.Year;
                 var monthIndex = record.Timestamp.Month - 1;
                 var dayIndex = record.Timestamp.Day;
-                var timeIndex = record.Timestamp.Hour * recordsPerHour + (record.Timestamp.Minute / minutesPerPeriod);
+                var timeIndex = record.Timestamp.Hour * periodsPerHour + (record.Timestamp.Minute / minutesPerPeriod);
 
-                var theoreticalPower = PvJacobian.EffectiveCellPower(installedPower, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation, record.GlobalHorizontalIrradiance, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.Age,
-                    pvModelParams.Etha, pvModelParams.Gamma, pvModelParams.U0, pvModelParams.U1, pvModelParams.LDegr);
+                var theoreticalPower = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation, 
+                    record.GlobalHorizontalIrradiance, record.SunshineDuration, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.SnowDepth, record.Age,
+                    ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
                 var measuredPower = record.MeasuredPower;
 
                 if (theoreticalPower > 0.0)

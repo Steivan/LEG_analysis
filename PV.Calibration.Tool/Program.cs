@@ -25,6 +25,7 @@ async Task CalibrateE3DcData(int folder, string label)
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
             pvRecords,
             installedPower,
+            periodsPerHour,
             defaultPriors,
             defaultModelParams,
             fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
@@ -35,6 +36,7 @@ async Task CalibrateE3DcData(int folder, string label)
     ProcessPvData(
         siteId,
         installedPower,
+        periodsPerHour,
         pvRecords,
         modelValidRecords: modelValidRecords,
         filteredValidRecors,
@@ -67,6 +69,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
             pvRecords,
             installedPower,
+            periodsPerHour: 6,
             defaultPriors,
             defaultModelParams,
             fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
@@ -77,6 +80,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     ProcessPvData(
         siteId,
         installedPower,
+        periodsPerHour: 6,
         pvRecords,
         modelValidRecords: null,
         filteredValidRecors,
@@ -92,6 +96,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     GetFilteredRecords(
     List<PvRecord> pvRecords,
     double installedPower,
+    int periodsPerHour,
     PvPriors defaultPriors,
     PvModelParams defaultModelParams,
     (int thresholdType, double loThreshold, double hiThreshold) fogParams,
@@ -106,6 +111,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         pvRecords,
         filteredValidRecors,
         installedPower,
+        periodsPerHour,
         defaultModelParams
         );
 
@@ -113,6 +119,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         pvRecords,
         filteredValidRecors,
         installedPower,
+        periodsPerHour,
         defaultModelParams,
         patternType: 0,
         relativeThreshold: true,
@@ -125,6 +132,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     //    pvRecords,
     //    filteredValidRecors,
     //    installedPower,
+    //    periodsPerHour,
     //    defaultModelParams,
     //    patternType: 0,
     //    relativeThreshold: false,
@@ -137,6 +145,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         pvRecords,
         filteredValidRecors,
         installedPower,
+        periodsPerHour,
         defaultModelParams,
         periodThreshold: outlierParams.periodThreshold,
         hourlyThreshold: outlierParams.hourlyThreshold,
@@ -149,6 +158,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
 void ProcessPvData(
     string siteId,
     double installedPower,
+    int periodsPerHour,
     List<PvRecord> pvRecords,
     List<bool>? modelValidRecords,
     List<bool> filteredValidRecors,
@@ -167,7 +177,7 @@ void ProcessPvData(
 
     var hasModelValidRecords = modelValidRecords != null && modelValidRecords.Any(v => v);
 
-    var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, GetDefaultPriorModelParams());
+    var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, periodsPerHour, GetDefaultPriorModelParams());
     var hullPriors = new PvPriors
     {
         EthaSysMean = ethaHull,
@@ -191,17 +201,19 @@ void ProcessPvData(
         PvJacobianFunc,
         validRecords: null,
         installedPower: installedPower,
+        periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
 
-        //public static (List<PvModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
-        //    List<PvRecord> pvRecords,
-        //    PvPriors pvPriors,
-        //    JacobianFunc jacobianFunc,
-        //    List<bool>? validRecords = null,
-        //    double installedPower = 10.0,
-        //    double tolerance = 1e-6,
-        //    int maxIterations = 50)
+    //public static (List<PvModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
+    //    List<PvRecord> pvRecords,
+    //    PvPriors pvPriors,
+    //    JacobianFunc jacobianFunc,
+    //    List<bool>? validRecords = null,
+    //    double installedPower = 10.0,
+    //    int periodsPerHour = 6,
+    //    double tolerance = 1e-6,
+    //    int maxIterations = 50)
 
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 
@@ -215,12 +227,14 @@ void ProcessPvData(
             PvJacobianFunc,
             validRecords: modelValidRecords,
             installedPower: installedPower,
+            periodsPerHour: periodsPerHour,
             tolerance: tolerance,
             maxIterations: maxIterations);
         (minError, maxError, meanError0, binSize, binCenters, binCounts) = PvErrorStatistics.ComputeHistograms(
             pvRecords,
             modelValidRecords,
             installedPower,
+            periodsPerHour,
             thetaCalibratedList[^1],
             countOfBins: 50);
         PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
@@ -234,6 +248,7 @@ void ProcessPvData(
             PvJacobianFunc,
             validRecords: modelValidRecords,
             installedPower: installedPower,
+            periodsPerHour: periodsPerHour,
             tolerance: tolerance,
             maxIterations: maxIterations);
         PrintCalibrationResults(hullPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
@@ -246,6 +261,7 @@ void ProcessPvData(
         PvJacobianFunc,
         validRecords: filteredValidRecors,
         installedPower: installedPower,
+        periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
@@ -254,6 +270,7 @@ void ProcessPvData(
         pvRecords,
         filteredValidRecors,
         installedPower,
+        periodsPerHour,
         thetaCalibratedList[^1],
         countOfBins: 50);
     PrintStatistics(minError, maxError, meanError, binSize, binCenters, binCounts);
@@ -263,6 +280,7 @@ void ProcessPvData(
         pvRecords,
         filteredValidRecors,
         installedPower,
+        periodsPerHour,
         thetaCalibratedList[^1],
         pCumulative);
     Console.WriteLine();

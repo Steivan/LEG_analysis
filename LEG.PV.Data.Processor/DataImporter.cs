@@ -16,8 +16,8 @@ namespace LEG.PV.Data.Processor
         const double solarConstant = 1361.0;                                                        // [W/m²]
         const double maxGroundIrradiance = 1000.0;                                                  // [W/m²]
         const double irradianceNoise = maxGroundIrradiance / 100.0;                                 // [W/m²]      Fluctuation of 1% of max irradiance
-        const double irradiationBaselineVariance = irradianceNoise * irradianceNoise;               // [(W/m²)²]
-        const double irradiationMaxVariance = maxGroundIrradiance * maxGroundIrradiance / 4;        // [(W/m²)²]   Bernoulli distribution with p=0.5
+        const double irradianceBaselineVariance = irradianceNoise * irradianceNoise;               // [(W/m²)²]
+        const double irradianceMaxVariance = maxGroundIrradiance * maxGroundIrradiance / 4;        // [(W/m²)²]   Bernoulli distribution with p=0.5
 
         // see also file: C:\code\LEG_analysis\Data\MeteoData\StationsData\klo_sma_hoe_ueb_recent_16.11.2025.xlsx
         const int meteoDataOffset = 60;             // Timestamps are UTC values
@@ -170,18 +170,18 @@ namespace LEG.PV.Data.Processor
             List<PvModelParams> modelParams =  [
                 GetDefaultPriorModelParams(),
                 new(
-                     0.156,
-                    -0.00529,
-                    615.5,
-                    0.0,
-                    0.017
+                     0.273 * 2.5,
+                     -0.00355,
+                    33.4,
+                    0.614,
+                    0.0101
                 ),
                 new(             // SennV: elevation 35° 
-                     0.119,
-                    -0.00086,
-                    30,
-                    0.0,
-                    0.0065
+                     0.235 * 2.3,
+                    -0.00364,
+                    28.9,
+                    0.500,
+                     0.0099
                 )
             ];
 
@@ -225,11 +225,11 @@ namespace LEG.PV.Data.Processor
             for (var index = 0; index < dataRecords.Count; index++)
             {
                 var record = dataRecords[index];
-                var computedPower = record.ComputedPower(modelParams[folder], installedPower);
+                var computedPower = record.ComputedPower(modelParams[folder], installedPower, periodsPerHour: periodsPerHour);
 
                 // Build lists for the current record, including the base series and the valid reference series
-                List<double?> irradiationList = [];
-                irradiationList.AddRange(filteredIrradianceSeries.Select(series => series[index]));
+                List<double?> irradianceList = [];
+                irradianceList.AddRange(filteredIrradianceSeries.Select(series => series[index]));
 
                 List<double?> temperatureList = [];
                 temperatureList.AddRange(filteredTemperatureSeries.Select(series => series[index]));
@@ -241,7 +241,7 @@ namespace LEG.PV.Data.Processor
                     record.Timestamp,
                     record.Index,
                     [record.MeasuredPower, computedPower],
-                    irradiationList,
+                    irradianceList,
                     temperatureList,
                     windSpeedList
                 );
@@ -560,12 +560,12 @@ namespace LEG.PV.Data.Processor
 
             for (var i = 0; i < supportCount; i++)
             {
-                var globalIrradianceVariance = irradiationMaxVariance;
+                var globalIrradianceVariance = irradianceMaxVariance;
                 if (selectedStationsIdList.Count > 1)
                 {
                     var E1i = sumSupportGlobalIrradiance[i] / selectedStationsIdList.Count; ;
                     var E2i = squaredSumSupportGlobalIrradiance[i] / selectedStationsIdList.Count; 
-                    globalIrradianceVariance = irradiationBaselineVariance + (E2i - E1i * E1i) * selectedStationsIdList.Count / (selectedStationsIdList.Count - 1) ;
+                    globalIrradianceVariance = irradianceBaselineVariance + (E2i - E1i * E1i) * selectedStationsIdList.Count / (selectedStationsIdList.Count - 1) ;
                 }
                  
                 blendedWeatherData.Add((

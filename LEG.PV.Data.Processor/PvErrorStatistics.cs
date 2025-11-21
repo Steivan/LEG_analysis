@@ -11,6 +11,7 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool>? initialValidRecords,
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams)
         {
             initialValidRecords ??= pvRecords.Select(r => r.DirectGeometryFactor > 0.0).ToList();
@@ -22,20 +23,23 @@ namespace LEG.PV.Data.Processor
                     continue;
                 var pvRecord = pvRecords[recordIndex];
                 var modeledPower = EffectiveCellPower(
-                    installedPower,
+                    installedPower, 
+                    periodsPerHour,
                     pvRecord.DirectGeometryFactor,
                     pvRecord.DiffuseGeometryFactor,
                     pvRecord.CosSunElevation,
                     pvRecord.GlobalHorizontalIrradiance,
+                    pvRecord.SunshineDuration,
                     pvRecord.DiffuseHorizontalIrradiance,
                     pvRecord.AmbientTemp,
                     pvRecord.WindSpeed,
+                    pvRecord.SnowDepth,
                     pvRecord.Age,
-                    pvModelParams.Etha,
-                    pvModelParams.Gamma,
-                    pvModelParams.U0,
-                    pvModelParams.U1,
-                    pvModelParams.LDegr
+                    ethaSys: pvModelParams.Etha,
+                    gamma: pvModelParams.Gamma,
+                    u0: pvModelParams.U0,
+                    u1: pvModelParams.U1,
+                    lDegr: pvModelParams.LDegr
                     );
                 errorList.Add(pvRecord.MeasuredPower - modeledPower);
             }
@@ -47,12 +51,14 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool>? initialValidRecords,
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams)
         {
             var errorList = GetErrorList(
                 pvRecords,
                 initialValidRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams
                 );
 
@@ -76,12 +82,14 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool>? initialValidRecords,
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams)
         {
             var (_, _, meanError) = BaseLineStatistics(
                 pvRecords,
                 initialValidRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams
                 );
 
@@ -95,6 +103,7 @@ namespace LEG.PV.Data.Processor
             List<PvRecord> pvRecords,
             List<bool>? initialValidRecords,
             double installedPower,
+            int periodsPerHour,
             PvModelParams pvModelParams,
             int countOfBins = 100)
         {
@@ -104,6 +113,7 @@ namespace LEG.PV.Data.Processor
                 pvRecords,
                 initialValidRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams
                 );
 
@@ -134,6 +144,7 @@ namespace LEG.PV.Data.Processor
         List<PvRecord> pvRecords,
         List<bool>? initialValidRecords,
         double installedPower,
+            int periodsPerHour,
         PvModelParams pvModelParams,
         List<double> pCumulative)
         {
@@ -143,6 +154,7 @@ namespace LEG.PV.Data.Processor
                 pvRecords,
                 initialValidRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams
                 );
             errorList.Sort();

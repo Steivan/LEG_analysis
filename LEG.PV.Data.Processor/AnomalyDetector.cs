@@ -89,7 +89,7 @@ namespace LEG.PV.Data.Processor
             List<(bool[], double[])> hourlyRatiosList, 
             List<(bool[], double[])> blockRatiosList, 
             int periodsPerDay, int hoursPerDay, int blocksPerDay, int indexOffset) 
-            CalculateDiurnalRatios(List<PvRecord> pvRecords, double installedPower, PvModelParams pvModelParams)
+            CalculateDiurnalRatios(List<PvRecord> pvRecords, double installedPower, int periodsPerHour, PvModelParams pvModelParams)
         {
             const double daysPerYear = 365.2522;
             const int hoursPerDay = 24;
@@ -100,8 +100,9 @@ namespace LEG.PV.Data.Processor
             var firstRecordDate = pvRecords.First().Timestamp;
             var secondRecordDate = pvRecords[1].Timestamp;
 
-            var minutesPerPeriod = (secondRecordDate - firstRecordDate).Minutes;
-            var periodsPerHour = minutesPerHour / minutesPerPeriod;
+            var minutesPerPeriod = minutesPerHour / periodsPerHour;
+            //var minutesPerPeriod = (secondRecordDate - firstRecordDate).Minutes;
+            //var periodsPerHour = minutesPerHour / minutesPerPeriod;
             var periodsPerDay = hoursPerDay * periodsPerHour;
 
             var recordsCount = pvRecords.Count;
@@ -130,9 +131,9 @@ namespace LEG.PV.Data.Processor
                         indexOffset = timeIndex;
                     }
                     var age = (record.Timestamp - firstRecordDate).Days / daysPerYear;
-                    pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, record.DirectGeometryFactor,
-                        record.GlobalHorizontalIrradiance, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, age,
-                        pvModelParams.Etha, pvModelParams.Gamma, pvModelParams.U0, pvModelParams.U1, pvModelParams.LDegr);
+                    pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation,
+                        record.GlobalHorizontalIrradiance, record.SunshineDuration, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.SnowDepth, age,
+                        ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
                     pMeasured[timeIndex] = record.MeasuredPower;
                     hasPeriodData[timeIndex] = pTheoretical[timeIndex] > 0;
 
@@ -197,6 +198,7 @@ namespace LEG.PV.Data.Processor
         internal static (List<int[]> diurnalIndicesList, int periodsPerDay, int indexOffset) GetDiurnalPatterns(
             List<PvRecord> pvRecords,
             double installedPower,
+            int periodsPerHour, 
             PvModelParams pvModelParams,
             int patternType = 0,
             bool relativeThreshold = true,
@@ -207,6 +209,7 @@ namespace LEG.PV.Data.Processor
             var (periodRatiosList, hourlyRatiosList, blockRatiosList, periodsPerDay, hoursPerDay, blocksPerDay, indexOffset) = CalculateDiurnalRatios(
                 pvRecords,
                 installedPower,
+                periodsPerHour,
                 pvModelParams);
             var diurnalIndicesList = new List<int[]>();
 
