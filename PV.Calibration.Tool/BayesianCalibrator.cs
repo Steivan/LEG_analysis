@@ -99,23 +99,23 @@ namespace PV.Calibration.Tool
                         installedPower,
                         periodsPerHour,
                         pvRecord.DirectGeometryFactor, 
-                        pvRecord.SunshineDuration,
                         pvRecord.DiffuseGeometryFactor, 
                         pvRecord.CosSunElevation, 
-                        pvRecord.GlobalHorizontalIrradiance, 
+                        pvRecord.GlobalHorizontalIrradiance,
+                        pvRecord.SunshineDuration,
                         pvRecord.DiffuseHorizontalIrradiance, 
                         pvRecord.AmbientTemp, 
                         pvRecord.WindSpeed,   
                         pvRecord.SnowDepth,
                         pvRecord.Age,
-                        etha, gamma, u0, u1, lDegr);
+                        ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
                     // Weighting (if applicable)
                     var weight = pvRecord.Weight;
                     //weight = 1.0;
 
                     // Residual Vector r
-                    Y[i] = pvRecord.MeasuredPower *weight;      // TODO: Apply weighting
+                    Y[i] = pvRecord.MeasuredPower * weight;      // TODO: Apply weighting
                     Peff_model[i] = peff * weight;
 
                     // Jacobian Matrix J

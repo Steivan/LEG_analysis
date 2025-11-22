@@ -61,7 +61,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     var installedKwP = 10.0;      // [kWp]
     var installedPower = installedKwP * 1000;
 
-    var (pvRecords, modelValidRecords) = DataSimulator.GetPvSimulatedRecords(thetaModel, installedPower, simulationsPeriod: simulationsPeriod);
+    var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(thetaModel, installedPower, simulationsPeriod: simulationsPeriod);
 
     var defaultPriors = new PvPriors();
     var defaultModelParams = GetDefaultPriorModelParams();
@@ -69,7 +69,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
             pvRecords,
             installedPower,
-            periodsPerHour: 6,
+            periodsPerHour,
             defaultPriors,
             defaultModelParams,
             fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
@@ -80,7 +80,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     ProcessPvData(
         siteId,
         installedPower,
-        periodsPerHour: 6,
+        periodsPerHour,
         pvRecords,
         modelValidRecords: null,
         filteredValidRecors,

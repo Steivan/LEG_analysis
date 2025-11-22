@@ -13,9 +13,9 @@ namespace LEG.PV.Data.Processor
 {
     public class DataImporter
     {
-        const double solarConstant = 1361.0;                                                        // [W/m²]
-        const double maxGroundIrradiance = 1000.0;                                                  // [W/m²]
-        const double irradianceNoise = maxGroundIrradiance / 100.0;                                 // [W/m²]      Fluctuation of 1% of max irradiance
+        const double solarConstant = 1361.0;                                                       // [W/m²]
+        const double maxGroundIrradiance = 1000.0;                                                 // [W/m²]
+        const double irradianceNoise = maxGroundIrradiance / 100.0;                                // [W/m²]      Fluctuation of 1% of max irradiance
         const double irradianceBaselineVariance = irradianceNoise * irradianceNoise;               // [(W/m²)²]
         const double irradianceMaxVariance = maxGroundIrradiance * maxGroundIrradiance / 4;        // [(W/m²)²]   Bernoulli distribution with p=0.5
 
@@ -170,18 +170,18 @@ namespace LEG.PV.Data.Processor
             List<PvModelParams> modelParams =  [
                 GetDefaultPriorModelParams(),
                 new(
-                     0.273 * 2.5,
-                     -0.00355,
-                    33.4,
-                    0.614,
-                    0.0101
+                    0.641,
+                    -0.00567,
+                    233.9,
+                    0.0,
+                    0.0171
                 ),
                 new(             // SennV: elevation 35° 
-                     0.235 * 2.3,
-                    -0.00364,
-                    28.9,
+                    0.488,
+                    -0.00142,
+                    29.0,
                     0.500,
-                     0.0099
+                    0.00693
                 )
             ];
 

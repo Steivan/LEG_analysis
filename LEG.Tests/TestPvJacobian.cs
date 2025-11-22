@@ -11,19 +11,18 @@ namespace LEG.Tests
         [TestMethod]
         public void TestJacobian()
         {
-
-            var installedPower = 10.0;      // [kWp]
-            var periodsPerHour = 4;        // [1/h]
-            var directGeometryFactor = 0.7;
-            var diffuseGeometryFactor =1.0;
-            var cosSunElevation = 1.0;       // [unitless]
-            var directIrradiance = 800.0;        // [W/m^2]
-            var sunshineDuration = 5.0;       // [m / period]
-            var diffuseIrradiance = 0.0;       // [W/m^2]
-            var ambientTemp = 35.0;         // [°C]
-            var windSpeed = 100;         // [km/h]
-            var snowDepth = 0.0;         // [m]
-            var age = 5.0;                  // [y]
+            var installedPower = 10000.0;       // [Wp]
+            var periodsPerHour = 4;             // [1/h]
+            var directGeometryFactor = 0.7;     // [unitless]
+            var diffuseGeometryFactor = 0.8;    // [unitless]
+            var cosSunElevation = 0.8;          // [unitless]
+            var globalIrradiance = 1175.0;      // [W/m^2]
+            var sunshineDuration = 12.0;        // [m / 15 m]
+            var diffuseIrradiance = 375.0;      // [W/m^2]
+            var ambientTemp = 35.0;             // [°C]
+            var windSpeed = 22;                 // [km/h]
+            var snowDepth = 0.0;                // [m]
+            var age = 5.0;                      // [y]
 
             var (meanEtha, sigmaEtha, minEtha, maxEtha) = GetPriorsEtha();
             var (meanGamma, sigmaGamma, minGamma, maxGamma) = GetPriorsGamma();
@@ -33,51 +32,51 @@ namespace LEG.Tests
 
             // Calculate effective power
             var effectivePower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
 
             // Calculate analytical derivatives
             var derEtha = DerEthaSys(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
             var derGamma = DerGamma(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
             var derU0 = DerU0(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
             var derU1 = DerU1(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
             var derLDegr = DerLDegr(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
 
             // Calculate Jacobian derivatives
             var (effectivePowerJac, derEthaJac, derGammaJac, derU0Jac, derU1Jac, derLDegrJac) = PvJacobianFunc(
-                    installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation, 
-                    directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                    installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                    globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                     ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr);
 
             // Calculate numerical derivatives
-            var derEthaNum = GetNumericalDerivative(0,installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+            var derEthaNum = GetNumericalDerivative(0, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
             var derGammaNum = GetNumericalDerivative(1, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-               directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+               globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
             var derU0Num = GetNumericalDerivative(2, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
             var derU1Num = GetNumericalDerivative(3, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-                directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
             var derLDegrNum = GetNumericalDerivative(4, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
-               directIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
+               globalIrradiance, sunshineDuration, diffuseIrradiance, ambientTemp, windSpeed, snowDepth, age,
                 ethaSys: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
                 sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
 

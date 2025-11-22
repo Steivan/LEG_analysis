@@ -6,16 +6,39 @@ namespace LEG.PV.Data.Processor;
 
 public class DataSimulator
 {
-    public static (List<PvRecord> dataRecords, List<bool> validRecords) GetPvSimulatedRecords(PvModelParams pvParams, double installedPower, double simulationsPeriod = 5)
+    public static (List<PvRecord> dataRecords, List<bool> validRecords, int periodsPerHour) GetPvSimulatedRecords(
+        PvModelParams pvParams, 
+        double installedPower, 
+        double siteLatitude = 46,
+        double roofAzimuth = -30,
+        double roofElevation = 20,
+        double simulationsPeriod = 5,
+        bool applyRandomNoise = false,
+        bool applyFoggyDays = false,
+        bool applySnowDays = false,
+        bool applyOutliers = false)
     {
+        const double earthTilt = 23.4; // [degrees]
         const double daysPerYears = 365.2422;
         const int hoursPerDay = 24;
-        const int periodsPerHour = 6;
-        const int minutesPerPeriod = 60 / periodsPerHour;
+        const int minutesPerHour = 60;
+        const int periodsPerHour = 4;
+        const int minutesPerPeriod = minutesPerHour / periodsPerHour;
+        const Double minutesPerYear = daysPerYears * hoursPerDay * minutesPerHour;
+
+        const int startHour = 12;
+        const int startMinute = 0;
+        var startBlock = startHour / 3; // start at 6am
+        var startBlockHour = startHour % 3;  // start at 6am
+        var startPeriod = startMinute / minutesPerPeriod; // start at first period
+
+        var sinRoofElevation = Math.Sin(roofElevation * Math.PI / 180.0);
+        var cosRoofElevation = Math.Cos(roofElevation * Math.PI / 180.0);
+        var diffuseGeometryFactor = (1.0 + cosRoofElevation) / 2;
 
         var now = DateTime.Now;
         var tomorrow = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0).AddDays(1);
-        var endDate = new DateTime(tomorrow.Year, tomorrow.Month, 1, 0, 0, 0).AddDays(-1); // last day of previous month
+        var endDate = new DateTime(tomorrow.Year, tomorrow.Month, 1, startBlock * 3 + startBlockHour, startPeriod * 15, 0).AddDays(-1); // last day of previous month
         var startDate = now.AddDays(-(int)Math.Ceiling(daysPerYears * simulationsPeriod)); // first of first month post simulationsPeriod years ago
         if (startDate.Month == 12 && startDate.Day > 1)
         {
@@ -32,10 +55,13 @@ public class DataSimulator
         const double omegaYear = 2 * Math.PI / daysPerYears;
         const double omegaDay = 2 * Math.PI / hoursPerDay;
 
-        const double annualSolarAmplitude = 0.1;
-        const double diurnalSolarAmplitude = 0.9;
+        var annualSolarAmplitude = earthTilt;
+        var diurnalSolarAmplitude = 90.0 - siteLatitude;
 
         const double maxIrradiance = 1361;     // [W/m^2] Solar constant
+        const double diffuseIrradianceRatio = 0.3;
+        const Double averagediffuseIrradiance = maxIrradiance * diffuseIrradianceRatio;
+        const double maxDirectIrratiance = maxIrradiance - averagediffuseIrradiance;
         const double weightPreviousIrradiance = 0.7;
 
         const double averageTemp = 15;          // [°C]
@@ -51,7 +77,7 @@ public class DataSimulator
 
         var daysPerMonth     = new List<int> { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
         var fogDaysPerMonth  = new List<int> { 10,  5,  0,  0,  0,  0,  0,  0,  0,  5, 10, 10 };
-        var snowDaysPerMonth = new List<int> { 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 5, 10 };
+        var snowDaysPerMonth = new List<int> { 10, 10,  0,  0,  0,  0,  0,  0,  0,  0,  5, 10 };
         var pPeriodOutlier = 0.001;
         var pHourOutlier   = 0.001;
         var pBlockOutlier  = 0.001;
@@ -63,8 +89,7 @@ public class DataSimulator
         double lDegr = pvParams.LDegr;
 
         // initial values
-        var globalHorizontalIrradiance = 500.0;
-        var diffuseHorizontalIrradiance = 0.0;
+        double previousDirectIrradiance = maxDirectIrratiance / 2;
         double windSpeed = 10;
         var random = new Random();
         var pvRecords = new List<PvRecord>();
@@ -73,7 +98,7 @@ public class DataSimulator
         var lastSnowDay = -1;
         for (int day = 0; day < daysTotal; day++)
         {
-            var age = (double)day / daysPerYears;
+            //var age = (double)day / daysPerYears;
             var currentDate = startDate.AddDays(day);
             var monthIndex = currentDate.Month - 1;
 
@@ -97,44 +122,54 @@ public class DataSimulator
                 }
             }
             var isSnowyDay = (firstSnowDay <= dayOfMonth && dayOfMonth <= lastSnowDay);
-            var snowDepth = isSnowyDay ? 20.0 : 0.0; // [cm]
+            var snowDepth = applySnowDays ? (isSnowyDay ? 20 : 0) : 0; // [cm]
 
-
-            var annualVariation = -Math.Cos(omegaYear * (startLag + day));
-            for (int block = 0; block < 8; block++)
+            var cosOmegaYear = Math.Cos(omegaYear * (startLag + day));
+            var annualZenithangle = 90 + annualSolarAmplitude * cosOmegaYear;      // zenith angle of the sun is largest in winter
+            for (int block = startBlock; block < 8; block++)
             {                   
                 // Block outliers
                 var blockOutlier = random.NextDouble() < pBlockOutlier;
-                for (var blockHour = 0; blockHour < 3; blockHour++)
+                for (var blockHour = startBlockHour; blockHour < 3; blockHour++)
                 {  
                     // Hour outliers
                     var hourOutlier = random.NextDouble() < pHourOutlier;
 
                     var hour = 3 * block + blockHour;
                     var currentHour = currentDate.AddHours(hour);
-                    for (int period = 0; period < periodsPerHour; period++)
+                    for (int period = startPeriod; period < periodsPerHour; period++)
                     {
                         // Period outliers
                         var periodOutlier = random.NextDouble() < pPeriodOutlier;
                         var isOutlier = blockOutlier || hourOutlier || periodOutlier;
 
                         var timeStamp = currentHour.AddMinutes(period * minutesPerPeriod);
+                        var age = (timeStamp - startDate).TotalMinutes / minutesPerYear;
                         var timeOfDay = (double)hour + period / periodsPerHour;
 
-                        var diurnalVariation = -Math.Cos(omegaDay * timeOfDay);
+                        var cosOmegaDay = Math.Cos(omegaDay * timeOfDay);
+                        var diurnalZenithAngle = (90 - siteLatitude) * cosOmegaDay; // zenith angle of the sun is largest at night
 
                         // Geometry factor combines annual and diurnal variations
-                        var directGeometryFactor = Math.Max(0.0, annualSolarAmplitude * annualVariation + diurnalSolarAmplitude * diurnalVariation); // Simplified model
-                        var diffuseGeometryFactor = 1.0; // Simplified model        TODO: improve diffuse model
-                        var cosSunElevation = 1.0; // Simplified model, assuming assuming direct irradiance is G_DNI and not G_DHI
+                        var sunAzimuth = (timeOfDay - 12.0) * 15.0;
+                        var sunZenithAngle = annualZenithangle + diurnalZenithAngle; 
+                        var sunElevation = 90 - sunZenithAngle;
+                        var cosSunElevation = Math.Cos(sunZenithAngle * Math.PI / 180.0);
+                        var directGeometryFactor = Math.Cos(sunElevation * Math.PI / 180.0) * cosRoofElevation * Math.Cos((sunAzimuth - roofAzimuth) * Math.PI / 180.0)  // theta = 90 - elevation => Cos() <-> Sin()
+                            + Math.Sin(sunElevation * Math.PI / 180.0) * sinRoofElevation;
 
                         // Update irradiance with some randomness
-                        var newRandomIrradiance = globalHorizontalIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * random.NextDouble() * maxIrradiance;
-                        globalHorizontalIrradiance = Math.Max(0.0, Math.Min(maxIrradiance, newRandomIrradiance)); // Smooth changes
-                        var sunshineDuration = Math.Max(0.0, Math.Min(1.0, globalHorizontalIrradiance / cosSunElevation / maxIrradiance)) * minutesPerPeriod; // [min]
+                        var r = random.NextDouble();
+                        var newRandomDirectIrradiance = previousDirectIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * r;  // hypothetical irradiance as a function of cloudiness
+                        previousDirectIrradiance = newRandomDirectIrradiance;
+                        var diffuseIrradiance = averagediffuseIrradiance + (maxDirectIrratiance - newRandomDirectIrradiance) * 0.1;
+                        var globalHorizontalIrradiance = cosSunElevation > 0.0 ? newRandomDirectIrradiance * cosSunElevation + diffuseIrradiance : 0.0;
+                        var diffuseHorizontalIrradiance = cosSunElevation > 0.0 ? diffuseIrradiance : 0.0;
+                        var sunshineDuration = cosSunElevation > 0 ? (int) (newRandomDirectIrradiance / maxDirectIrratiance * minutesPerPeriod) : 0; // [min]
+                        var weight = cosSunElevation > 0 ? 1E-3 + Math.Pow(newRandomDirectIrradiance / maxDirectIrratiance, 3) : 0.0;
 
                         // Calculate ambient temperature
-                        var ambientTemp = averageTemp + annualTempAmplitude * annualVariation + diurnalTempAmplitude * diurnalVariation; // [°C]
+                        var ambientTemp = averageTemp - annualTempAmplitude * cosOmegaYear - diurnalTempAmplitude * cosOmegaDay; // [°C]
 
                         // Update wind velocity with some randomness
                         var newWindGustVelocity = (random.NextDouble() < windGustProbability) ? random.NextDouble() * maxNewWindGust : 0.0;
@@ -149,20 +184,33 @@ public class DataSimulator
                         // Add some noise to the measured power
                         var noise = calculatedPower * randomNoiseStdDev * (random.NextDouble() - 0.5);
 
-                        var measuredPower = calculatedPower + noise;
+                        var measuredPower = calculatedPower + (applyRandomNoise ? noise : 0);
+
+                        // Apply weather and outlier effects
                         var isFoggyPeriod = isFoggyDay && hour < fogDissolveEndHour;
-                        if (isFoggyPeriod)
+                        if (applyFoggyDays)
                         {
-                            var fogFactor = hour <= fogDissolveStartHour ? 0.0 : hour >= fogDissolveEndHour ? 1.0 : (hour - fogDissolveStartHour) / (fogDissolveEndHour - fogDissolveStartHour);
-                            measuredPower *= fogFactor; // Reduced power in foggy mornings
+                            if (isFoggyPeriod)
+                            {
+                                var fogFactor = hour <= fogDissolveStartHour ? 0.0 : hour >= fogDissolveEndHour ? 1.0 : (hour - fogDissolveStartHour) / (fogDissolveEndHour - fogDissolveStartHour);
+                                measuredPower *= fogFactor; // Reduced power in foggy mornings
+                            }
                         }
-                        if (isSnowyDay)
+
+                        if (applySnowDays)
                         {
-                            measuredPower = 0.0; // No power generation on snowy days
+                            if (isSnowyDay)
+                            {
+                                measuredPower = 0.0; // No power generation on snowy days
+                            }
                         }
-                        if (isOutlier)
+
+                        if (applyOutliers)
                         {
-                            measuredPower *= 1.5; // Distorted power for outliers
+                            if (isOutlier)
+                            {
+                                measuredPower *= 1.5; // Distorted power for outliers
+                            }
                         }
 
                         pvRecords.Add(
@@ -172,28 +220,31 @@ public class DataSimulator
                                 directGeometryFactor,
                                 diffuseGeometryFactor,
                                 cosSunElevation,
-                                globalHorizontalIrradiance,               // Direct irradiance
-                                sunshineDuration,                                       // Sunshine duration not modeled
-                                diffuseHorizontalIrradiance,                        // Diffuse irradiance not modeled
+                                globalHorizontalIrradiance,
+                                sunshineDuration,  
+                                diffuseHorizontalIrradiance,  
                                 ambientTemp, 
-                                windSpeed, 
-                                isSnowyDay ? 20.0 : 0.0,                 // Snow depth
-                                weight: 1.0,                    // TODO: implement weighting
+                                windSpeed,
+                                snowDepth,   
+                                weight: weight,  
                                 age, measuredPower)
                             );
                         var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower, periodsPerHour);
 
-                        var isValidRecord = !isSnowyDay && !isFoggyPeriod && !isOutlier;
+                        var isValidRecord = (weight > 0) &&(!applySnowDays || !isSnowyDay) && (!applyFoggyDays || !isFoggyPeriod) && (!applyOutliers || !isOutlier);
                         validRecords.Add(isValidRecord);
                     }
+                    startPeriod = 0; // after first hour, start at first period
                 }
+                startBlockHour = 0; // after first block, start at first block hour
             }
+            startBlock = 0; // after first day, start at midnight
         }
         // Check period start date and period end date
         var firstRecordDate = pvRecords.First().Timestamp;
         var lastRecordDate = pvRecords.Last().Timestamp;
 
         var countFalse = validRecords.Count(v => v!=true);
-        return (pvRecords, validRecords);
+        return (pvRecords, validRecords, periodsPerHour);
     }
 }
