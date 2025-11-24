@@ -1,4 +1,5 @@
 ﻿using LEG.MeteoSwiss.Abstractions;
+using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -43,21 +44,61 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             _isInitialized = true;
         }
 
-        public async Task<string[]> GetHistoricalDataAsync(string startDate, string endDate, string stationId, string granularity)
+        private async Task DownloadFile(string stationId, string granularity, string period, List<string> allDataRows)
         {
-            await InitializeSessionAsync();
+            var lowerCaseStationId = stationId.ToLower();
+            var filename = $"ogd-smn_{lowerCaseStationId}_{granularity}_{period}.csv";
+            var collectionName = "ch.meteoschweiz.ogd-smn";
+            var directUrl = $"https://data.geo.admin.ch/{collectionName}/{lowerCaseStationId}/{filename}";
 
-            if (string.IsNullOrEmpty(stationId))
+            var dataFolder = @"C:\code\LEG_analysis\Data\MeteoData\StationsData\";
+            var destinationPath = Path.Combine(dataFolder, lowerCaseStationId, filename);
+
+            Console.WriteLine($"Attempting to download from correct URL: {directUrl}");
+
+            try
             {
-                return [];
-            }
+                _httpClient.DefaultRequestHeaders.Accept.Clear();
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/csv"));
 
-            var allDataRows = new List<string>();
+                var responseBytes = await _httpClient.GetByteArrayAsync(directUrl);
+
+                var directory = Path.GetDirectoryName(destinationPath);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                await File.WriteAllBytesAsync(destinationPath, responseBytes);
+                Console.WriteLine($"Successfully downloaded and saved to {destinationPath}");
+
+                var csvResponse = Encoding.UTF8.GetString(responseBytes);
+                allDataRows.AddRange(csvResponse.Split('\n'));
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                Console.WriteLine($"No data file found for station {stationId} for period '{period}' at {directUrl}");
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"File Error for {destinationPath}: {ex.Message}. The file may be open in another program.");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An unexpected error occurred for {directUrl}: {ex.Message}");
+                throw;
+            }
+        }
+
+        private HashSet<string> GetPeriods(string startDate, string endDate)
+        {
+
             var start = DateTime.Parse(startDate);
             var end = DateTime.Parse(endDate);
             var currentYear = DateTime.UtcNow.Year;
-
             // ** THE DEFINITIVE FIX: Determine the unique periods to download, avoiding redundant loops. **
+
             var periodsToFetch = new HashSet<string>();
             for (int year = start.Year; year <= end.Year; year++)
             {
@@ -71,55 +112,37 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                     periodsToFetch.Add($"historical_{((year / 10) * 10)}-{((year / 10) * 10) + 9}");
                 }
             }
+            return periodsToFetch;
+        }
 
+        public async Task UpdatePeriodFiles(string startDate, string endDate, string stationId, string granularity)
+        {
+            var periodsToFetch = GetPeriods(startDate, endDate);
+            var _ = new List<string>();
             foreach (var period in periodsToFetch)
             {
-                var lowerCaseStationId = stationId.ToLower();
-                var filename = $"ogd-smn_{lowerCaseStationId}_{granularity}_{period}.csv";
-                var collectionName = "ch.meteoschweiz.ogd-smn";
-                var directUrl = $"https://data.geo.admin.ch/{collectionName}/{lowerCaseStationId}/{filename}";
+                await DownloadFile(stationId, granularity, period, _);
+            }
+        }
 
-                var dataFolder = @"C:\code\LEG_analysis\Data\MeteoData\StationsData\";
-                var destinationPath = Path.Combine(dataFolder, lowerCaseStationId, filename);
+        public async Task<string[]> GetHistoricalDataAsync(string startDate, string endDate, string stationId, string granularity)
+        {
+            await InitializeSessionAsync();
 
-                Console.WriteLine($"Attempting to download from correct URL: {directUrl}");
+            if (string.IsNullOrEmpty(stationId))
+            {
+                return [];
+            }
 
-                try
-                {
-                    _httpClient.DefaultRequestHeaders.Accept.Clear();
-                    _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/csv"));
-
-                    var responseBytes = await _httpClient.GetByteArrayAsync(directUrl);
-
-                    var directory = Path.GetDirectoryName(destinationPath);
-                    if (!string.IsNullOrEmpty(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    await File.WriteAllBytesAsync(destinationPath, responseBytes);
-                    Console.WriteLine($"Successfully downloaded and saved to {destinationPath}");
-
-                    var csvResponse = Encoding.UTF8.GetString(responseBytes);
-                    allDataRows.AddRange(csvResponse.Split('\n'));
-                }
-                catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-                {
-                    Console.WriteLine($"No data file found for station {stationId} for period '{period}' at {directUrl}");
-                }
-                catch (IOException ex)
-                {
-                    Console.WriteLine($"File Error for {destinationPath}: {ex.Message}. The file may be open in another program.");
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An unexpected error occurred for {directUrl}: {ex.Message}");
-                    throw;
-                }
+            var periodsToFetch = GetPeriods(startDate, endDate);
+            var allDataRows = new List<string>();
+            foreach (var period in periodsToFetch)
+            {
+                await DownloadFile(stationId, granularity, period, allDataRows); // Download and accumulate data rows in allDataRows
             }
 
             Console.WriteLine($"Total Data Rows found for granularity '{granularity}': {allDataRows.Count}");
+
             return [.. allDataRows];
         }
 

@@ -1,4 +1,5 @@
-﻿using LEG.MeteoSwiss.Abstractions;
+﻿using LEG.Common;
+using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.MeteoSwiss.Parsers;
 
@@ -60,7 +61,6 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                 throw new InvalidOperationException("Failed to retrieve or parse historical weather data.", ex);
             }
         }
-
         public async Task<List<WeatherData>> GetOpenMeteoHistoricalAsync(double latitude, double longitude, string startDate, string endDate)
         {
             if (latitude < -90 || latitude > 90)

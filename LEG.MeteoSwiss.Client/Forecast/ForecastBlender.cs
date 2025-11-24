@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace LEG.MeteoSwiss.Client.Forecast
+﻿namespace LEG.MeteoSwiss.Client.Forecast
 {
-    internal class ForecastBlender
+    public class ForecastBlender
     {
         public record BlendedPeriod
-            (
-            DateTime Time,
+        (
+            DateTime Time,          // Timestamp of the blended forecast period: request is explicitely in UTC
             double? TempC,
-            double? WindMps, // Convert from km/h to m/s for model inputs
+            double? WindKmh,
             double? DniWm2,
-            double? DiffuseWm2
-            // Add other fields as needed
-            );
+            double? DiffuseWm2,
+            double? SnowDepthM      // SnowDepth is stored in meters (m) as received from API
+        )
+        {
+            public double? SnowDepthCm => SnowDepthM.HasValue       // Calculated property for Snow Depth (in centimeters)
+                ? SnowDepthM.Value * 100.0
+                : (double?)null;
+        }
 
-        public List<BlendedPeriod> CreateBlendedForecast(
+        public static List<BlendedPeriod> CreateBlendedForecast(
+            DateTime now, // <-- Reference time
             List<ForecastPeriod> longTermData,
             List<ForecastPeriod> midTermData,
             List<NowcastPeriod> shortTermData)
@@ -26,7 +26,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             // --- STEP 1: Initialize the full 15-minute time axis ---
 
             // Find the total duration from the longest forecast (URL 1)
-            var startTime = longTermData.Min(p => p.Time);
+            var startTime = longTermData.Min(p => p.Time).AddMinutes(-45);
             var endTime = longTermData.Max(p => p.Time);
 
             var blendedData = new Dictionary<DateTime, BlendedPeriod>();
@@ -35,7 +35,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             for (var time = startTime; time <= endTime.AddMinutes(45); time = time.AddMinutes(15))
             {
                 // Initialize all records as empty or interpolated later
-                blendedData[time] = new BlendedPeriod(time, null, null, null, null);
+                blendedData[time] = new BlendedPeriod(time, null, null, null, null, null);
             }
 
             // --- STEP 2: Apply Long-Term Base (Hourly to 15-min Upscaling) ---
@@ -45,7 +45,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 // Upscale the hourly data to four 15-minute slots
                 for (int i = 0; i < 4; i++)
                 {
-                    var quarterTime = hourData.Time.AddMinutes(15 * i);
+                    var quarterTime = hourData.Time.AddMinutes(15 * i - 45);
                     if (blendedData.ContainsKey(quarterTime))
                     {
                         // This is the BASE LAYER.
@@ -53,9 +53,10 @@ namespace LEG.MeteoSwiss.Client.Forecast
                         blendedData[quarterTime] = new BlendedPeriod(
                             Time: quarterTime,
                             TempC: hourData.TemperatureC,
-                            WindMps: hourData.WindSpeedKmh * 0.2778, // Hourly Wind
+                            WindKmh: hourData.WindSpeedKmh, // Hourly Wind
                             DniWm2: hourData.DirectNormalIrradianceWm2, // Hourly DNI
-                            DiffuseWm2: hourData.DiffuseRadiationWm2
+                            DiffuseWm2: hourData.DiffuseRadiationWm2,
+                            SnowDepthM: 0.0 // Placeholder for Snow Depth
                         );
                     }
                 }
@@ -69,16 +70,17 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 // Repeat the upscaling logic: ICON-D2 is higher quality than ECMWF
                 for (int i = 0; i < 4; i++)
                 {
-                    var quarterTime = hourData.Time.AddMinutes(15 * i);
+                    var quarterTime = hourData.Time.AddMinutes(15 * i - 45);
                     if (blendedData.ContainsKey(quarterTime))
                     {
-                        // OVERWRITE: Higher fidelity hourly data (CORRECTED SYNTAX)
+                        // OVERWRITE: Higher fidelity hourly data
                         blendedData[quarterTime] = blendedData[quarterTime] with
                         {
-                            TempC = hourData.TemperatureC, // Colon replaced with EQUALS SIGN
-                            WindMps = hourData.WindSpeedKmh * 0.2778,
-                            DniWm2 = hourData.DirectNormalIrradianceWm2,
-                            DiffuseWm2 = hourData.DiffuseRadiationWm2
+                            TempC = hourData.TemperatureC ?? blendedData[quarterTime].TempC,
+                            WindKmh = hourData.WindSpeedKmh ?? blendedData[quarterTime].WindKmh,
+                            DniWm2 = hourData.DirectNormalIrradianceWm2 ?? blendedData[quarterTime].DniWm2,
+                            DiffuseWm2 = hourData.DiffuseRadiationWm2 ?? blendedData[quarterTime].DiffuseWm2,
+                            SnowDepthM = hourData.SnowDepthCm ?? blendedData[quarterTime].SnowDepthM
                         };
                     }
                 }
@@ -91,19 +93,32 @@ namespace LEG.MeteoSwiss.Client.Forecast
             {
                 if (blendedData.ContainsKey(quarterData.Time))
                 {
-                    // OVERWRITE: Highest fidelity, highest resolution data (CORRECTED SYNTAX)
+                    // OVERWRITE: Highest fidelity, highest resolution data
                     blendedData[quarterData.Time] = blendedData[quarterData.Time] with
                     {
-                        TempC = quarterData.TemperatureC, // Colon replaced with EQUALS SIGN
-                        WindMps = quarterData.WindSpeedKmh * 0.2778,
-                        DniWm2 = quarterData.DirectNormalIrradianceWm2,
-                        DiffuseWm2 = quarterData.DiffuseRadiationWm2
+                        TempC = quarterData.TemperatureC ?? blendedData[quarterData.Time].TempC,
+                        WindKmh = quarterData.WindSpeedKmh ?? blendedData[quarterData.Time].WindKmh,
+                        DniWm2 = quarterData.DirectNormalIrradianceWm2 ?? blendedData[quarterData.Time].DniWm2,
+                        DiffuseWm2 = quarterData.DiffuseRadiationWm2 ?? blendedData[quarterData.Time].DiffuseWm2,
+                        SnowDepthM = blendedData[quarterData.Time].SnowDepthM     // No snow depth in nowcast     
                     };
                 }
             }
+            
+            // --- STEP 5: Apply Synchronization Filter ---
+             // 1. Find the current hour rounded down (e.g., 10:23 AM becomes 10:00 AM)
+            var endOfCurrentHour = now.Date.AddHours(now.Hour);
 
-            return blendedData.Values.OrderBy(p => p.Time).ToList();
+            // 2. The first 15-minute timestamp we want is the one ending 45 minutes earlier.
+            //    (e.g., 10:00 AM - 45 min = 9:15 AM). 
+            //    This represents the 15-min slot starting at 9:00 AM.
+            var filterCutoffTime = endOfCurrentHour.AddMinutes(-45);
+
+            // 3. Filter the final list to include only records at or after the cutoff time.
+            return blendedData.Values
+                .Where(p => p.Time >= filterCutoffTime)
+                .OrderBy(p => p.Time)
+                .ToList();
         }
-
     }
 }

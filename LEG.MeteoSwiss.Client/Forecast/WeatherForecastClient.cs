@@ -6,7 +6,7 @@ using System.Globalization;
 // Documentation
 // https://open-meteo.com/en/docs
 // Browser url:
-// https://api.open-meteo.com/v1/forecast?latitude=47.38&longitude=8.54&minutely_15=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m,shortwave_radiation_instant&forecast_minutely_15=360&timezone=Europe%2FZurich
+// https://api.open-meteo.com/v1/forecast?latitude=47.38&longitude=8.54&minutely_15=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m,shortwave_radiation_instant&forecast_minutely_15=360&timezone=UTC
 
 namespace LEG.MeteoSwiss.Client.Forecast
 {
@@ -43,7 +43,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             "direct_radiation,diffuse_radiation,direct_normal_irradiance,shortwave_radiation" +
             "&models=ecmwf_ifs" + // ECMWF model for long horizon
             "&forecast_days=10" + // Requesting max forecast length
-            "&timezone=Europe%2FZurich",
+            "&timezone=UTC",
             ForecastBaseUrl, lat, lon);
 
             var json = await _httpClient.GetStringAsync(url);
@@ -91,7 +91,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 "snow_depth" + // This is now correctly separated by the preceding comma
                 "&models=icon_d2" +
                 "&forecast_days=3" +
-                "&timezone=Europe%2FZurich",
+                "&timezone=UTC",
                 ForecastBaseUrl, lat, lon);
 
             var json = await _httpClient.GetStringAsync(url);
@@ -146,7 +146,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 "direct_normal_irradiance_instant,diffuse_radiation_instant,shortwave_radiation_instant" +
                 "&forecast_minutely_15=360" + // Requesting 360 minutes (6 hours) of 15-min data
                 "&models=icon_d2" +
-                "&timezone=Europe%2FZurich",
+                "&timezone=UTC",
                 ForecastBaseUrl, lat, lon);        // &daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max
 
             var json = await client.GetStringAsync(url);
@@ -272,6 +272,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     DirectNormalIrradianceWm2: Get(data.DirectNormalIrradianceInstant, i),
                     DiffuseRadiationWm2: Get(data.DiffuseRadiationInstant, i),
                     SolarRadiationWm2: Get(data.ShortwaveRadiationInstant, i),
+                    // Precipitation
                     PrecipitationMm: Get(data.Precipitation, i)
                 ));
             }

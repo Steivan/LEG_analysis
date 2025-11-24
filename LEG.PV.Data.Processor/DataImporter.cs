@@ -7,8 +7,7 @@ using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
+using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
 using static LEG.PV.Data.Processor.DataRecords;
 
 namespace LEG.PV.Data.Processor
@@ -175,17 +174,20 @@ namespace LEG.PV.Data.Processor
             int periodsPerHour)>
             ImportE3DcAndMeteoForecast(int folder)
         {
-            // Fetch coordinates for meteo stations
+            // Update historic weather data for selected stations
+            var updateClient = new MeteoSwissUpdater();
+            await updateClient.UpdateDataForGroundStations(selectedStationsIdList, granularity: "t");
 
-            var client = new WeatherForecastClient();
             // Fetch nowcasting weather data for each station
             // Force synchronization of time stamps with pvProduction data
-
+            var forecastClient = new WeatherForecastClient();
             foreach (var stationId in selectedStationsIdList)
             {
-                var longCast = await client.Get10DayPeriodsByStationIdAsync(stationId);
-                var midCast = await client.Get7DayPeriodsByStationIdAsync(stationId);
-                var nowCast = await client.GetNowcast15MinuteByStationIdAsync(stationId);
+                var longCast = await forecastClient.Get10DayPeriodsByStationIdAsync(stationId);
+                var midCast = await forecastClient.Get7DayPeriodsByStationIdAsync(stationId);
+                var nowCast = await forecastClient.GetNowcast15MinuteByStationIdAsync(stationId);
+
+                var blendedForecast = CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
             }
 
             var perStationWeatherData = new List<(string stationID, List<(
