@@ -8,7 +8,7 @@ public class DataSimulator
 {
     public static (List<PvRecord> dataRecords, List<bool> validRecords, int periodsPerHour) GetPvSimulatedRecords(
         PvModelParams pvParams, 
-        double installedPower, 
+        double installedPower = 10000, 
         double siteLatitude = 46,
         double roofAzimuth = -30,
         double roofElevation = 20,

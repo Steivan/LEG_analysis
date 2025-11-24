@@ -4,9 +4,11 @@ using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.E3Dc.Client;
 using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions;
+using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using static LEG.PV.Data.Processor.DataRecords;
 
 namespace LEG.PV.Data.Processor
@@ -22,6 +24,8 @@ namespace LEG.PV.Data.Processor
         // see also file: C:\code\LEG_analysis\Data\MeteoData\StationsData\klo_sma_hoe_ueb_recent_16.11.2025.xlsx
         const int meteoDataOffset = 60;             // Timestamps are UTC values
         int meteoDataLag = 10;                      // Values at given timestamp represent the aggregation over previous 10 minutes
+        const double latSma = 47.378;
+        const double lonSma =  8.566;
 
         // Selected stations, available parameters and blending weights
         List<string> selectedStationsIdList      = ["SMA", "KLO", "HOE", "UEB"];
@@ -83,7 +87,7 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower, 
             int periodsPerHour)> 
-            ImportE3DcDataAndMeteo(int folder)
+            ImportE3DcAndMeteoHistory(int folder)
         {
             // Fetch pvProduction records
             folder = 1 + (folder - 1) % 2;
@@ -147,14 +151,78 @@ namespace LEG.PV.Data.Processor
             return (perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
 
+        public async Task<(
+            List<(string stationID, List<(
+                double? globalIrradiance,
+                double? sunshineDuration,
+                double? diffuseIrradiance,
+                double? temperature,
+                double? windSpeed,
+                double? snowDepth)> perStationWeatherData)>,
+            List<(
+                double? globalIrradiance,
+                double? sunshineDuration,
+                double? diffuseIrradiance,
+                double? temperature,
+                double? windSpeed,
+                double? snowDepth,
+                double? directIrradianceVariance
+                )> blendedWeatherData,
+            string siteId,
+            List<PvRecord> dataRecords,
+            List<bool> validRecords,
+            double installedPower,
+            int periodsPerHour)>
+            ImportE3DcAndMeteoForecast(int folder)
+        {
+            // Fetch coordinates for meteo stations
+
+            var client = new WeatherForecastClient();
+            // Fetch nowcasting weather data for each station
+            // Force synchronization of time stamps with pvProduction data
+
+            foreach (var stationId in selectedStationsIdList)
+            {
+                var longCast = await client.Get10DayPeriodsByStationIdAsync(stationId);
+                var midCast = await client.Get7DayPeriodsByStationIdAsync(stationId);
+                var nowCast = await client.GetNowcast15MinuteByStationIdAsync(stationId);
+            }
+
+            var perStationWeatherData = new List<(string stationID, List<(
+                double? globalIrradiance,
+                double? sunshineDuration,
+                double? diffuseIrradiance,
+                double? temperature,
+                double? windSpeed,
+                double? snowDepth)> perStationWeatherData)>();
+            var blendedWeatherData = new List<(
+                double? globalIrradiance,
+                double? sunshineDuration,
+                double? diffuseIrradiance,
+                double? temperature,
+                double? windSpeed,
+                double? snowDepth,
+                double? directIrradianceVariance
+                )>();
+            var siteId = string.Empty;
+            var dataRecords = new List<PvRecord>();
+            var validRecords = new List<bool>();
+            double installedPower = 10000.0;
+            int periodsPerHour = 4;
+
+            return (perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
+        }
+
         public async Task<(string siteId,
             List<PvRecord> dataRecords,
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportE3DcData(int folder)
+            ImportE3DcHistory(int folder)
         {
-            var (perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcDataAndMeteo(folder);
+            var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder);
+
+            var forecast = await ImportE3DcAndMeteoForecast(folder);
 
             return (siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
@@ -165,7 +233,7 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportE3DcDataCalculated(int folder)
+            ImportE3DcHistoryAndCalculated(int folder)
         {
             List<PvModelParams> modelParams =  [
                 GetDefaultPriorModelParams(),
@@ -186,7 +254,8 @@ namespace LEG.PV.Data.Processor
             ];
 
             // Fetch pvProduction and meteo data
-            var (perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcDataAndMeteo(folder);
+            var (perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder);
+            var nowcastAndForecast = await ImportE3DcAndMeteoForecast(folder);
 
             // Filter: retain valid series and get the labels
             var filteredIrradianceSeries = new List<List<double?>>();

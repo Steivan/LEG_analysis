@@ -22,7 +22,7 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcDataCalculated(1);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(2);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)

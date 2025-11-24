@@ -8,15 +8,15 @@ using static PV.Calibration.Tool.BayesianCalibrator;
 
 //ProcessSyntheticModelData();
 
-await CalibrateE3DcData(1, "Senn");
-await CalibrateE3DcData(2, "SennV");
+//await CalibrateE3DcData(1, "Senn");
+//await CalibrateE3DcData(2, "SennV");
 
-//ProcessSyntheticModelData();
+ProcessSyntheticModelData();
 
 async Task CalibrateE3DcData(int folder, string label)
 {
     var dataImporter = new DataImporter();
-    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcData(folder); // meteoDataLag in multiples of 5 minutes
+    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistory(folder); // meteoDataLag in multiples of 5 minutes
     var installedPower = installedKwP; // / periodsPerHour;
 
     var defaultPriors = new PvPriors();
@@ -51,17 +51,28 @@ async Task CalibrateE3DcData(int folder, string label)
 void ProcessSyntheticModelData(int simulationsPeriod = 5)
 {
     var thetaModel = new PvModelParams(
-    etha: 0.9,
-    gamma: -0.005,
-    u0: 25,
-    u1: 0.4,
-    lDegr: 0.01
-    );
+        etha: 0.9,
+        gamma: -0.005,
+        u0: 25,
+        u1: 0.4,
+        lDegr: 0.01
+        );
     var siteId = "SyntheticModelSite";
     var installedKwP = 10.0;      // [kWp]
     var installedPower = installedKwP * 1000;
 
-    var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(thetaModel, installedPower, simulationsPeriod: simulationsPeriod);
+    var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
+        thetaModel, 
+        installedPower: installedPower,
+        siteLatitude: 46,
+        roofAzimuth: -30,
+        roofElevation: 20,
+        simulationsPeriod: simulationsPeriod,
+        applyRandomNoise: true,
+        applyFoggyDays: true,
+        applySnowDays: true,
+        applyOutliers: true
+        );
 
     var defaultPriors = new PvPriors();
     var defaultModelParams = GetDefaultPriorModelParams();
@@ -128,18 +139,18 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         hiThreshold: fogParams.hiThreshold);
     countTrue = filteredValidRecors.Count(v => v == true);
 
-    //filteredValidRecors = DataFilter.ExcludeSnowyRecords(
-    //    pvRecords,
-    //    filteredValidRecors,
-    //    installedPower,
-    //    periodsPerHour,
-    //    defaultModelParams,
-    //    patternType: 0,
-    //    relativeThreshold: false,
-    //    thresholdType: snowParams.thresholdType,
-    //    loThreshold: snowParams.loThreshold,
-    //    hiThreshold: snowParams.hiThreshold);
-    //countTrue = filteredValidRecors.Count(v => v == true);
+    filteredValidRecors = DataFilter.ExcludeSnowyRecords(
+        pvRecords,
+        filteredValidRecors,
+        installedPower,
+        periodsPerHour,
+        defaultModelParams,
+        patternType: 0,
+        relativeThreshold: false,
+        thresholdType: snowParams.thresholdType,
+        loThreshold: snowParams.loThreshold,
+        hiThreshold: snowParams.hiThreshold);
+    countTrue = filteredValidRecors.Count(v => v == true);
 
     filteredValidRecors = DataFilter.ExcludeOutlierRecords(
         pvRecords,

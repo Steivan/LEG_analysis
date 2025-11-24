@@ -3,40 +3,28 @@ using LEG.Common.Utils;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace MeteoConsoleApp
 {
     class Program
     {
+
         static async Task Main(string[] args)
         {
+            // Selected locations for forecast retrieval
+            var (lat, lon) = (47.377925, 8.565742);     // SMA
+            List<string> selectedZips = ["8124", "7550"];
+            List<string> selectedStationsIdList = ["SMA", "KLO", "HOE", "UEB"];
+
             var client = new WeatherForecastClient();
 
-            var forecast = await client.Get7DayPeriodsAsync("8124");
-            Console.WriteLine("7-Day Forecast:");
-            if (forecast.Count > 0)
-            {
-                var current = forecast[0];
-                var last = forecast[^1];
-                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | " +
-                                  $"Solar: {current.SolarRadiationWm2:F0} W/m² | Gust: {current.WindGustsKmh:F1} km/h");
-                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | " +
-                                  $"Solar: {last.SolarRadiationWm2:F0} W/m² | Gust: {last.WindGustsKmh:F1} km/h");
-            }
+            await GetForecastForLatLon(client, lat, lon);
+            await GetForecastForZipList(client, selectedZips);
+            await GetForecastForWeatherStations(client, selectedStationsIdList);
 
-            var nowcast = await client.GetNowcast15MinuteAsync("8124");
-            Console.WriteLine("90-Hour Nowcast:");
-            if (nowcast.Count > 0)
-            {
-                var current = nowcast[0];
-                var last = nowcast[^1];
-                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | " +
-                                  $"Solar: {current.SolarRadiationWm2:F0} W/m² | Gust: {current.WindGustsKmh:F1} km/h");
-                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | " +
-                                  $"Solar: {last.SolarRadiationWm2:F0} W/m² | Gust: {last.WindGustsKmh:F1} km/h");
-            }
-
-            //return;
+            return;
 
             // ******************************************   
 
@@ -194,6 +182,76 @@ namespace MeteoConsoleApp
 
                 return;
             }
+        }
+
+        public static async Task GetForecastForLatLon(WeatherForecastClient client, double lat, double lon)
+        {
+            var longCast = await client.Get10DayPeriodsAsync(lat, lon);
+            var midCast = await client.Get7DayPeriodsAsync(lat, lon);
+            var nowCast = await client.GetNowcast15MinuteAsync(lat, lon);
+
+            printForecastSamples($"Lat: {lat:F4}, Lon: {lon:F4}", longCast, midCast, nowCast);
+        }
+
+        public static async Task GetForecastForZipList(WeatherForecastClient client, List<string> selectedZips)
+        {
+            foreach (var zip in selectedZips)
+            {
+                var longCast = await client.Get10DayPeriodsByZipCodeAsync(zip);
+                var midCast = await client.Get7DayPeriodsByZipCodeAsync(zip);
+                var nowCast = await client.GetNowcast15MinuteByZipCodeAsync(zip);
+
+                printForecastSamples($"ZIP: {zip}", longCast, midCast, nowCast);
+            }
+        }
+
+        public static async Task GetForecastForWeatherStations(WeatherForecastClient client, List<string> selectedStationsIdList)
+        {
+            foreach (var stationId in selectedStationsIdList)
+            {
+                var longCast = await client.Get10DayPeriodsByStationIdAsync(stationId);
+                var midCast = await client.Get7DayPeriodsByStationIdAsync(stationId);
+                var nowCast = await client.GetNowcast15MinuteByStationIdAsync(stationId);
+
+                printForecastSamples($"Station: {stationId}", longCast, midCast, nowCast);
+            }
+        }
+
+        public static void printForecastSamples(string location, List<ForecastPeriod> longCast, List<ForecastPeriod> midCast, List<NowcastPeriod> nowCast)
+        {
+            Console.WriteLine($"10-Day Forecast for {location}:");
+            if (longCast.Count > 0)
+            {
+                var current = longCast[0];
+                var last = longCast[^1];
+                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedKmh:F1} km/h | " +
+                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.DirectRadiationWm2:F0} W/m²");
+                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedKmh:F1} km/h | " +
+                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.DirectRadiationWm2:F0} W/m²");
+            }
+
+            Console.WriteLine($"7-Day Forecast for {location}:");
+            if (midCast.Count > 0)
+            {
+                var current = midCast[0];
+                var last = midCast[^1];
+                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedKmh:F1} km/h | " +
+                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.DirectRadiationWm2:F0} W/m²");
+                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedKmh:F1} km/h | " +
+                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.DirectRadiationWm2:F0} W/m²");
+            }
+
+            Console.WriteLine($"90-Hour Nowcast: for {location}:");
+            if (nowCast.Count > 0)
+            {
+                var current = nowCast[0];
+                var last = nowCast[^1];
+                Console.WriteLine($"NOW     → {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedKmh:F1} km/h | " +
+                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.SolarRadiationWm2:F0} W/m²");
+                Console.WriteLine($"Outlook → {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedKmh:F1} km/h | " +
+                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.SolarRadiationWm2:F0} W/m²");
+            }
+            Console.WriteLine();
         }
     }
 }
