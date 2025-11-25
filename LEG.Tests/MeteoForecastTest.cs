@@ -69,9 +69,9 @@ namespace LEG.Tests
             {
                 var current = longCast[0];
                 var last = longCast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedKmh:F1} km/h | " +
+                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
                                               $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.DirectRadiationWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedKmh:F1} km/h | " +
+                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
                                               $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.DirectRadiationWm2:F0} W/m²");
             }
 
@@ -80,9 +80,9 @@ namespace LEG.Tests
             {
                 var current = midCast[0];
                 var last = midCast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedKmh:F1} km/h | " +
+                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
                                               $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.DirectRadiationWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedKmh:F1} km/h | " +
+                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
                                               $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.DirectRadiationWm2:F0} W/m²");
             }
 
@@ -91,9 +91,9 @@ namespace LEG.Tests
             {
                 var current = nowCast[0];
                 var last = nowCast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedKmh:F1} km/h | " +
+                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
                                               $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.SolarRadiationWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedKmh:F1} km/h | " +
+                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
                                               $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.SolarRadiationWm2:F0} W/m²");
             }
 

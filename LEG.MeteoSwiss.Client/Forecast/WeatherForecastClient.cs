@@ -144,7 +144,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 "&minutely_15=temperature_2m,relative_humidity_2m,dew_point_2m," + 
                 "wind_speed_10m,wind_direction_10m," +
                 "direct_normal_irradiance_instant,diffuse_radiation_instant,shortwave_radiation_instant" +
-                "&forecast_minutely_15=360" + // Requesting 360 minutes (6 hours) of 15-min data
+                "&forecast_minutely_15=360" + // Requesting 360 records of 15-min data (90 hours)
                 "&models=icon_d2" +
                 "&timezone=UTC",
                 ForecastBaseUrl, lat, lon);        // &daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max
@@ -227,9 +227,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     CloudCoverMidPct: Get(r.Hourly.CloudCoverMid, i),
                     CloudCoverHighPct: Get(r.Hourly.CloudCoverHigh, i),
                     // Wind
-                    WindSpeedKmh: Get(r.Hourly.WindSpeed10m, i),
+                    WindSpeedMs: Get(r.Hourly.WindSpeed10m, i),
                     WindDirectionDeg: Get(r.Hourly.WindDirection10m, i),
-                    WindGustsKmh: Get(r.Hourly.WindGusts10m, i),
+                    WindGustsMs: Get(r.Hourly.WindGusts10m, i),
                     // New Radiation Fields (Mapped to Direct and Diffuse)
                     DirectRadiationWm2: Get(r.Hourly.DirectRadiation, i),
                     DiffuseRadiationWm2: Get(r.Hourly.DiffuseRadiation, i),
@@ -265,9 +265,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     DewPointC: Get(data.DewPoint2m, i),
                     CloudCoverPct: Get(data.CloudCover, i),
                     // Wind
-                    WindSpeedKmh: Get(data.WindSpeed10m, i),
+                    WindSpeedMs: Get(data.WindSpeed10m, i),
                     WindDirectionDeg: Get(data.WindDirection10m, i),
-                    WindGustsKmh: Get(data.WindGusts10m, i),
+                    WindGustsMs: Get(data.WindGusts10m, i),
                     // New Radiation Fields (Mapped to DNI and Diffuse)
                     DirectNormalIrradianceWm2: Get(data.DirectNormalIrradianceInstant, i),
                     DiffuseRadiationWm2: Get(data.DiffuseRadiationInstant, i),

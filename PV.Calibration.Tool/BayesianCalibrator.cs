@@ -111,11 +111,11 @@ namespace PV.Calibration.Tool
                         ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
                     // Weighting (if applicable)
-                    var weight = pvRecord.Weight;
+                    var weight = pvRecord.HasMeasuredPower ? pvRecord.Weight : 0.0;
                     //weight = 1.0;
 
                     // Residual Vector r
-                    Y[i] = pvRecord.MeasuredPower * weight;      // TODO: Apply weighting
+                    Y[i] = pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value * weight : 0.0;      // TODO: Apply weighting
                     Peff_model[i] = peff * weight;
 
                     // Jacobian Matrix J

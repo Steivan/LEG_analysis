@@ -11,7 +11,7 @@ namespace LEG.PV.Data.Processor
             public PvRecord(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
                 double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiance, double ambientTemp, double windSpeed, double snowDepth, double weight, 
-                double age, double measuredPower)
+                double age, double? measuredPower)
             {
                 Timestamp = timestamp;
                 Index = index;
@@ -41,7 +41,8 @@ namespace LEG.PV.Data.Processor
             public double SnowDepth { get; init; }                                              // d_snow [cm]
             public double Weight { get; init; }
             public double Age { get; init; }                                                    // Age [years]
-            public double MeasuredPower { get; init; }                                          // P_meas [W]
+            public double? MeasuredPower { get; init; }                                         // P_meas [W]
+            public bool HasMeasuredPower => MeasuredPower.HasValue;
             public double ComputedPower(                                                        // P_meas [W]
                 PvModelParams modelParams, 
                 double installedPower,

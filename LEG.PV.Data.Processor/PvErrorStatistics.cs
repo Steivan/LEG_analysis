@@ -41,7 +41,7 @@ namespace LEG.PV.Data.Processor
                     u1: pvModelParams.U1,
                     lDegr: pvModelParams.LDegr
                     );
-                errorList.Add(pvRecord.MeasuredPower - modeledPower);
+                errorList.Add(pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value - modeledPower : 0.0);
             }
 
             return errorList;

@@ -134,8 +134,8 @@ namespace LEG.PV.Data.Processor
                     pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation,
                         record.GlobalHorizontalIrradiance, record.SunshineDuration, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.SnowDepth, age,
                         ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
-                    pMeasured[timeIndex] = record.MeasuredPower;
-                    hasPeriodData[timeIndex] = pTheoretical[timeIndex] > 0;
+                    pMeasured[timeIndex] = record.HasMeasuredPower ? record.MeasuredPower.Value : pTheoretical[timeIndex];
+                    hasPeriodData[timeIndex] = record.HasMeasuredPower && pTheoretical[timeIndex] > 0;
 
                     recordIndex++;
                 }

@@ -23,9 +23,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
         double? CloudCoverMidPct,
         double? CloudCoverHighPct,
         // Updated Wind (using WindSpeedKmh from old model, keep it for consistency)
-        double? WindSpeedKmh,
+        double? WindSpeedMs,
         double? WindDirectionDeg,
-        double? WindGustsKmh,
+        double? WindGustsMs,
         // New Radiation Fields (CRITICAL for PV model)
         double? DirectRadiationWm2,
         double? DiffuseRadiationWm2,
@@ -45,6 +45,8 @@ namespace LEG.MeteoSwiss.Client.Forecast
         // Note: The Open-Meteo API usually returns UTC time. 
         // Your LocalTime logic seems to assume a fixed +1hr shift, 
         // but it's generally safer to use the UtcOffsetSeconds from the response.
+        public double? WindSpeedKmh => WindSpeedMs.HasValue ? WindSpeedMs * 3.6 : null;
+        public double? WindGustsKmh => WindGustsMs.HasValue ? WindGustsMs * 3.6 : null;
         public DateTime LocalTime => Time.AddHours(1);
     }
 
@@ -56,9 +58,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
         double? DewPointC,
         double? CloudCoverPct,
         // Updated Wind
-        double? WindSpeedKmh,
+        double? WindSpeedMs,
         double? WindDirectionDeg, // Added
-        double? WindGustsKmh,
+        double? WindGustsMs,
         // New Radiation Fields (CRITICAL for PV model)
         double? DirectNormalIrradianceWm2,
         double? DiffuseRadiationWm2,
@@ -66,6 +68,8 @@ namespace LEG.MeteoSwiss.Client.Forecast
         double? PrecipitationMm
         )
     {
+        public double? WindSpeedKmh => WindSpeedMs.HasValue ? WindSpeedMs * 3.6 : null;
+        public double? WindGustsKmh => WindGustsMs.HasValue ? WindGustsMs * 3.6 : null;
         public DateTime LocalTime => Time.AddHours(1);
     }
 

@@ -15,9 +15,12 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             int periodEndYear,
             string granularity = "t",
             bool isTower = false,
-            bool includeRecent = true)
+            bool includeRecent = true,
+            bool includeNow = false)
         {
             var getRecent = includeRecent && DateTime.UtcNow.Year <= periodEndYear;
+            var getNow = includeNow && getRecent;
+
             var startDecade = (periodStartYear / 10) * 10;
             var endDecade = (periodEndYear / 10) * 10;
 
@@ -68,6 +71,29 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                     Console.WriteLine($"Warning: Recent file not found: {recentFilePath}");
                 }
             }
+            if (getNow)
+            {
+                // Also get today's data from the "now" file
+                var nowPeriod = "now";
+                var nowFilePath = "";
+                if (isTower)
+                {
+                    (_, nowFilePath) = MeteoSwissHelper.GetTowerCsvFilename(stationId, nowPeriod, granularity: granularity);
+                }
+                else
+                {
+                    (_, nowFilePath) = MeteoSwissHelper.GetGroundCsvFilename(stationId, nowPeriod, granularity: granularity);
+                }
+                if (File.Exists(nowFilePath))
+                {
+                    var nowRecords = ImportCsv.ImportFromFile<WeatherCsvRecord>(nowFilePath, ";");
+                    allRecords.AddRange(nowRecords);
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: Now file not found: {nowFilePath}");
+                }
+            }
 
             // Filter records for the period of interest
             var filteredRecords = allRecords
@@ -84,7 +110,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
 
         public static void RunMeteoAggregationForPeriod(string stationId, StationMetaInfo stationMetaInfo, int periodStartYear, int periodEndYear, string granularity = "t", bool isTower = false)
         {
-            var filteredRecords = GetFilteredRecords(stationId, stationMetaInfo, periodStartYear, periodEndYear, granularity, isTower, false);
+            var filteredRecords = GetFilteredRecords(stationId, stationMetaInfo, periodStartYear, periodEndYear, granularity, isTower, includeRecent: false, includeNow: false);
             // --- Monthly averages ---
             var monthlyAverages = filteredRecords
                 .GroupBy(r => new { r.ReferenceTimestamp.Year, r.ReferenceTimestamp.Month })

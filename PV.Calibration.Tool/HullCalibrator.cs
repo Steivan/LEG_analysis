@@ -41,7 +41,7 @@ namespace PV.Calibration.Tool
                 var theoreticalPower = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation, 
                     record.GlobalHorizontalIrradiance, record.SunshineDuration, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.SnowDepth, record.Age,
                     ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
-                var measuredPower = record.MeasuredPower;
+                var measuredPower = record.HasMeasuredPower ? record.MeasuredPower.Value : theoreticalPower;
 
                 if (theoreticalPower > 0.0)
                 {
