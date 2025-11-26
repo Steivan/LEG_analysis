@@ -19,7 +19,7 @@ namespace LEG.Tests
 
             var client = new WeatherForecastClient();
 
-            var longCast = await client.Get10DayPeriodsAsync(lat, lon);
+            var longCast = await client.Get16DayPeriodsAsync(lat, lon);
             var midCast = await client.Get7DayPeriodsAsync(lat, lon);
             var nowCast = await client.GetNowcast15MinuteAsync(lat, lon);
 
@@ -35,7 +35,7 @@ namespace LEG.Tests
 
             foreach (var zip in selectedZips)
             {
-                var longCast = await client.Get10DayPeriodsByZipCodeAsync(zip);
+                var longCast = await client.Get16DayPeriodsByZipCodeAsync(zip);
                 var midCast = await client.Get7DayPeriodsByZipCodeAsync(zip);
                 var nowCast = await client.GetNowcast15MinuteByZipCodeAsync(zip);
 
@@ -51,7 +51,7 @@ namespace LEG.Tests
             var client = new WeatherForecastClient();
             foreach (var stationId in selectedStationsIdList)
             {
-                var longCast = await client.Get10DayPeriodsByStationIdAsync(stationId);
+                var longCast = await client.Get16DayPeriodsByStationIdAsync(stationId);
                 var midCast = await client.Get7DayPeriodsByStationIdAsync(stationId);
                 var nowCast = await client.GetNowcast15MinuteByStationIdAsync(stationId);
 

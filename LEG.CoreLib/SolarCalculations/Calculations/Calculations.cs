@@ -94,7 +94,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             var effectiveIrradianceFactor = new double[nrRoofs, dimensionAnnualSupport];
             var directGeometryFactors = new double[dimensionAnnualSupport];
             var diffuseGeometryFactor = 0.0;
-            var cosSunElevations = new double[dimensionAnnualSupport];
+            var sinSunElevations = new double[dimensionAnnualSupport];
 
             Console.Write($"Calculating gain profiles for site {siteId} / {evaluationYear}: ...");
             for (var dayIndex = 0; dayIndex < dimensionDays; dayIndex++)
@@ -126,15 +126,15 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
 
                     var (sunAziDeg, sunElevDeg) = AstroGeometry.GetSolarAziElev(indexYear, indexMonth, indexDay, indexHour, indexMinute,
                         indexSecond, utcShift, lon, lat);
-                    var cosSunElevation = Math.Cos(GeoUtils.DegToRad(90.0 - sunElevDeg));  // cos(solar zenith angle)
+                    var sinSunElevation = Math.Cos(GeoUtils.DegToRad(90.0 - sunElevDeg));  // cos(solar zenith angle)
 
                     var horizonElevDeg = SunRiseSetFromProfile.HorizonElevation(sunAziDeg, siteAzimuths, siteAngles);
 
                     // sun is above horizon / above horizon profile
                     var indexAnnualSupport = indexTimeLag * stepsPerDay + indexHour * stepsPerHour + indexMinute / minutesPerPeriod;
-                    if (cosSunElevation > 0)
+                    if (sinSunElevation > 0)
                     {
-                        cosSunElevations[indexAnnualSupport] = cosSunElevation;
+                        sinSunElevations[indexAnnualSupport] = sinSunElevation;
                     }
                     if (sunElevDeg > horizonElevDeg)
                     {
@@ -185,7 +185,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 EffectiveIrradiancePerRoofAndInterval: effectiveIrradianceFactor,
                 DirectGeometryFactors: directGeometryFactors,
                 DiffuseGeometryFactor: diffuseGeometryFactor,
-                CosSunElevations: cosSunElevations,
+                SinSunElevations: sinSunElevations,
                 CountPerMonth: countPerMonth,
                 CountPerHour: countPerHour
             );
@@ -216,7 +216,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     effectiveIrradiancePerRoofAndInterval,
                     directGeometryFactors,
                     diffuseGeometryFactor,
-                    cosSunElevations,
+                    sinSunElevations,
                     countPerMonth,
                     countPerHour
                 )

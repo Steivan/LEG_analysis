@@ -38,7 +38,7 @@ namespace PV.Calibration.Tool
                 var dayIndex = record.Timestamp.Day;
                 var timeIndex = record.Timestamp.Hour * periodsPerHour + (record.Timestamp.Minute / minutesPerPeriod);
 
-                var theoreticalPower = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation, 
+                var theoreticalPower = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.SinSunElevation, 
                     record.GlobalHorizontalIrradiance, record.SunshineDuration, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.SnowDepth, record.Age,
                     ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
                 var measuredPower = record.HasMeasuredPower ? record.MeasuredPower.Value : theoreticalPower;

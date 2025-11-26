@@ -27,7 +27,7 @@ namespace LEG.PV.Data.Processor
                     periodsPerHour,
                     pvRecord.DirectGeometryFactor,
                     pvRecord.DiffuseGeometryFactor,
-                    pvRecord.CosSunElevation,
+                    pvRecord.SinSunElevation,
                     pvRecord.GlobalHorizontalIrradiance,
                     pvRecord.SunshineDuration,
                     pvRecord.DiffuseHorizontalIrradiance,

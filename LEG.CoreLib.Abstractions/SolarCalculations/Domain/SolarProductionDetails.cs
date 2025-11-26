@@ -14,7 +14,7 @@ public record SolarProductionDetails(
     double[,] EffectiveIrradiancePerRoofAndInterval,           // [StepsPerHour * 24 * 366]
     double[] DirectGeometryFactors,                             // [StepsPerHour * 24 * 366]
     double DiffuseGeometryFactor,  
-    double[] CosSunElevations,                                  // [StepsPerHour * 24 * 366]
+    double[] SinSunElevations,                                  // [StepsPerHour * 24 * 366]
     int[] CountPerMonth,
     int[] CountPerHour
 );

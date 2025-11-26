@@ -167,6 +167,12 @@ namespace LEG.MeteoSwiss.Abstractions
         public double? DiffuseIrradiance { get; set; }
 
         /// <summary>
+        /// Gets or sets the direct normal irradiance (DNI) in watts per square meter.
+        /// </summary>
+        [Name("DniWm2"), TypeConverter(typeof(NullableDoubleConverter))]                             //  Used in Forecast
+        public double? DirectNormalIrradiance { get; set; }
+
+        /// <summary>
         /// Longwave incoming radiation; ten minutes mean in W/m².
         /// </summary>
         [Name("oli000z0"), TypeConverter(typeof(NullableDoubleConverter))]

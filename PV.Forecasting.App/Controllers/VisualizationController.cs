@@ -22,7 +22,7 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(2);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(2, displayPeriod: 2);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)
@@ -56,9 +56,10 @@ namespace PV.Forecasting.App.Controllers
                 SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
             }
 
-            var minDate = _pvRecords.Min(r => r.Timestamp.Date);
-            var maxDate = _pvRecords.Max(r => r.Timestamp.Date);
-            var currentDate = SelectedDate ?? minDate;
+            var minDate = _pvRecords[0].Timestamp.Date;
+            var maxDate = _pvRecords[^1].Timestamp.Date;
+            var nowDate = DateTime.Today.Date;
+            var currentDate = SelectedDate ?? nowDate;
 
             var (startDate, endDate) = GetDateRange(currentDate, SelectedPeriod, minDate, maxDate);
             var recordsForPeriod = _pvRecords.Where(r => r.Timestamp >= startDate && r.Timestamp < endDate).ToList();

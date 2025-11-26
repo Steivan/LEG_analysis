@@ -8,18 +8,31 @@ namespace LEG.PV.Data.Processor
     {
         public record PvRecord
         {
-            public PvRecord(DateTime timestamp, int index, 
-                double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
-                double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiance, double ambientTemp, double windSpeed, double snowDepth, double weight, 
-                double age, double? measuredPower)
+            public PvRecord(
+                DateTime timestamp, 
+                int index, 
+                double directGeometryFactor, 
+                double diffuseGeometryFactor, 
+                double sinSunElevation, 
+                double globalHorizontalIrradiance, 
+                double sunshineDuration, 
+                double directNormalIrradiance, 
+                double diffuseHorizontalIrradiance,
+                double ambientTemp, 
+                double windSpeed, 
+                double snowDepth,
+                double weight, 
+                double age, 
+                double? measuredPower)
             {
                 Timestamp = timestamp;
                 Index = index;
                 DirectGeometryFactor = directGeometryFactor;
-                SunshineDuration = sunshineDuration;
                 DiffuseGeometryFactor = diffuseGeometryFactor;
-                CosSunElevation = cosSunElevation;
+                SinSunElevation = sinSunElevation;
                 GlobalHorizontalIrradiance = globalHorizontalIrradiance;
+                SunshineDuration = sunshineDuration;
+                DirectNormalIrradiance = directNormalIrradiance;
                 DiffuseHorizontalIrradiance = diffuseHorizontalIrradiance;
                 AmbientTemp = ambientTemp;
                 WindSpeed = windSpeed;
@@ -32,9 +45,10 @@ namespace LEG.PV.Data.Processor
             public int Index { get; init; }                                                     // Index [unitless]
             public double DirectGeometryFactor { get; init; }                                   // G_POA / G_ref [unitless]
             public double DiffuseGeometryFactor { get; init; }                                  // G_POA / G_ref [unitless]
-            public double CosSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
+            public double SinSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
             public double GlobalHorizontalIrradiance { get; init; }                             // [W/m²]
             public double SunshineDuration { get; init; }                                       // [min / ten min]
+            public double DirectNormalIrradiance  { get; init; }                                // [W/m²]
             public double DiffuseHorizontalIrradiance { get; init; }                            // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
             public double WindSpeed { get; init; }                                              // v_wind [m/s]
@@ -43,6 +57,14 @@ namespace LEG.PV.Data.Processor
             public double Age { get; init; }                                                    // Age [years]
             public double? MeasuredPower { get; init; }                                         // P_meas [W]
             public bool HasMeasuredPower => MeasuredPower.HasValue;
+            public double GetGlobalHorizontalIrradiance()
+            { 
+                if (DirectNormalIrradiance > 0)
+                {
+                    return DirectNormalIrradiance * SinSunElevation + DiffuseHorizontalIrradiance;
+                }
+                return GlobalHorizontalIrradiance;
+            }
             public double ComputedPower(                                                        // P_meas [W]
                 PvModelParams modelParams, 
                 double installedPower,
@@ -51,8 +73,8 @@ namespace LEG.PV.Data.Processor
                 return PvJacobian.EffectiveCellPower(installedPower, periodsPerHour,
                     DirectGeometryFactor,
                     DiffuseGeometryFactor,
-                    CosSunElevation,
-                    GlobalHorizontalIrradiance,
+                    SinSunElevation,
+                    GetGlobalHorizontalIrradiance(),
                     SunshineDuration,
                     DiffuseHorizontalIrradiance,
                     AmbientTemp,
@@ -71,7 +93,7 @@ namespace LEG.PV.Data.Processor
         public record PvRecordCalculated
         {
             public PvRecordCalculated(DateTime timestamp, int index, 
-                double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation, 
+                double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation, 
                 double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, double snowDepth,
                 double age, double measuredPower, double computedPower)
             {
@@ -79,7 +101,7 @@ namespace LEG.PV.Data.Processor
                 Index = index;
                 DirectGeometryFactor = directGeometryFactor;
                 DiffuseGeometryFactor = diffuseGeometryFactor;
-                CosSunElevation = cosSunElevation;
+                SinSunElevation = sinSunElevation;
                 GlobalHorizontalIrradiance = globalHorizontalIrradiance;
                 SunshineDuration = sunshineDuration;
                 DiffuseHorizontalIrradiance = diffuseHorizontalIrradiatio;
@@ -95,7 +117,7 @@ namespace LEG.PV.Data.Processor
             public int Index { get; init; }                                                     // Index [unitless]
             public double DirectGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
-            public double CosSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
+            public double SinSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
             public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
             public double SunshineDuration { get; init; }                                      // [min / ten min]
             public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]

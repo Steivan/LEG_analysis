@@ -154,7 +154,7 @@ public class DataSimulator
                         var sunAzimuth = (timeOfDay - 12.0) * 15.0;
                         var sunZenithAngle = annualZenithangle + diurnalZenithAngle; 
                         var sunElevation = 90 - sunZenithAngle;
-                        var cosSunElevation = Math.Cos(sunZenithAngle * Math.PI / 180.0);
+                        var sinSunElevation = Math.Cos(sunZenithAngle * Math.PI / 180.0);
                         var directGeometryFactor = Math.Cos(sunElevation * Math.PI / 180.0) * cosRoofElevation * Math.Cos((sunAzimuth - roofAzimuth) * Math.PI / 180.0)  // theta = 90 - elevation => Cos() <-> Sin()
                             + Math.Sin(sunElevation * Math.PI / 180.0) * sinRoofElevation;
 
@@ -163,10 +163,10 @@ public class DataSimulator
                         var newRandomDirectIrradiance = previousDirectIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * r;  // hypothetical irradiance as a function of cloudiness
                         previousDirectIrradiance = newRandomDirectIrradiance;
                         var diffuseIrradiance = averagediffuseIrradiance + (maxDirectIrratiance - newRandomDirectIrradiance) * 0.1;
-                        var globalHorizontalIrradiance = cosSunElevation > 0.0 ? newRandomDirectIrradiance * cosSunElevation + diffuseIrradiance : 0.0;
-                        var diffuseHorizontalIrradiance = cosSunElevation > 0.0 ? diffuseIrradiance : 0.0;
-                        var sunshineDuration = cosSunElevation > 0 ? (int) (newRandomDirectIrradiance / maxDirectIrratiance * minutesPerPeriod) : 0; // [min]
-                        var weight = cosSunElevation > 0 ? 1E-3 + Math.Pow(newRandomDirectIrradiance / maxDirectIrratiance, 3) : 0.0;
+                        var globalHorizontalIrradiance = sinSunElevation > 0.0 ? newRandomDirectIrradiance * sinSunElevation + diffuseIrradiance : 0.0;
+                        var diffuseHorizontalIrradiance = sinSunElevation > 0.0 ? diffuseIrradiance : 0.0;
+                        var sunshineDuration = sinSunElevation > 0 ? (int) (newRandomDirectIrradiance / maxDirectIrratiance * minutesPerPeriod) : 0; // [min]
+                        var weight = sinSunElevation > 0 ? 1E-3 + Math.Pow(newRandomDirectIrradiance / maxDirectIrratiance, 3) : 0.0;
 
                         // Calculate ambient temperature
                         var ambientTemp = averageTemp - annualTempAmplitude * cosOmegaYear - diurnalTempAmplitude * cosOmegaDay; // [°C]
@@ -177,7 +177,7 @@ public class DataSimulator
                         windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, newWindSpeed));
 
                         // Calculate theoretical effective power
-                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, cosSunElevation,
+                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
                             globalHorizontalIrradiance, sunshineDuration, diffuseHorizontalIrradiance, ambientTemp, windSpeed, snowDepth, age,
                             ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
@@ -213,15 +213,18 @@ public class DataSimulator
                             }
                         }
 
+                        var directNormalIrradiance = 0.0; // used in forecasting models
+
                         pvRecords.Add(
                             new PvRecord(
                                 timeStamp, 
                                 pvRecords.Count, 
                                 directGeometryFactor,
                                 diffuseGeometryFactor,
-                                cosSunElevation,
+                                sinSunElevation,
                                 globalHorizontalIrradiance,
                                 sunshineDuration,  
+                                directNormalIrradiance,
                                 diffuseHorizontalIrradiance,  
                                 ambientTemp, 
                                 windSpeed,

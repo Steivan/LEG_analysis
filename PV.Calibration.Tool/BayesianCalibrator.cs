@@ -16,7 +16,7 @@ namespace PV.Calibration.Tool
         // Delegate matching the required Jacobian function signature
         // NOTE: The geometryFactor (GPOA/Gref) is implicitly included in the inputs.
         public delegate (double Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
-            double installedPower, int periodsPerHour,double directGeometryFactor, double diffuseGeometryFactor, double cosSunElevation,
+            double installedPower, int periodsPerHour,double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
             double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiance,
             double ambientTemp, double windSpeed, double snowDepth, double age,
             double ethaSys, double gamma, double u0, double u1, double lDegr);
@@ -100,7 +100,7 @@ namespace PV.Calibration.Tool
                         periodsPerHour,
                         pvRecord.DirectGeometryFactor, 
                         pvRecord.DiffuseGeometryFactor, 
-                        pvRecord.CosSunElevation, 
+                        pvRecord.SinSunElevation, 
                         pvRecord.GlobalHorizontalIrradiance,
                         pvRecord.SunshineDuration,
                         pvRecord.DiffuseHorizontalIrradiance, 

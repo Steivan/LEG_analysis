@@ -131,7 +131,7 @@ namespace LEG.PV.Data.Processor
                         indexOffset = timeIndex;
                     }
                     var age = (record.Timestamp - firstRecordDate).Days / daysPerYear;
-                    pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.CosSunElevation,
+                    pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.SinSunElevation,
                         record.GlobalHorizontalIrradiance, record.SunshineDuration, record.DiffuseHorizontalIrradiance, record.AmbientTemp, record.WindSpeed, record.SnowDepth, age,
                         ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
                     pMeasured[timeIndex] = record.HasMeasuredPower ? record.MeasuredPower.Value : pTheoretical[timeIndex];

@@ -22,15 +22,15 @@ namespace LEG.MeteoSwiss.Client.Forecast
 
         // 10-Day Forecast using ECMWF model
         // =======================================================
-        public async Task<ForecastResponse> Get10DayForecastAsync(string zipCode)
+        public async Task<ForecastResponse> Get16DayForecastAsync(string zipCode)
         {
             var (lat, lon) = await GetLatLonAsync(zipCode);
-            return await Get10DayForecastAsync(lat, lon);
+            return await Get16DayForecastAsync(lat, lon);
         }
 
-        public async Task<ForecastResponse> Get10DayForecastAsync(double lat, double lon)
+        public async Task<ForecastResponse> Get16DayForecastAsync(double lat, double lon)
         {
-            string key = $"10day|{lat:F4},{lon:F4}";
+            string key = $"16day|{lat:F4},{lon:F4}";
             if (Cache.TryGetValue(key, out var c) && DateTime.UtcNow < c.Expires)
                 return (ForecastResponse)c.Response;
 
@@ -42,7 +42,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             "wind_speed_10m,wind_direction_10m," +
             "direct_radiation,diffuse_radiation,direct_normal_irradiance,shortwave_radiation" +
             "&models=ecmwf_ifs" + // ECMWF model for long horizon
-            "&forecast_days=10" + // Requesting max forecast length
+            "&forecast_days=16" + // Requesting max forecast length
             "&timezone=UTC",
             ForecastBaseUrl, lat, lon);
 
@@ -52,26 +52,26 @@ namespace LEG.MeteoSwiss.Client.Forecast
             return resp;
         }
 
-        public async Task<ForecastResponse> Get10DayForecastByZipCodeAsync(string zipCode)
+        public async Task<ForecastResponse> Get16DayForecastByZipCodeAsync(string zipCode)
         {
             var (lat, lon) = await GetLatLonAsync(zipCode);
-            return await Get10DayForecastAsync(lat, lon);
+            return await Get16DayForecastAsync(lat, lon);
         }
 
-        public async Task<ForecastResponse> Get10DayForecastByStationIdAsync(string stationId)
+        public async Task<ForecastResponse> Get16DayForecastByStationIdAsync(string stationId)
         {
             var (lat, lon) = GetStationLatLon(stationId);
-            return await Get10DayForecastAsync(lat, lon);
+            return await Get16DayForecastAsync(lat, lon);
         }
 
-        public async Task<List<ForecastPeriod>> Get10DayPeriodsAsync(double lat, double lon)
-            => ConvertToForecastPeriods(await Get10DayForecastAsync(lat, lon));
+        public async Task<List<ForecastPeriod>> Get16DayPeriodsAsync(double lat, double lon)
+            => ConvertToForecastPeriods(await Get16DayForecastAsync(lat, lon));
 
-        public async Task<List<ForecastPeriod>> Get10DayPeriodsByZipCodeAsync(string zipCode)
-            => ConvertToForecastPeriods(await Get10DayForecastByZipCodeAsync(zipCode));
+        public async Task<List<ForecastPeriod>> Get16DayPeriodsByZipCodeAsync(string zipCode)
+            => ConvertToForecastPeriods(await Get16DayForecastByZipCodeAsync(zipCode));
 
-        public async Task<List<ForecastPeriod>> Get10DayPeriodsByStationIdAsync(string stationId)
-            => ConvertToForecastPeriods(await Get10DayForecastByStationIdAsync(stationId));
+        public async Task<List<ForecastPeriod>> Get16DayPeriodsByStationIdAsync(string stationId)
+            => ConvertToForecastPeriods(await Get16DayForecastByStationIdAsync(stationId));
 
         // 7-Day Forecast using ICON-D2 model
         // =======================================================
