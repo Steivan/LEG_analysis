@@ -7,7 +7,8 @@
             DateTime Time,          // Timestamp of the blended forecast period: request is explicitely in UTC
             double? TempC,
             double? WindKmh,
-            double? DniWm2,
+            double? DhiWm2,         // Direct horizontal irradiance (DHI) in W/m² : used in nearcast model
+            double? DniWm2,         // Direct normal irradiance (DNI) in W/m² : used in midcast and longcast model
             double? DiffuseWm2,
             double? SnowDepthM      // SnowDepth is stored in meters (m) as received from API
         )
@@ -35,7 +36,7 @@
             for (var time = startTime; time <= endTime.AddMinutes(45); time = time.AddMinutes(15))
             {
                 // Initialize all records as empty or interpolated later
-                blendedData[time] = new BlendedPeriod(time, null, null, null, null, null);
+                blendedData[time] = new BlendedPeriod(time, null, null, null, null, null, null);
             }
 
             // --- STEP 2: Apply Long-Term Base (Hourly to 15-min Upscaling) ---
@@ -53,7 +54,8 @@
                         blendedData[quarterTime] = new BlendedPeriod(
                             Time: quarterTime,
                             TempC: hourData.TemperatureC,
-                            WindKmh: hourData.WindSpeedKmh, // Hourly Wind
+                            WindKmh: hourData.WindSpeedKmh, // Hourly Wind$
+                            DhiWm2: null,                   //not available from long-term
                             DniWm2: hourData.DirectNormalIrradianceWm2, // Hourly DNI
                             DiffuseWm2: hourData.DiffuseRadiationWm2,
                             SnowDepthM: 0.0 // Placeholder for Snow Depth
@@ -78,9 +80,10 @@
                         {
                             TempC = hourData.TemperatureC ?? blendedData[quarterTime].TempC,
                             WindKmh = hourData.WindSpeedKmh ?? blendedData[quarterTime].WindKmh,
+                            DhiWm2 = null,                   //not available from mid-term
                             DniWm2 = hourData.DirectNormalIrradianceWm2 ?? blendedData[quarterTime].DniWm2,
                             DiffuseWm2 = hourData.DiffuseRadiationWm2 ?? blendedData[quarterTime].DiffuseWm2,
-                            SnowDepthM = hourData.SnowDepthCm ?? blendedData[quarterTime].SnowDepthM
+                            SnowDepthM = hourData.SnowDepthM ?? blendedData[quarterTime].SnowDepthM
                         };
                     }
                 }
@@ -98,7 +101,8 @@
                     {
                         TempC = quarterData.TemperatureC ?? blendedData[quarterData.Time].TempC,
                         WindKmh = quarterData.WindSpeedKmh ?? blendedData[quarterData.Time].WindKmh,
-                        DniWm2 = quarterData.DirectNormalIrradianceWm2 ?? blendedData[quarterData.Time].DniWm2,
+                        DhiWm2 = quarterData.DirectNormalIrradianceWm2 ?? blendedData[quarterData.Time].DniWm2,
+                        DniWm2 = null,                   //not available from short-term
                         DiffuseWm2 = quarterData.DiffuseRadiationWm2 ?? blendedData[quarterData.Time].DiffuseWm2,
                         SnowDepthM = blendedData[quarterData.Time].SnowDepthM     // No snow depth in nowcast     
                     };

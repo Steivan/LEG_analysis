@@ -149,6 +149,14 @@ namespace LEG.PV.Data.Processor
             public List<double?> Irradiance { get; init; }          // G_POA [W/m²]
             public List<double?> Temperature { get; init; }         // T [°C]
             public List<double?> WindSpeed { get; init; }           // v_wind [m/s]
+            public bool HasMeteoData()
+            {
+                if (Irradiance.All(x => !x.HasValue)) return false;
+                if (Temperature.All(x => !x.HasValue)) return false;
+                if (WindSpeed.All(x => !x.HasValue)) return false;
+                return true;
+            }
+            
         }
         public record PvRecordLabels
         {

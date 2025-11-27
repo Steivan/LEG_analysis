@@ -47,6 +47,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
             ForecastBaseUrl, lat, lon);
 
             var json = await _httpClient.GetStringAsync(url);
+            // {"latitude":47.34622,"longitude":8.543372,"generationtime_ms":0.8310079574584961,"utc_offset_seconds":0,"timezone":"GMT","timezone_abbreviation":"GMT","elevation":557.0,
+            // "hourly_units":{"time":"iso8601","temperature_2m":"°C","relative_humidity_2m":"%","dew_point_2m":"°C","wind_speed_10m":"km/h","wind_direction_10m":"°",
+            // "direct_radiation":"W/m²","diffuse_radiation":"W/m²","direct_normal_irradiance":"W/m²","shortwave_radiation":"W/m²"}
             var resp = JsonConvert.DeserializeObject<ForecastResponse>(json)!;
             Cache[key] = (DateTime.UtcNow.Add(HourlyCacheDuration), resp);
             return resp;
@@ -87,14 +90,17 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 "{0}?latitude={1:F4}&longitude={2:F4}" +
                 "&hourly=temperature_2m,relative_humidity_2m,dew_point_2m," +
                 "wind_speed_10m,wind_direction_10m," +
-                "direct_radiation,diffuse_radiation,direct_normal_irradiance,shortwave_radiation," + // <-- ADDED COMMA HERE
-                "snow_depth" + // This is now correctly separated by the preceding comma
+                "direct_radiation,diffuse_radiation,direct_normal_irradiance,shortwave_radiation," + 
+                "snow_depth" +
                 "&models=icon_d2" +
                 "&forecast_days=3" +
                 "&timezone=UTC",
                 ForecastBaseUrl, lat, lon);
 
             var json = await _httpClient.GetStringAsync(url);
+            // {"latitude":47.4,"longitude":8.559999,"generationtime_ms":0.18656253814697266,"utc_offset_seconds":0,"timezone":"GMT","timezone_abbreviation":"GMT","elevation":557.0,
+            // "hourly_units":{"time":"iso8601","temperature_2m":"°C","relative_humidity_2m":"%","dew_point_2m":"°C","wind_speed_10m":"km/h","wind_direction_10m":"°",
+            // "direct_radiation":"W/m²","diffuse_radiation":"W/m²","direct_normal_irradiance":"W/m²","shortwave_radiation":"W/m²","snow_depth":"m"},
             var resp = JsonConvert.DeserializeObject<ForecastResponse>(json)!;
             Cache[key] = (DateTime.UtcNow.Add(HourlyCacheDuration), resp);
             return resp;
@@ -141,7 +147,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             var url = string.Format(
                 CultureInfo.InvariantCulture,
                 "{0}?latitude={1:F4}&longitude={2:F4}" +
-                "&minutely_15=temperature_2m,relative_humidity_2m,dew_point_2m," + 
+                "&minutely_15=temperature_2m,relative_humidity_2m,dew_point_2m," +
                 "wind_speed_10m,wind_direction_10m," +
                 "direct_normal_irradiance_instant,diffuse_radiation_instant,shortwave_radiation_instant" +
                 "&forecast_minutely_15=360" + // Requesting 360 records of 15-min data (90 hours)
@@ -150,6 +156,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 ForecastBaseUrl, lat, lon);        // &daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max
 
             var json = await client.GetStringAsync(url);
+            // {"latitude":47.4,"longitude":8.559999,"generationtime_ms":0.47838687896728516,"utc_offset_seconds":0,"timezone":"GMT","timezone_abbreviation":"GMT","elevation":557.0,
+            // "minutely_15_units":{"time":"iso8601","temperature_2m":"°C","relative_humidity_2m":"%","dew_point_2m":"°C","wind_speed_10m":"km/h","wind_direction_10m":"°",
+            // "direct_normal_irradiance_instant":"W/m²","diffuse_radiation_instant":"W/m²","shortwave_radiation_instant":"W/m²"}
             var freshResponse = JsonConvert.DeserializeObject<NowcastResponse>(json)!;
             var result = ConvertToNowcastPeriods(freshResponse);
 
@@ -208,42 +217,24 @@ namespace LEG.MeteoSwiss.Client.Forecast
 
             private static List<ForecastPeriod> ConvertToForecastPeriods(ForecastResponse r)
         {
-            if (r.Hourly?.Time is not { Count: > 0 }) return new();
-            var list = new List<ForecastPeriod>(r.Hourly.Time.Count);
-            for (int i = 0; i < r.Hourly.Time.Count; i++)
+            var data = r.Hourly;
+            if (data?.Time is not { Count: > 0 }) return new();
+            var list = new List<ForecastPeriod>(data.Time.Count);
+            for (int i = 0; i < data.Time.Count; i++)
             {
-                var t = DateTime.Parse(r.Hourly.Time[i]);
+                var t = DateTime.Parse(data.Time[i]);
                 list.Add(new ForecastPeriod(
                     Time: t,
-                    TemperatureC: Get(r.Hourly.Temperature2m, i),
-                    RelativeHumidity: Get(r.Hourly.RelativeHumidity2m, i),
-                    DewPointC: Get(r.Hourly.DewPoint2m, i),
-                    // New Thermal and Pressure
-                    ApparentTemperatureC: Get(r.Hourly.ApparentTemperature, i),
-                    SurfacePressureHpa: Get(r.Hourly.SurfacePressure, i),
-                    // New Clouds
-                    CloudCoverPct: Get(r.Hourly.CloudCover, i),
-                    CloudCoverLowPct: Get(r.Hourly.CloudCoverLow, i),
-                    CloudCoverMidPct: Get(r.Hourly.CloudCoverMid, i),
-                    CloudCoverHighPct: Get(r.Hourly.CloudCoverHigh, i),
-                    // Wind
-                    WindSpeedMs: Get(r.Hourly.WindSpeed10m, i),
-                    WindDirectionDeg: Get(r.Hourly.WindDirection10m, i),
-                    WindGustsMs: Get(r.Hourly.WindGusts10m, i),
-                    // New Radiation Fields (Mapped to Direct and Diffuse)
-                    DirectRadiationWm2: Get(r.Hourly.DirectRadiation, i),
-                    DiffuseRadiationWm2: Get(r.Hourly.DiffuseRadiation, i),
-                    DirectNormalIrradianceWm2: Get(r.Hourly.DirectNormalIrradiance, i),
-                    ShortwaveRadiationWm2: Get(r.Hourly.ShortwaveRadiation, i),
-                    TerrestrialRadiationWm2: Get(r.Hourly.TerrestrialRadiation, i),
-                    // Precipitation/Weather
-                    PrecipitationMm: Get(r.Hourly.Precipitation, i),
-                    SnowfallCm: Get(r.Hourly.Snowfall, i),
-                    PrecipitationProbabilityPct: Get(r.Hourly.PrecipitationProbability, i),
-                    WeatherCode: Get(r.Hourly.WeatherCode, i),
-                    SnowDepthCm: Get(r.Hourly.SnowDepth, i),
-                    EvapotranspirationMm: Get(r.Hourly.Evapotranspiration, i),
-                    PressureHpa: Get(r.Hourly.PressureMsl, i)
+                    TemperatureC: Get(data.Temperature2m, i),
+                    RelativeHumidity: Get(data.RelativeHumidity2m, i),
+                    DewPointC: Get(data.DewPoint2m, i),
+                    WindSpeedKmh: Get(data.WindSpeed10m, i),
+                    WindDirectionDeg: Get(data.WindDirection10m, i),
+                    DirectRadiationWm2: Get(data.DirectRadiation, i),
+                    DiffuseRadiationWm2: Get(data.DiffuseRadiation, i),
+                    DirectNormalIrradianceWm2: Get(data.DirectNormalIrradiance, i),
+                    ShortwaveRadiationWm2: Get(data.ShortwaveRadiation, i),
+                    SnowDepthM: Get(data.SnowDepth, i)
                 ));
             }
             return list;
@@ -260,20 +251,15 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 list.Add(new NowcastPeriod(
                     Time: t,
                     TemperatureC: Get(data.Temperature2m, i),
-                    // New Humidity/Clouds
                     RelativeHumidity: Get(data.RelativeHumidity2m, i),
                     DewPointC: Get(data.DewPoint2m, i),
-                    CloudCoverPct: Get(data.CloudCover, i),
-                    // Wind
-                    WindSpeedMs: Get(data.WindSpeed10m, i),
+                    WindSpeedKmh: Get(data.WindSpeed10m, i),
                     WindDirectionDeg: Get(data.WindDirection10m, i),
-                    WindGustsMs: Get(data.WindGusts10m, i),
-                    // New Radiation Fields (Mapped to DNI and Diffuse)
-                    DirectNormalIrradianceWm2: Get(data.DirectNormalIrradianceInstant, i),
+                    // DirectRadiationWm2 => derived from ShortwaveRadiationWm2 and DiffuseRadiationWm2
                     DiffuseRadiationWm2: Get(data.DiffuseRadiationInstant, i),
-                    SolarRadiationWm2: Get(data.ShortwaveRadiationInstant, i),
-                    // Precipitation
-                    PrecipitationMm: Get(data.Precipitation, i)
+                    DirectNormalIrradianceWm2: Get(data.DirectNormalIrradianceInstant, i),
+                    ShortwaveRadiationWm2: Get(data.ShortwaveRadiationInstant, i)
+                    // SnowDepthM: Not available in nowcast => set to null
                 ));
             }
             return list;
@@ -285,3 +271,4 @@ namespace LEG.MeteoSwiss.Client.Forecast
         public void Dispose() => _httpClient.Dispose();
     }
 }
+

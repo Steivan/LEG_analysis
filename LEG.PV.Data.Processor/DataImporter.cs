@@ -6,9 +6,11 @@ using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
+using NetTopologySuite.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Net;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
 using static LEG.PV.Data.Processor.DataRecords;
 
@@ -303,7 +305,9 @@ namespace LEG.PV.Data.Processor
             var indexFirstDataRecord = 0;                                           // Start from the beginning if list is empty
             if (countOfListsDataRecords > 0)                                        // Continue after last injected record
             {
-                var lastInjectedTimestamp = listsDataRecords[^1].Timestamp;
+                var indexLastValidRecord = countOfListsDataRecords - 1;
+                var lastInjectedTimestamp = listsDataRecords[indexLastValidRecord].Timestamp;
+                // Find first forecast record after last injected timestamp
                 for (var i = 0; i < dataRecords.Count; i++)
                 {
                     if (dataRecords[i].Timestamp > lastInjectedTimestamp)
@@ -311,6 +315,15 @@ namespace LEG.PV.Data.Processor
                         indexFirstDataRecord = i;
                         break;
                     }
+                }
+                // Step packwards to find last valid record
+                var indexNewRecord = indexFirstDataRecord;
+                while (indexNewRecord > 0 && indexLastValidRecord > 0 && !listsDataRecords[indexLastValidRecord].HasMeteoData())
+                {
+                    indexNewRecord--;
+                    listsDataRecords.RemoveAt(indexLastValidRecord);
+                    validListsDataRecords.RemoveAt(indexLastValidRecord);
+                    indexLastValidRecord--;
                 }
             }
 
@@ -376,6 +389,7 @@ namespace LEG.PV.Data.Processor
             var (perStationWeatherHistory, blendedWeatherHistory, siteId, dataRecordsHistory, validRecordsHistory, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod>0);
 
             // Filter: retain valid series and get the labels
+            var irradianceLabel = displayPeriod == 2 ? "Global/DNI" : "Global";
             var filteredIrradianceLabels = new List<string>();
             var filteredTemperatureLabels = new List<string>();
             var filteredWindSpeedLabels = new List<string>();
@@ -388,8 +402,8 @@ namespace LEG.PV.Data.Processor
                 var (stationID, stationData) = perStationWeatherHistory[i];
                 if (hasGlobalIrradianceList[i])
                 {
-                    filteredIrradianceLabels.Add($"Global_{stationID}");
-                    filteredIrradianceHistorySeries.Add(stationData.Select(d => d.globalIrradiance).ToList());
+                    filteredIrradianceLabels.Add($"{irradianceLabel}_{stationID}");
+                    filteredIrradianceHistorySeries.Add(stationData.Select(d => d.globalIrradiance).ToList()); 
                 }
                 if (hasDiffuseIrradianceList[i])
                 {
@@ -427,7 +441,7 @@ namespace LEG.PV.Data.Processor
             if (displayPeriod == 2)
             {
                 var firstE3DcTimestamp = dataRecordsHistory[0].Timestamp;
-                var lHistoryTimestamp = dataRecordsHistory[^1].Timestamp;
+                var lHistoryTimestamp = dataRecordsHistory[^3].Timestamp;
                 var (perStationWeatherForecast, blendedWeatherForecasty, _, dataRecordsForecast, validRecordsForecast, _, _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstE3DcTimestamp, lHistoryTimestamp);
 
                 var filteredIrradianceForecastSeries = new List<List<double?>>();
@@ -1065,9 +1079,9 @@ namespace LEG.PV.Data.Processor
                     weatherRecords.Add(new WeatherCsvRecord
                     {
                         ReferenceTimestamp = record.Time,
-                        GlobalIrradiance = null,
+                        GlobalIrradiance = record.DhiWm2 == null ? null : record.DhiWm2 + record.DiffuseWm2,
                         SunshineDuration = null,
-                        DirectNormalIrradiance = record.DniWm2,             // Specific for forecast data
+                        DirectNormalIrradiance = record.DniWm2,             // Specific for mid-term and long-term forecast data
                         DiffuseIrradiance = record.DiffuseWm2,
                         Temperature2m = record.TempC,
                         WindSpeed10min_kmh = record.WindKmh,

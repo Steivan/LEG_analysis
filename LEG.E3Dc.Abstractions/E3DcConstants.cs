@@ -11,7 +11,7 @@ namespace LEG.E3Dc.Abstractions
         public const int FirstYear1 = 18;
         public const int FirstMonth1 = 10;
         public const int LastYear1 = 25;
-        public const int LastMonth1 = 10;
+        public const int LastMonth1 = 11;
         public const string SubFolder2 = @"Felix_Senn_70-1860\";
         public const int FirstYear2 = 21;
         public const int FirstMonth2 = 9;
