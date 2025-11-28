@@ -8,7 +8,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             List<ForecastPeriod> longTermData,
             List<ForecastPeriod> midTermData,
             List<NowcastPeriod> shortTermData,
-            int smoothingFilterId = 1)
+            int smoothingFilterId = 0)      // smoothing filters 0, 1, 2, ... ; -1 = no smoothing
         {
             // --- STEP 1: Initialize the full 15-minute time axis ---
 
