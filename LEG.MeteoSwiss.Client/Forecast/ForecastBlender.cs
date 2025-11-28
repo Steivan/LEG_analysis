@@ -1,27 +1,14 @@
-﻿namespace LEG.MeteoSwiss.Client.Forecast
+﻿
+namespace LEG.MeteoSwiss.Client.Forecast
 {
     public class ForecastBlender
     {
-        public record BlendedPeriod
-        (
-            DateTime Time,          // Timestamp of the blended forecast period: request is explicitely in UTC
-            double? TempC,
-            double? WindKmh,
-            double? DirectHRWm2,    // Direct horizontal raduiation (DHI) in W/m² : used in nearcast model
-            double? DNIWm2,         // Direct normal irradiance (DNI) in W/m² : used in midcast and longcast model
-            double? DiffuseHRWm2,
-            double? SnowDepthM      // SnowDepth is stored in meters (m) as received from API
-        )
-        {
-            public double? GlobalHRWm2 = (DirectHRWm2.HasValue && DiffuseHRWm2.HasValue) ? DirectHRWm2.Value + DiffuseHRWm2.Value : (double?)null;
-            public double? SnowDepthCm => SnowDepthM.HasValue ? SnowDepthM.Value * 100.0 : (double?)null;
-        }
-
         public static List<BlendedPeriod> CreateBlendedForecast(
             DateTime now, // <-- Reference time
             List<ForecastPeriod> longTermData,
             List<ForecastPeriod> midTermData,
-            List<NowcastPeriod> shortTermData)
+            List<NowcastPeriod> shortTermData,
+            int smoothingFilterId = 1)
         {
             // --- STEP 1: Initialize the full 15-minute time axis ---
 
@@ -87,6 +74,9 @@
                     }
                 }
             }
+
+            // Smooth after mid-term patching
+            if (smoothingFilterId >= 0) blendedData = SmoothBlender.SmoothBlendedPeriod(blendedData, filterId : smoothingFilterId);
 
             // --- STEP 4: Patch with Short-Term High-Res (15-min Nearcast) ---
             // Overwrites all prior data for the first ~48 hours.
