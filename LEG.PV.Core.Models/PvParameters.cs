@@ -10,7 +10,7 @@ namespace LEG.PV.Core.Models
     {
 
         internal const double mpSPerKmh = 1000 / 3600;       // 1 km/h = 1000 m / 3600 s  ]
-        internal const double baselineIrradiance = 1000;    // [W/m^2]
+        internal const double baselineIrradiance = 1000;     // [W/m^2]
         internal const double meanTempStc = 25;              // [°C]
         public static double ConvertKmhToMpS(double vKmh)
         {

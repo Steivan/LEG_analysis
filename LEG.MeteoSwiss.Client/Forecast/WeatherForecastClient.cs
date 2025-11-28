@@ -233,7 +233,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     DirectRadiationWm2: Get(data.DirectRadiation, i),
                     DiffuseRadiationWm2: Get(data.DiffuseRadiation, i),
                     DirectNormalIrradianceWm2: Get(data.DirectNormalIrradiance, i),
-                    ShortwaveRadiationWm2: Get(data.ShortwaveRadiation, i),
+                    GlobalRadiationWm2: Get(data.ShortwaveRadiation, i),
                     SnowDepthM: Get(data.SnowDepth, i)
                 ));
             }
@@ -258,7 +258,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     // DirectRadiationWm2 => derived from ShortwaveRadiationWm2 and DiffuseRadiationWm2
                     DiffuseRadiationWm2: Get(data.DiffuseRadiationInstant, i),
                     DirectNormalIrradianceWm2: Get(data.DirectNormalIrradianceInstant, i),
-                    ShortwaveRadiationWm2: Get(data.ShortwaveRadiationInstant, i)
+                    GlobalRadiationWm2: Get(data.ShortwaveRadiationInstant, i)
                     // SnowDepthM: Not available in nowcast => set to null
                 ));
             }

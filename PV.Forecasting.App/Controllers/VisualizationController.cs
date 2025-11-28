@@ -30,7 +30,7 @@ namespace PV.Forecasting.App.Controllers
                     _pvRecordLabels = new Dictionary<string, List<string>>
                     {
                         { "Power", pvRecordLabels.PowerLabels },
-                        { "Irradiance", pvRecordLabels.IrradianceLabels },
+                        { "Irradiance", pvRecordLabels.RadiationLabels },
                         { "Ambient Temperature", pvRecordLabels.TemperatureLabels },
                         { "Wind Velocity", pvRecordLabels.WindSpeedLabels }
                     };
@@ -271,7 +271,7 @@ namespace PV.Forecasting.App.Controllers
             var list = groupName switch
             {
                 "Power" => record.Power,
-                "Irradiance" => record.Irradiance,
+                "Irradiance" => record.Radiation,
                 "Ambient Temperature" => record.Temperature,
                 "Wind Velocity" => record.WindSpeed,
                 _ => null

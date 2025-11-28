@@ -17,9 +17,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
         double? WindSpeedKmh,
         double? WindDirectionDeg,
         double? DirectRadiationWm2,
-        double? DiffuseRadiationWm2,
         double? DirectNormalIrradianceWm2,
-        double? ShortwaveRadiationWm2, // This is the old SolarRadiationWm2
+        double? GlobalRadiationWm2, // This is the old SolarRadiationWm2
+        double? DiffuseRadiationWm2,
         double? SnowDepthM
         )
     {
@@ -28,7 +28,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
         // but it's generally safer to use the UtcOffsetSeconds from the response.
         public DateTime LocalTime => Time.AddHours(1);
         public double? WindSpeedMs => WindSpeedKmh.HasValue ? WindSpeedKmh / 3.6 : null;
-        public double? SolarRadiationWm2 => ShortwaveRadiationWm2;
+        public double? SolarRadiationWm2 => GlobalRadiationWm2;
         public double? SnowDepthCm => SnowDepthM * 100;
     }
 
@@ -40,17 +40,17 @@ namespace LEG.MeteoSwiss.Client.Forecast
         double? WindSpeedKmh,
         double? WindDirectionDeg,
         // DirectRadiationWm2 => derived from ShortwaveRadiationWm2 and DiffuseRadiationWm2
-        double? DiffuseRadiationWm2,
         double? DirectNormalIrradianceWm2,
-        double? ShortwaveRadiationWm2 // This is the old SolarRadiationWm2
+        double? GlobalRadiationWm2, // This is the old SolarRadiationWm2
+        double? DiffuseRadiationWm2
         // SnowDepthM: Not available in nowcast => set to null
         )
     {
         public DateTime LocalTime => Time.AddHours(1);
         public double? WindSpeedMs => WindSpeedKmh.HasValue ? WindSpeedKmh / 3.6 : null;
-        public double? DirectRadiationWm2 => ShortwaveRadiationWm2.HasValue && DiffuseRadiationWm2.HasValue
-            ? ShortwaveRadiationWm2 - DiffuseRadiationWm2 : null;
-        public double? SolarRadiationWm2 => ShortwaveRadiationWm2;
+        public double? DirectRadiationWm2 => GlobalRadiationWm2.HasValue && DiffuseRadiationWm2.HasValue
+            ? GlobalRadiationWm2 - DiffuseRadiationWm2 : null;
+        public double? SolarRadiationWm2 => GlobalRadiationWm2;
         public double? SnowDepthM => null;
         public double? SnowDepthCm => null;
         //    public double? WindGustsMs => WindGustsKmh.HasValue ? WindGustsKmh * 3.6 : null;

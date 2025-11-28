@@ -39,10 +39,10 @@
 //            Assert.AreEqual(2, result.Count);
 //            Assert.AreEqual(new DateTimeOffset(2023, 1, 1, 0, 0, 0, TimeSpan.Zero), result[0].Timestamp);
 //            Assert.AreEqual(5.2, result[0].Temperature2m, 0.01);
-//            Assert.AreEqual(0, result[0].GlobalHorizontalIrradiance, 0.01);
+//            Assert.AreEqual(0, result[0].GlobalHorizontalRadiation, 0.01);
 //            Assert.AreEqual(new DateTimeOffset(2023, 1, 1, 0, 10, 0, TimeSpan.Zero), result[1].Timestamp);
 //            Assert.AreEqual(5.3, result[1].Temperature2m, 0.01);
-//            Assert.AreEqual(0, result[1].GlobalHorizontalIrradiance, 0.01);
+//            Assert.AreEqual(0, result[1].GlobalHorizontalRadiation, 0.01);
 //        }
 //    }
 //}

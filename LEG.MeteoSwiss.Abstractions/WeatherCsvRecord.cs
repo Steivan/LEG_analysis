@@ -158,19 +158,13 @@ namespace LEG.MeteoSwiss.Abstractions
         /// Global radiation; ten minutes mean in W/m².
         /// </summary>
         [Name("gre000z0"), TypeConverter(typeof(NullableDoubleConverter))]
-        public double? GlobalIrradiance { get; set; }
+        public double? ShortWaveRadiation { get; set; }
 
         /// <summary>
         /// Diffuse radiation; ten minutes mean in W/m².
         /// </summary>
         [Name("ods000z0"), TypeConverter(typeof(NullableDoubleConverter))]
-        public double? DiffuseIrradiance { get; set; }
-
-        /// <summary>
-        /// Gets or sets the direct normal irradiance (DNI) in watts per square meter.
-        /// </summary>
-        [Name("DniWm2"), TypeConverter(typeof(NullableDoubleConverter))]                             //  Used in Forecast
-        public double? DirectNormalIrradiance { get; set; }
+        public double? DiffuseRadiation { get; set; }
 
         /// <summary>
         /// Longwave incoming radiation; ten minutes mean in W/m².
@@ -195,5 +189,17 @@ namespace LEG.MeteoSwiss.Abstractions
         /// </summary>
         [Name("sre000z0"), TypeConverter(typeof(NullableDoubleConverter))]
         public double? SunshineDuration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the direct radiation in watts per square meter.
+        /// </summary>
+        [Name("DiRWm2"), TypeConverter(typeof(NullableDoubleConverter))]                             //  Used in Forecast
+        public double? DirectRadiation { get; set; }
+
+        /// <summary>
+        /// Gets or sets the direct normal irradiance (DNI) in watts per square meter.
+        /// </summary>
+        [Name("DniWm2"), TypeConverter(typeof(NullableDoubleConverter))]                             //  Used in Forecast
+        public double? DirectNormalIrradiance { get; set; }
     }
 }

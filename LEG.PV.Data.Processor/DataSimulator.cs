@@ -59,9 +59,9 @@ public class DataSimulator
         var diurnalSolarAmplitude = 90.0 - siteLatitude;
 
         const double maxIrradiance = 1361;     // [W/m^2] Solar constant
-        const double diffuseIrradianceRatio = 0.3;
-        const Double averagediffuseIrradiance = maxIrradiance * diffuseIrradianceRatio;
-        const double maxDirectIrratiance = maxIrradiance - averagediffuseIrradiance;
+        const double diffuseRadiationRatio = 0.3;
+        const Double averagediffuseRadiation = maxIrradiance * diffuseRadiationRatio;
+        const double maxDirectIrratiance = maxIrradiance - averagediffuseRadiation;
         const double weightPreviousIrradiance = 0.7;
 
         const double averageTemp = 15;          // [°C]
@@ -158,13 +158,13 @@ public class DataSimulator
                         var directGeometryFactor = Math.Cos(sunElevation * Math.PI / 180.0) * cosRoofElevation * Math.Cos((sunAzimuth - roofAzimuth) * Math.PI / 180.0)  // theta = 90 - elevation => Cos() <-> Sin()
                             + Math.Sin(sunElevation * Math.PI / 180.0) * sinRoofElevation;
 
-                        // Update irradiance with some randomness
+                        // Update radiation with some randomness
                         var r = random.NextDouble();
                         var newRandomDirectIrradiance = previousDirectIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * r;  // hypothetical irradiance as a function of cloudiness
                         previousDirectIrradiance = newRandomDirectIrradiance;
-                        var diffuseIrradiance = averagediffuseIrradiance + (maxDirectIrratiance - newRandomDirectIrradiance) * 0.1;
-                        var globalHorizontalIrradiance = sinSunElevation > 0.0 ? newRandomDirectIrradiance * sinSunElevation + diffuseIrradiance : 0.0;
-                        var diffuseHorizontalIrradiance = sinSunElevation > 0.0 ? diffuseIrradiance : 0.0;
+                        var diffuseRadiation = averagediffuseRadiation + (maxDirectIrratiance - newRandomDirectIrradiance) * 0.1;
+                        var globalHorizontalRadiation = sinSunElevation > 0.0 ? newRandomDirectIrradiance * sinSunElevation + diffuseRadiation : 0.0;
+                        var diffuseHorizontalRadiation = sinSunElevation > 0.0 ? diffuseRadiation : 0.0;
                         var sunshineDuration = sinSunElevation > 0 ? (int) (newRandomDirectIrradiance / maxDirectIrratiance * minutesPerPeriod) : 0; // [min]
                         var weight = sinSunElevation > 0 ? 1E-3 + Math.Pow(newRandomDirectIrradiance / maxDirectIrratiance, 3) : 0.0;
 
@@ -178,7 +178,7 @@ public class DataSimulator
 
                         // Calculate theoretical effective power
                         var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                            globalHorizontalIrradiance, sunshineDuration, diffuseHorizontalIrradiance, ambientTemp, windSpeed, snowDepth, age,
+                            globalHorizontalRadiation, sunshineDuration, diffuseHorizontalRadiation, ambientTemp, windSpeed, snowDepth, age,
                             ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
 
                         // Add some noise to the measured power
@@ -213,7 +213,8 @@ public class DataSimulator
                             }
                         }
 
-                        var directNormalIrradiance = 0.0; // used in forecasting models
+                        var directHorizontalRadiation = globalHorizontalRadiation - diffuseHorizontalRadiation;
+                        var directNormalIrradiance = sinSunElevation > 0 ? directHorizontalRadiation / sinSunElevation : 0.0; // used in forecasting models
 
                         pvRecords.Add(
                             new PvRecord(
@@ -222,10 +223,11 @@ public class DataSimulator
                                 directGeometryFactor,
                                 diffuseGeometryFactor,
                                 sinSunElevation,
-                                globalHorizontalIrradiance,
-                                sunshineDuration,  
+                                sunshineDuration,
+                                directHorizontalRadiation,
                                 directNormalIrradiance,
-                                diffuseHorizontalIrradiance,  
+                                globalHorizontalRadiation,
+                                diffuseHorizontalRadiation,
                                 ambientTemp, 
                                 windSpeed,
                                 snowDepth,   

@@ -92,9 +92,9 @@ namespace LEG.Tests
                 var current = nowCast[0];
                 var last = nowCast[^1];
                 Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.ShortwaveRadiationWm2:F0} W/m²");
+                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.GlobalRadiationWm2:F0} W/m²");
                 Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.ShortwaveRadiationWm2:F0} W/m²");
+                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.GlobalRadiationWm2:F0} W/m²");
             }
 
             Console.WriteLine($"Blended forecast: for {location}:");
@@ -103,9 +103,9 @@ namespace LEG.Tests
                 var current = blendedForecast[0];
                 var last = blendedForecast[^1];
                 Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.Time:HH:mm} | {current.TempC:F1}°C | WindSpeed: {current.WindKmh:F1} km/h | SnowDepth: {current.SnowDepthCm:F1} cm | " +
-                                              $"Direct: {current.DniWm2:F0} W/m² | Diffuse: {current.DiffuseWm2:F0} W/m²");
+                                              $"Direct: {current.DNIWm2:F0} W/m² | Diffuse: {current.DiffuseHRWm2:F0} W/m²");
                 Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.Time:HH:mm} | {last.TempC:F1}°C | WindSpeed: {last.WindKmh:F1} km/h | SnowDepth: {last.SnowDepthCm:F1} cm | " +
-                                              $"Direct: {last.DniWm2:F0} W/m² | Diffuse: {last.DiffuseWm2:F0} W/m²");
+                                              $"Direct: {last.DNIWm2:F0} W/m² | Diffuse: {last.DiffuseHRWm2:F0} W/m²");
             }
 
             Console.WriteLine();

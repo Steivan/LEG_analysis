@@ -14,10 +14,11 @@ namespace LEG.PV.Data.Processor
                 double directGeometryFactor, 
                 double diffuseGeometryFactor, 
                 double sinSunElevation, 
-                double globalHorizontalIrradiance, 
-                double sunshineDuration, 
-                double directNormalIrradiance, 
-                double diffuseHorizontalIrradiance,
+                double sunshineDuration,
+                double directHorizontalRadiation,
+                double directNormalIrradiance,
+                double globalHorizontalRadiation,
+                double diffuseHorizontalRadiation,
                 double ambientTemp, 
                 double windSpeed, 
                 double snowDepth,
@@ -30,10 +31,11 @@ namespace LEG.PV.Data.Processor
                 DirectGeometryFactor = directGeometryFactor;
                 DiffuseGeometryFactor = diffuseGeometryFactor;
                 SinSunElevation = sinSunElevation;
-                GlobalHorizontalIrradiance = globalHorizontalIrradiance;
                 SunshineDuration = sunshineDuration;
+                DirectHorizontalRadiation = directHorizontalRadiation;
                 DirectNormalIrradiance = directNormalIrradiance;
-                DiffuseHorizontalIrradiance = diffuseHorizontalIrradiance;
+                GlobalHorizontalRadiation = globalHorizontalRadiation;
+                DiffuseHorizontalRadiation = diffuseHorizontalRadiation;
                 AmbientTemp = ambientTemp;
                 WindSpeed = windSpeed;
                 SnowDepth = snowDepth;
@@ -46,10 +48,11 @@ namespace LEG.PV.Data.Processor
             public double DirectGeometryFactor { get; init; }                                   // G_POA / G_ref [unitless]
             public double DiffuseGeometryFactor { get; init; }                                  // G_POA / G_ref [unitless]
             public double SinSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
-            public double GlobalHorizontalIrradiance { get; init; }                             // [W/m²]
             public double SunshineDuration { get; init; }                                       // [min / ten min]
-            public double DirectNormalIrradiance  { get; init; }                                // [W/m²]
-            public double DiffuseHorizontalIrradiance { get; init; }                            // [W/m²]
+            public double DirectHorizontalRadiation { get; init; }                              // [W/m²]
+            public double DirectNormalIrradiance { get; init; }                                 // [W/m²]
+            public double GlobalHorizontalRadiation  { get; init; }                             // [W/m²]
+            public double DiffuseHorizontalRadiation { get; init; }                             // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
             public double WindSpeed { get; init; }                                              // v_wind [m/s]
             public double SnowDepth { get; init; }                                              // d_snow [cm]
@@ -57,14 +60,9 @@ namespace LEG.PV.Data.Processor
             public double Age { get; init; }                                                    // Age [years]
             public double? MeasuredPower { get; init; }                                         // P_meas [W]
             public bool HasMeasuredPower => MeasuredPower.HasValue;
-            public double GetGlobalHorizontalIrradiance()
-            { 
-                if (DirectNormalIrradiance > 0)
-                {
-                    return DirectNormalIrradiance * SinSunElevation + DiffuseHorizontalIrradiance;
-                }
-                return GlobalHorizontalIrradiance;
-            }
+            public double GetGlobalHorizontalRadiation() =>  GlobalHorizontalRadiation > 0 ? GlobalHorizontalRadiation : 
+                (DirectHorizontalRadiation > 0 ? DirectHorizontalRadiation : DirectNormalIrradiance * SinSunElevation) + DiffuseHorizontalRadiation;
+            
             public double ComputedPower(                                                        // P_meas [W]
                 PvModelParams modelParams, 
                 double installedPower,
@@ -74,9 +72,9 @@ namespace LEG.PV.Data.Processor
                     DirectGeometryFactor,
                     DiffuseGeometryFactor,
                     SinSunElevation,
-                    GetGlobalHorizontalIrradiance(),
+                    GetGlobalHorizontalRadiation(),
                     SunshineDuration,
-                    DiffuseHorizontalIrradiance,
+                    DiffuseHorizontalRadiation,
                     AmbientTemp,
                     WindSpeed,
                     SnowDepth,
@@ -94,7 +92,7 @@ namespace LEG.PV.Data.Processor
         {
             public PvRecordCalculated(DateTime timestamp, int index, 
                 double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation, 
-                double globalHorizontalIrradiance, double sunshineDuration, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, double snowDepth,
+                double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, double snowDepth,
                 double age, double measuredPower, double computedPower)
             {
                 Timestamp = timestamp;
@@ -102,9 +100,9 @@ namespace LEG.PV.Data.Processor
                 DirectGeometryFactor = directGeometryFactor;
                 DiffuseGeometryFactor = diffuseGeometryFactor;
                 SinSunElevation = sinSunElevation;
-                GlobalHorizontalIrradiance = globalHorizontalIrradiance;
+                GlobalHorizontalRadiation = globalHorizontalRadiation;
                 SunshineDuration = sunshineDuration;
-                DiffuseHorizontalIrradiance = diffuseHorizontalIrradiatio;
+                DiffuseHorizontalRadiation = diffuseHorizontalIrradiatio;
                 AmbientTemp = ambientTemp;
                 WindSpeed = windSpeed;
                 SnowDepth = snowDepth;
@@ -118,9 +116,9 @@ namespace LEG.PV.Data.Processor
             public double DirectGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double DiffuseGeometryFactor { get; init; }                                         // G_POA / G_ref [unitless]
             public double SinSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
-            public double GlobalHorizontalIrradiance { get; init; }                                      // [W/m²]
+            public double GlobalHorizontalRadiation { get; init; }                                      // [W/m²]
             public double SunshineDuration { get; init; }                                      // [min / ten min]
-            public double DiffuseHorizontalIrradiance { get; init; }                                     // [W/m²]
+            public double DiffuseHorizontalRadiation { get; init; }                                     // [W/m²]
             public double AmbientTemp { get; init; }                                            // T_amb [°C]
             public double WindSpeed { get; init; }                                           // v_wind [m/s]
             public double SnowDepth { get; init; }                                           // d_snow [cm]
@@ -128,17 +126,17 @@ namespace LEG.PV.Data.Processor
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]
             public double ComputedPower { get; init; }                                          // P_comp [W]
-            public double Irradiance => GlobalHorizontalIrradiance + DiffuseHorizontalIrradiance;                // G_POA [W/m²]
+            public double Irradiance => GlobalHorizontalRadiation + DiffuseHorizontalRadiation;                // G_POA [W/m²]
         }
 
         public record PvRecordLists
         {
-            public PvRecordLists(DateTime timestamp, int index, List<double?> power, List<double?> irradiance, List<double?> temperature, List<double?> windSpeed)
+            public PvRecordLists(DateTime timestamp, int index, List<double?> power, List<double?> radiation, List<double?> temperature, List<double?> windSpeed)
             {
                 Timestamp = timestamp;
                 Index = index;
                 Power = power;
-                Irradiance = irradiance;
+                Radiation = radiation;
                 Temperature = temperature;
                 WindSpeed = windSpeed;
             }
@@ -146,12 +144,12 @@ namespace LEG.PV.Data.Processor
             public DateTime Timestamp { get; init; }                // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                         // Index [unitless]
             public List<double?> Power { get; init; }               // P [W]
-            public List<double?> Irradiance { get; init; }          // G_POA [W/m²]
+            public List<double?> Radiation { get; init; }          // G_POA [W/m²]
             public List<double?> Temperature { get; init; }         // T [°C]
             public List<double?> WindSpeed { get; init; }           // v_wind [m/s]
             public bool HasMeteoData()
             {
-                if (Irradiance.All(x => !x.HasValue)) return false;
+                if (Radiation.All(x => !x.HasValue)) return false;
                 if (Temperature.All(x => !x.HasValue)) return false;
                 if (WindSpeed.All(x => !x.HasValue)) return false;
                 return true;
@@ -160,15 +158,15 @@ namespace LEG.PV.Data.Processor
         }
         public record PvRecordLabels
         {
-            public PvRecordLabels(List<string> powerLabels, List<string> irradianceLabels, List<string> temperatureLabels, List<string> windSpeedLabels)
+            public PvRecordLabels(List<string> powerLabels, List<string> radiationLabels, List<string> temperatureLabels, List<string> windSpeedLabels)
             {
                 PowerLabels = powerLabels;
-                IrradianceLabels = irradianceLabels;
+                RadiationLabels = radiationLabels;
                 TemperatureLabels = temperatureLabels;
                 WindSpeedLabels = windSpeedLabels;
             }
             public List<string> PowerLabels { get; init; }    
-            public List<string> IrradianceLabels { get; init; }  
+            public List<string> RadiationLabels { get; init; }  
             public List<string> TemperatureLabels { get; init; } 
             public List<string> WindSpeedLabels { get; init; }
         }
