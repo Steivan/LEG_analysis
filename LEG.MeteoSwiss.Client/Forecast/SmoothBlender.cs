@@ -1,25 +1,14 @@
 ﻿
-namespace LEG.MeteoSwiss.Client.Forecast
+using LEG.MeteoSwiss.Abstractions.Models;
+    
+    namespace LEG.MeteoSwiss.Client.Forecast
 {
-    public record BlendedPeriod
-    (
-        DateTime Time,          // Timestamp of the blended forecast period: request is explicitely in UTC
-        double? TempC,
-        double? WindKmh,
-        double? DirectHRWm2,    // Direct horizontal raduiation (DHI) in W/m² : used in nearcast model
-        double? DNIWm2,         // Direct normal irradiance (DNI) in W/m² : used in midcast and longcast model
-        double? DiffuseHRWm2,
-        double? SnowDepthM      // SnowDepth is stored in meters (m) as received from API
-    )
-    {
-        public double? GlobalHRWm2 = (DirectHRWm2.HasValue && DiffuseHRWm2.HasValue) ? DirectHRWm2.Value + DiffuseHRWm2.Value : (double?)null;
-        public double? SnowDepthCm => SnowDepthM.HasValue ? SnowDepthM.Value * 100.0 : (double?)null;
-    }
+
 internal class SmoothBlender
     {
         const double DegToRad = Math.PI / 180;
 
-        public static Dictionary<DateTime, BlendedPeriod> SmoothBlendedPeriod(Dictionary<DateTime, BlendedPeriod> quarterForecast, int filterId = 0)
+        public static Dictionary<DateTime, MeteoParameters> SmoothBlendedPeriod(Dictionary<DateTime, MeteoParameters> quarterForecast, int filterId = 0)
         {
             void UpdateRowSource(ref double sumValues, ref double sumWeights, double value, double weight)
             {
@@ -27,7 +16,7 @@ internal class SmoothBlender
                 sumWeights += weight;
             }
 
-            var filterIndices = new int[] {  -3,   -2,   -1,    0,    1,   2 };
+            var filterIndices = new int[] {  -3,   -2,   -1,    0,    1,   2 };     // Symmetric filter shifted to the left for causal filtering (aggregated hourly data is reported at the end of 1h period
             List<List<double>> filterWeightsList = [
                 [ 0.10, 0.15, 0.25, 0.25, 0.15, 0.10 ],
                 [ 0.05, 0.15, 0.30, 0.30, 0.15, 0.05 ],
@@ -42,24 +31,30 @@ internal class SmoothBlender
             var filterLength = Math.Min(filterIndices.Length, filterWeights.Length);
 
             var sortedKeys = quarterForecast.Keys.OrderBy(dt => dt).ToList();
-            var smoothedQuarterForecast = new Dictionary<DateTime, BlendedPeriod>();
+            var smoothedQuarterForecast = new Dictionary<DateTime, MeteoParameters>();
             for (int i = 0; i < forecastCount; i++)
             {
                 var quarterTime = sortedKeys[i];
 
-                var sumTempC = 0.0;
-                var sumWindKmh = 0.0;
-                var sumDirectHRWm2 = 0.0;
-                var sumDNIWm2 = 0.0;
-                var sumDiffuseHRWm2 = 0.0;
-                var sumSnowDepthM = 0.0;
+                var sumSunshineDuration = 0.0;
+                var sumDirectRadiation = 0.0;
+                var sumDirectNormalIrradiance = 0.0;
+                var sumGlobalRadiation = 0.0;
+                var sumDiffuseRadiation = 0.0;
+                var sumTemperatue = 0.0;
+                var sumWindSpeed = 0.0;
+                var sumSnowDepth = 0.0;
+                var sumDirectRadiationVariance = 0.0;
 
-                var weightTempC = 0.0;
-                var weightWindKmh = 0.0;
-                var weightDirectHRWm2 = 0.0;
-                var weightDNIWm2 = 0.0;
-                var weightDiffuseHRWm2 = 0.0;
-                var weightSnowDepthM = 0.0;
+                var weightSunshineDuration = 0.0;
+                var weightDirectRadiation = 0.0;
+                var weightDirectNormalIrradiance = 0.0;
+                var weightGlobalRadiation = 0.0;
+                var weightDiffuseRadiation = 0.0;
+                var weightTemperature = 0.0;
+                var weightWindSpeed = 0.0;
+                var weightSnowDepth = 0.0;
+                var weightDirectRadiationVariance = 0.0;
 
                 for (int j = 0; j < filterLength; j++)
                 {
@@ -69,22 +64,28 @@ internal class SmoothBlender
                         var quarterForecast_ij = quarterForecast[sortedKeys[index_ij]];
                         double weight = filterWeights[j];
 
-                        if (quarterForecast_ij.TempC.HasValue) UpdateRowSource(ref sumTempC, ref weightTempC, quarterForecast_ij.TempC.Value, weight);
-                        if (quarterForecast_ij.WindKmh.HasValue) UpdateRowSource(ref sumWindKmh, ref weightWindKmh, quarterForecast_ij.WindKmh.Value, weight);
-                        if (quarterForecast_ij.DirectHRWm2.HasValue) UpdateRowSource(ref sumDirectHRWm2, ref weightDirectHRWm2, quarterForecast_ij.DirectHRWm2.Value, weight);
-                        if (quarterForecast_ij.DNIWm2.HasValue) UpdateRowSource(ref sumDNIWm2, ref weightDNIWm2, quarterForecast_ij.DNIWm2.Value, weight);
-                        if (quarterForecast_ij.DiffuseHRWm2.HasValue) UpdateRowSource(ref sumDiffuseHRWm2, ref weightDiffuseHRWm2, quarterForecast_ij.DiffuseHRWm2.Value, weight);
-                        if (quarterForecast_ij.SnowDepthM.HasValue) UpdateRowSource(ref sumSnowDepthM, ref weightSnowDepthM, quarterForecast_ij.SnowDepthM.Value, weight);
+                        if (quarterForecast_ij.SunshineDuration.HasValue) UpdateRowSource(ref sumSunshineDuration, ref weightSunshineDuration, quarterForecast_ij.SunshineDuration.Value, weight);
+                        if (quarterForecast_ij.DirectRadiation.HasValue) UpdateRowSource(ref sumDirectRadiation, ref weightDirectRadiation, quarterForecast_ij.DirectRadiation.Value, weight);
+                        if (quarterForecast_ij.DirectNormalIrradiance.HasValue) UpdateRowSource(ref sumDirectNormalIrradiance, ref weightDirectNormalIrradiance, quarterForecast_ij.DirectNormalIrradiance.Value, weight);
+                        if (quarterForecast_ij.GlobalRadiation.HasValue) UpdateRowSource(ref sumGlobalRadiation, ref weightGlobalRadiation, quarterForecast_ij.GlobalRadiation.Value, weight);
+                        if (quarterForecast_ij.DiffuseRadiation.HasValue) UpdateRowSource(ref sumDiffuseRadiation, ref weightDiffuseRadiation, quarterForecast_ij.DiffuseRadiation.Value, weight);
+                        if (quarterForecast_ij.Temperature.HasValue) UpdateRowSource(ref sumTemperatue, ref weightTemperature, quarterForecast_ij.Temperature.Value, weight);
+                        if (quarterForecast_ij.WindSpeed.HasValue) UpdateRowSource(ref sumWindSpeed, ref weightWindSpeed, quarterForecast_ij.WindSpeed.Value, weight);
+                        if (quarterForecast_ij.SnowDepth.HasValue) UpdateRowSource(ref sumSnowDepth, ref weightSnowDepth, quarterForecast_ij.SnowDepth.Value, weight);
+                        if (quarterForecast_ij.DirectRadiationVariance.HasValue) UpdateRowSource(ref sumDirectRadiationVariance, ref weightDirectRadiationVariance, quarterForecast_ij.DirectRadiationVariance.Value, weight);
                     }
                 }
-                smoothedQuarterForecast[quarterTime] = new BlendedPeriod(
+                smoothedQuarterForecast[quarterTime] = new MeteoParameters(
                     Time: quarterTime,
-                    weightTempC > 0 ? sumTempC / weightTempC : null,
-                    weightWindKmh > 0 ? sumWindKmh / weightWindKmh : null,
-                    weightDirectHRWm2 > 0 ? sumDirectHRWm2 / weightDirectHRWm2 : null,
-                    weightDNIWm2 > 0 ? sumDNIWm2 / weightDNIWm2 : null,
-                    weightDiffuseHRWm2 > 0 ? sumDiffuseHRWm2 / weightDiffuseHRWm2 : null,
-                    weightSnowDepthM > 0 ? sumSnowDepthM / weightSnowDepthM : null
+                    weightSunshineDuration > 0 ? sumSunshineDuration / weightSunshineDuration : null,
+                    weightDirectRadiation > 0 ? sumDirectRadiation / weightDirectRadiation : null,
+                    weightDirectNormalIrradiance > 0 ? sumDirectNormalIrradiance / weightDirectNormalIrradiance : null,
+                    weightGlobalRadiation > 0 ? sumGlobalRadiation / weightGlobalRadiation : null,
+                    weightDiffuseRadiation > 0 ? sumDiffuseRadiation / weightDiffuseRadiation : null,
+                    weightTemperature > 0 ? sumTemperatue / weightTemperature : null,
+                    weightWindSpeed > 0 ? sumWindSpeed / weightWindSpeed : null,
+                    weightSnowDepth > 0 ? sumSnowDepth / weightSnowDepth : null,
+                    weightDirectRadiationVariance > 0 ? sumDirectRadiationVariance / weightDirectRadiationVariance : null
                 );
             }
 

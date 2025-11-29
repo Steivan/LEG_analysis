@@ -1,9 +1,11 @@
 ﻿
+using LEG.MeteoSwiss.Abstractions.Models;
+
 namespace LEG.MeteoSwiss.Client.Forecast
 {
     public class ForecastBlender
     {
-        public static List<BlendedPeriod> CreateBlendedForecast(
+        public static List<MeteoParameters> CreateBlendedForecast(
             DateTime now, // <-- Reference time
             List<ForecastPeriod> longTermData,
             List<ForecastPeriod> midTermData,
@@ -16,13 +18,13 @@ namespace LEG.MeteoSwiss.Client.Forecast
             var startTime = longTermData.Min(p => p.Time).AddMinutes(-45);
             var endTime = longTermData.Max(p => p.Time);
 
-            var blendedData = new Dictionary<DateTime, BlendedPeriod>();
+            var blendedData = new Dictionary<DateTime, MeteoParameters>();
 
             // Create the full 15-minute time index
             for (var time = startTime; time <= endTime.AddMinutes(45); time = time.AddMinutes(15))
             {
                 // Initialize all records as empty or interpolated later
-                blendedData[time] = new BlendedPeriod(time, null, null, null, null, null, null);
+                blendedData[time] = new MeteoParameters(time, null, null, null, null, null, null, null, null, null);
             }
 
             // --- STEP 2: Apply Long-Term Base (Hourly to 15-min Upscaling) ---
@@ -37,14 +39,17 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     {
                         // This is the BASE LAYER.
                         // Note: Wind speed conversion Km/h -> m/s is required here (factor 0.2778)
-                        blendedData[quarterTime] = new BlendedPeriod(
+                        blendedData[quarterTime] = new MeteoParameters(
                             Time: quarterTime,
-                            TempC: hourData.TemperatureC,
-                            WindKmh: hourData.WindSpeedKmh, // Hourly Wind$
-                            DirectHRWm2: hourData.DirectRadiationWm2, // Hourly DNI
-                            DNIWm2: hourData.DirectNormalIrradianceWm2, // Hourly DNI
-                            DiffuseHRWm2: hourData.DiffuseRadiationWm2,
-                            SnowDepthM: 0.0 // Placeholder for Snow Depth
+                            SunshineDuration: null,                                     // Not available in forecast
+                            DirectRadiation: hourData.DirectRadiationWm2,
+                            DirectNormalIrradiance: hourData.DirectNormalIrradianceWm2,
+                            GlobalRadiation: hourData.GlobalRadiationWm2,
+                            DiffuseRadiation: hourData.DiffuseRadiationWm2,
+                            Temperature: hourData.TemperatureC,
+                            WindSpeed: hourData.WindSpeedKmh, // Hourly Wind
+                            SnowDepth: 0.0,                                             // Placeholder for Snow Depth
+                            DirectRadiationVariance: null                               // Not available in forecast
                         );
                     }
                 }
@@ -64,12 +69,13 @@ namespace LEG.MeteoSwiss.Client.Forecast
                         // OVERWRITE: Higher fidelity hourly data
                         blendedData[quarterTime] = blendedData[quarterTime] with
                         {
-                            TempC = hourData.TemperatureC ?? blendedData[quarterTime].TempC,
-                            WindKmh = hourData.WindSpeedKmh ?? blendedData[quarterTime].WindKmh,
-                            DirectHRWm2 = hourData.DirectRadiationWm2 ?? blendedData[quarterTime].DirectHRWm2,
-                            DNIWm2 = hourData.DirectNormalIrradianceWm2 ?? blendedData[quarterTime].DNIWm2,
-                            DiffuseHRWm2 = hourData.DiffuseRadiationWm2 ?? blendedData[quarterTime].DiffuseHRWm2,
-                            SnowDepthM = hourData.SnowDepthM ?? blendedData[quarterTime].SnowDepthM
+                            DirectRadiation = hourData.DirectRadiationWm2 ?? blendedData[quarterTime].DirectRadiation,
+                            DirectNormalIrradiance = hourData.DirectNormalIrradianceWm2 ?? blendedData[quarterTime].DirectNormalIrradiance,
+                            GlobalRadiation = hourData.GlobalRadiationWm2 ?? blendedData[quarterTime].GlobalRadiation,
+                            DiffuseRadiation = hourData.DiffuseRadiationWm2 ?? blendedData[quarterTime].DiffuseRadiation,
+                            Temperature = hourData.TemperatureC ?? blendedData[quarterTime].Temperature,
+                            WindSpeed = hourData.WindSpeedKmh ?? blendedData[quarterTime].WindSpeed,
+                            SnowDepth = hourData.SnowDepthM ?? blendedData[quarterTime].SnowDepth
                         };
                     }
                 }
@@ -88,12 +94,13 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     // OVERWRITE: Highest fidelity, highest resolution data
                     blendedData[quarterData.Time] = blendedData[quarterData.Time] with
                     {
-                        TempC = quarterData.TemperatureC ?? blendedData[quarterData.Time].TempC,
-                        WindKmh = quarterData.WindSpeedKmh ?? blendedData[quarterData.Time].WindKmh,
-                        DirectHRWm2 = quarterData.DirectRadiationWm2 ?? blendedData[quarterData.Time].DirectHRWm2,
-                        DNIWm2 = quarterData.DirectNormalIrradianceWm2 ?? blendedData[quarterData.Time].DNIWm2,
-                        DiffuseHRWm2 = quarterData.DiffuseRadiationWm2 ?? blendedData[quarterData.Time].DiffuseHRWm2,
-                        SnowDepthM = blendedData[quarterData.Time].SnowDepthM     // No snow depth in nowcast     
+                        DirectRadiation = quarterData.DirectRadiationWm2 ?? blendedData[quarterData.Time].DirectRadiation,
+                        DirectNormalIrradiance = quarterData.DirectNormalIrradianceWm2 ?? blendedData[quarterData.Time].DirectNormalIrradiance,
+                        GlobalRadiation = quarterData.GlobalRadiationWm2 ?? blendedData[quarterData.Time].GlobalRadiation,
+                        DiffuseRadiation = quarterData.DiffuseRadiationWm2 ?? blendedData[quarterData.Time].DiffuseRadiation,
+                        Temperature = quarterData.TemperatureC ?? blendedData[quarterData.Time].Temperature,
+                        WindSpeed = quarterData.WindSpeedKmh ?? blendedData[quarterData.Time].WindSpeed,
+                        SnowDepth = blendedData[quarterData.Time].SnowDepth     // No snow depth in nowcast     
                     };
                 }
             }

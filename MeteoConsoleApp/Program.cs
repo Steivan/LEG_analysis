@@ -3,6 +3,7 @@ using LEG.Common.Utils;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
+using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
 
 namespace MeteoConsoleApp
@@ -222,7 +223,7 @@ namespace MeteoConsoleApp
             }
         }
 
-        public static void printForecastSamples(string location, List<ForecastPeriod> longCast, List<ForecastPeriod> midCast, List<NowcastPeriod> nowCast, List<BlendedPeriod> blendedForecast)
+        public static void printForecastSamples(string location, List<ForecastPeriod> longCast, List<ForecastPeriod> midCast, List<NowcastPeriod> nowCast, List<MeteoParameters> blendedForecast)
         {
             Console.WriteLine($"10-Day Forecast for {location}:");
 
@@ -263,10 +264,10 @@ namespace MeteoConsoleApp
             {
                 var current = blendedForecast[0];
                 var last = blendedForecast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.Time:HH:mm} | {current.TempC:F1}°C | WindSpeed: {current.WindKmh:F1} km/h | SnowDepth: {current.SnowDepthCm:F1} cm | " +
-                                              $"Direct: {current.DNIWm2:F0} W/m² | Diffuse: {current.DiffuseHRWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.Time:HH:mm} | {last.TempC:F1}°C | WindSpeed: {last.WindKmh:F1} km/h | SnowDepth: {last.SnowDepthCm:F1} cm | " +
-                                              $"Direct: {last.DNIWm2:F0} W/m² | Diffuse: {last.DiffuseHRWm2:F0} W/m²");
+                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.Time:HH:mm} | {current.Temperature:F1}°C | WindSpeed: {current.WindSpeed:F1} km/h | SnowDepth: {current.SnowDepthCm:F1} cm | " +
+                                              $"Direct: {current.DirectNormalIrradiance:F0} W/m² | Diffuse: {current.DiffuseRadiation:F0} W/m²");
+                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.Time:HH:mm} | {last.Temperature:F1}°C | WindSpeed: {last.WindSpeed:F1} km/h | SnowDepth: {last.SnowDepthCm:F1} cm | " +
+                                              $"Direct: {last.DirectNormalIrradiance:F0} W/m² | Diffuse: {last.DiffuseRadiation:F0} W/m²");
             }
 
             Console.WriteLine();
