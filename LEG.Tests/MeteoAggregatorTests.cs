@@ -1,4 +1,4 @@
-﻿using LEG.MeteoSwiss.Abstractions;
+﻿using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

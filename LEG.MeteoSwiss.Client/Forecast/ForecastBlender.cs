@@ -19,12 +19,13 @@ namespace LEG.MeteoSwiss.Client.Forecast
             var endTime = longTermData.Max(p => p.Time);
 
             var blendedData = new Dictionary<DateTime, MeteoParameters>();
+            var quarterInterval = TimeSpan.FromMinutes(15);
 
             // Create the full 15-minute time index
             for (var time = startTime; time <= endTime.AddMinutes(45); time = time.AddMinutes(15))
             {
                 // Initialize all records as empty or interpolated later
-                blendedData[time] = new MeteoParameters(time, null, null, null, null, null, null, null, null, null);
+                blendedData[time] = new MeteoParameters(time, quarterInterval, null, null, null, null, null, null, null, null, null, null, null);
             }
 
             // --- STEP 2: Apply Long-Term Base (Hourly to 15-min Upscaling) ---
@@ -41,6 +42,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                         // Note: Wind speed conversion Km/h -> m/s is required here (factor 0.2778)
                         blendedData[quarterTime] = new MeteoParameters(
                             Time: quarterTime,
+                            Interval: quarterInterval,
                             SunshineDuration: null,                                     // Not available in forecast
                             DirectRadiation: hourData.DirectRadiationWm2,
                             DirectNormalIrradiance: hourData.DirectNormalIrradianceWm2,
@@ -48,7 +50,10 @@ namespace LEG.MeteoSwiss.Client.Forecast
                             DiffuseRadiation: hourData.DiffuseRadiationWm2,
                             Temperature: hourData.TemperatureC,
                             WindSpeed: hourData.WindSpeedKmh, // Hourly Wind
+                            WindDirection: hourData.WindDirectionDeg,
                             SnowDepth: 0.0,                                             // Placeholder for Snow Depth
+                            RelativeHumidity: hourData.RelativeHumidity,
+                            DewPoint: hourData.DewPointC,
                             DirectRadiationVariance: null                               // Not available in forecast
                         );
                     }
@@ -75,7 +80,10 @@ namespace LEG.MeteoSwiss.Client.Forecast
                             DiffuseRadiation = hourData.DiffuseRadiationWm2 ?? blendedData[quarterTime].DiffuseRadiation,
                             Temperature = hourData.TemperatureC ?? blendedData[quarterTime].Temperature,
                             WindSpeed = hourData.WindSpeedKmh ?? blendedData[quarterTime].WindSpeed,
-                            SnowDepth = hourData.SnowDepthM ?? blendedData[quarterTime].SnowDepth
+                            WindDirection = hourData.WindDirectionDeg ?? blendedData[quarterTime].WindDirection,
+                            SnowDepth = hourData.SnowDepthM ?? blendedData[quarterTime].SnowDepth,
+                            RelativeHumidity = hourData.RelativeHumidity ?? blendedData[quarterTime].RelativeHumidity,
+                            DewPoint = hourData.DewPointC ?? blendedData[quarterTime].DewPoint
                         };
                     }
                 }
@@ -100,7 +108,10 @@ namespace LEG.MeteoSwiss.Client.Forecast
                         DiffuseRadiation = quarterData.DiffuseRadiationWm2 ?? blendedData[quarterData.Time].DiffuseRadiation,
                         Temperature = quarterData.TemperatureC ?? blendedData[quarterData.Time].Temperature,
                         WindSpeed = quarterData.WindSpeedKmh ?? blendedData[quarterData.Time].WindSpeed,
-                        SnowDepth = blendedData[quarterData.Time].SnowDepth     // No snow depth in nowcast     
+                        WindDirection = quarterData.WindDirectionDeg ?? blendedData[quarterData.Time].WindDirection,
+                        SnowDepth = blendedData[quarterData.Time].SnowDepth,     // No snow depth in nowcast
+                        RelativeHumidity = quarterData.RelativeHumidity ?? blendedData[quarterData.Time].RelativeHumidity,
+                        DewPoint = quarterData.DewPointC ?? blendedData[quarterData.Time].DewPoint
                     };
                 }
             }

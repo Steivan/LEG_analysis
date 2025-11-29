@@ -2,6 +2,7 @@
 using LEG.Common.Utils;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
+using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;

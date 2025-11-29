@@ -43,7 +43,11 @@ internal class SmoothBlender
                 var sumDiffuseRadiation = 0.0;
                 var sumTemperatue = 0.0;
                 var sumWindSpeed = 0.0;
+                var sumWind_X = 0.0;
+                var sumWind_Y = 0.0;
                 var sumSnowDepth = 0.0;
+                var sumRelativeHumidity = 0.0;
+                var sumDewPoint = 0.0;
                 var sumDirectRadiationVariance = 0.0;
 
                 var weightSunshineDuration = 0.0;
@@ -53,7 +57,10 @@ internal class SmoothBlender
                 var weightDiffuseRadiation = 0.0;
                 var weightTemperature = 0.0;
                 var weightWindSpeed = 0.0;
+                var weightWindDirection = 0.0;
                 var weightSnowDepth = 0.0;
+                var weightRelativeHumidity = 0.0;
+                var weightDewPoint = 0.0;
                 var weightDirectRadiationVariance = 0.0;
 
                 for (int j = 0; j < filterLength; j++)
@@ -71,12 +78,22 @@ internal class SmoothBlender
                         if (quarterForecast_ij.DiffuseRadiation.HasValue) UpdateRowSource(ref sumDiffuseRadiation, ref weightDiffuseRadiation, quarterForecast_ij.DiffuseRadiation.Value, weight);
                         if (quarterForecast_ij.Temperature.HasValue) UpdateRowSource(ref sumTemperatue, ref weightTemperature, quarterForecast_ij.Temperature.Value, weight);
                         if (quarterForecast_ij.WindSpeed.HasValue) UpdateRowSource(ref sumWindSpeed, ref weightWindSpeed, quarterForecast_ij.WindSpeed.Value, weight);
+                        if (quarterForecast_ij.WindSpeed.HasValue && quarterForecast_ij.WindDirection.HasValue)
+                        {
+                            double windDirRad = quarterForecast_ij.WindDirection.Value * DegToRad;
+                            sumWind_X += quarterForecast_ij.WindSpeed.Value * Math.Cos(windDirRad) * weight;
+                            sumWind_Y += quarterForecast_ij.WindSpeed.Value * Math.Sin(windDirRad) * weight;
+                            weightWindDirection += weight;
+                        }
                         if (quarterForecast_ij.SnowDepth.HasValue) UpdateRowSource(ref sumSnowDepth, ref weightSnowDepth, quarterForecast_ij.SnowDepth.Value, weight);
+                        if (quarterForecast_ij.RelativeHumidity.HasValue) UpdateRowSource(ref sumRelativeHumidity, ref weightRelativeHumidity, quarterForecast_ij.RelativeHumidity.Value, weight);
+                        if (quarterForecast_ij.DewPoint.HasValue) UpdateRowSource(ref sumDewPoint, ref weightDewPoint, quarterForecast_ij.DewPoint.Value, weight);
                         if (quarterForecast_ij.DirectRadiationVariance.HasValue) UpdateRowSource(ref sumDirectRadiationVariance, ref weightDirectRadiationVariance, quarterForecast_ij.DirectRadiationVariance.Value, weight);
                     }
                 }
                 smoothedQuarterForecast[quarterTime] = new MeteoParameters(
                     Time: quarterTime,
+                    Interval: quarterForecast[quarterTime].Interval,
                     weightSunshineDuration > 0 ? sumSunshineDuration / weightSunshineDuration : null,
                     weightDirectRadiation > 0 ? sumDirectRadiation / weightDirectRadiation : null,
                     weightDirectNormalIrradiance > 0 ? sumDirectNormalIrradiance / weightDirectNormalIrradiance : null,
@@ -84,7 +101,10 @@ internal class SmoothBlender
                     weightDiffuseRadiation > 0 ? sumDiffuseRadiation / weightDiffuseRadiation : null,
                     weightTemperature > 0 ? sumTemperatue / weightTemperature : null,
                     weightWindSpeed > 0 ? sumWindSpeed / weightWindSpeed : null,
+                    weightWindDirection > 0 ? Math.Atan2(sumWind_Y, sumWind_X) / DegToRad : null,
                     weightSnowDepth > 0 ? sumSnowDepth / weightSnowDepth : null,
+                    weightRelativeHumidity > 0 ? sumRelativeHumidity / weightRelativeHumidity : null,
+                    weightDewPoint > 0 ? sumDewPoint / weightDewPoint : null,
                     weightDirectRadiationVariance > 0 ? sumDirectRadiationVariance / weightDirectRadiationVariance : null
                 );
             }

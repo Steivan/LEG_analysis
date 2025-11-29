@@ -1,5 +1,5 @@
 ﻿using LEG.Common;
-using LEG.MeteoSwiss.Abstractions;
+using LEG.MeteoSwiss.Abstractions.Models;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("LEG.Tests")]

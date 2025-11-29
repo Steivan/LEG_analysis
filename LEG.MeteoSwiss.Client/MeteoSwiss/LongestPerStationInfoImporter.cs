@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using LEG.MeteoSwiss.Abstractions;
+using LEG.MeteoSwiss.Abstractions.Models;
 
 namespace LEG.MeteoSwiss.Client.MeteoSwiss
 {

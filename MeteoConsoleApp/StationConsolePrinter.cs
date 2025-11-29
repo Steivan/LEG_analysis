@@ -1,5 +1,5 @@
 ﻿using LEG.Common.Utils;
-using LEG.MeteoSwiss.Abstractions;
+using LEG.MeteoSwiss.Abstractions.Models;
 
 namespace MeteoConsoleApp
 {

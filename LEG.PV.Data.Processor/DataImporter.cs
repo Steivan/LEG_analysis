@@ -3,7 +3,6 @@ using LEG.CoreLib.SampleData.SampleData;
 using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.E3Dc.Client;
 using LEG.HorizonProfiles.Client;
-using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
@@ -657,6 +656,7 @@ namespace LEG.PV.Data.Processor
             {
                 weatherParameters.Add(new MeteoSwiss.Abstractions.Models.MeteoParameters(
                     supportTimeStamps[i],
+                    TimeSpan.FromMinutes(supportInterval),
                     supportSunshineDuration[i],
                     supportDirectRadiation[i],
                     supportDirectNormalIrradiance[i],
@@ -664,7 +664,10 @@ namespace LEG.PV.Data.Processor
                     supportDiffuseRadiation[i],
                     supportTemperature[i],
                     supportWindSpeed[i],
-                    supportSnowDepth[i]));
+                    null,
+                    supportSnowDepth[i],
+                    null,
+                    null));
 
                 var sunshineDur = supportSunshineDuration[i] ?? 0.0;
                 var directRad = supportDirectRadiation[i] ?? 0.0;
@@ -709,6 +712,7 @@ namespace LEG.PV.Data.Processor
         {
             var blendedWeatherData =
                     new List<MeteoSwiss.Abstractions.Models.MeteoParameters>();
+            var timeInterval = (supportTimeStamps[1] - supportTimeStamps[0]).Minutes;
 
             for (var i = 0; i < supportCount; i++)
             {
@@ -722,6 +726,7 @@ namespace LEG.PV.Data.Processor
 
                 blendedWeatherData.Add(new MeteoSwiss.Abstractions.Models.MeteoParameters(
                     supportTimeStamps[i],
+                    TimeSpan.FromMinutes(timeInterval),
                     weightedSumSupportSunshineDuration[i],
                     weightedSumSupportDirectRadiation[i],
                     weightedSumSupportDirectNormalIrradiance[i],
@@ -729,7 +734,10 @@ namespace LEG.PV.Data.Processor
                     weightedSumSupportDiffuseRadiation[i],
                     weightedSumSupportTemperature[i],
                     weightedSumSupportWindSpeed[i],
+                    null,
                     weightedSumSupportSnowDepth[i],
+                    null,
+                    null,
                     directRadiationVariance));
             }
 

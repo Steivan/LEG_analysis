@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using System.Globalization;
+using LEG.MeteoSwiss.Abstractions.Models;
 
 // Documentation
 // https://open-meteo.com/en/docs

@@ -1,8 +1,8 @@
-﻿
-namespace LEG.MeteoSwiss.Abstractions.Models
+﻿namespace LEG.MeteoSwiss.Abstractions.Models
 {
     public record MeteoParameters(
         DateTime Time,
+        TimeSpan Interval,
         double? SunshineDuration,
         double? DirectRadiation,
         double? DirectNormalIrradiance,
@@ -10,13 +10,23 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         double? DiffuseRadiation,
         double? Temperature,
         double? WindSpeed,
+        double? WindDirection,
         double? SnowDepth,
-        double? DirectRadiationVariance = null // Optional for history/forecast
+        double? RelativeHumidity,
+        double? DewPoint,
+        double? DirectRadiationVariance = null, // Optional for history/forecast
+        IntervalAnchor Anchor = IntervalAnchor.End // Default to End
     )
     {
-        public double? GlobalHRWm2 = GlobalRadiation.HasValue ? GlobalRadiation.Value : (DirectRadiation.HasValue && DiffuseRadiation.HasValue) ? DirectRadiation.Value + DiffuseRadiation.Value : (double?)null;
-        public double? SnowDepthCm => SnowDepth.HasValue ? SnowDepth.Value * 100.0 : (double?)null;
-    }
-public record StationMeteoData(string StationId, List<MeteoParameters> WeatherData);
+        public double? GlobalHRWm2 =>
+            GlobalRadiation.HasValue ? GlobalRadiation.Value
+            : (DirectRadiation.HasValue && DiffuseRadiation.HasValue)
+                ? DirectRadiation.Value + DiffuseRadiation.Value
+                : (double?)null;
 
+        public double? SnowDepthCm =>
+            SnowDepth.HasValue ? SnowDepth.Value * 100.0 : (double?)null;
+    }
+
+    public record StationMeteoData(string StationId, List<MeteoParameters> WeatherData);
 }
