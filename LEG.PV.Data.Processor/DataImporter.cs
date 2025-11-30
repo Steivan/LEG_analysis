@@ -14,7 +14,7 @@ namespace LEG.PV.Data.Processor
 {
     public record MeteoImportResult(
         List<StationMeteoData> PerStationWeatherData,
-        List<MeteoSwiss.Abstractions.Models.MeteoParameters> BlendedWeatherData,
+        List<MeteoParameters> BlendedWeatherData,
         string SiteId,
         List<PvRecord> DataRecords,
         List<bool> ValidRecords,
@@ -38,24 +38,24 @@ namespace LEG.PV.Data.Processor
         int meteoDataLagHistory = 10;             // Values at given timestamp represent the aggregation over previous 10 minutes
         int meteoDataLagForecast = 0;            // Forecast data lag in minutes
         const double latSma = 47.378;
-        const double lonSma =  8.566;
+        const double lonSma = 8.566;
 
         // Selected stations, available parameters and blending weights
-        List<string> selectedStationsIdList             = ["SMA", "KLO", "HOE", "UEB"];
-        List<bool> hasSunshineDurationList              = [ true,  true,  true,  true];
-        List<bool> hasGlobalRadiationList               = [ true,  true,  true,  true];
-        List<bool> hasDiffuseRadiationList              = [false,  true, false,  true];
-        List<bool> hasTemperatureList                   = [ true,  true,  true, false];
-        List<bool> hasWindSpeedList                     = [ true,  true,  true, false];
-        List<bool> hasSnowDepthList                     = [ true,  true,  true, false];
-        List<double> weightSunshineDurationList         = [  3.0,   1.0,   1.0,   1.0];
-        List<double> weightDirectRadiationList          = [  3.0,   1.0,   1.0,   1.0];
-        List<double> weightDirectNormalIrradianceList   = [  3.0,   1.0,   1.0,   1.0];         // Used in forecast only
-        List<double> weightGlobalRadiationList          = [  3.0,   1.0,   1.0,   1.0];
-        List<double> weightDiffuseRadiationList         = [  0.0,   1.0,   0.0,   1.0];
-        List<double> weightTemperatureList              = [  1.0,   1.0,   0.0,   0.0];
-        List<double> weightWindSpeedList                = [  1.0,   1.0,   0.0,   0.0];
-        List<double> weightSnowDepthList                = [  1.0,   1.0,   0.0,   0.0];
+        List<string> selectedStationsIdList = ["SMA", "KLO", "HOE", "UEB"];
+        List<bool> hasSunshineDurationList = [true, true, true, true];
+        List<bool> hasGlobalRadiationList = [true, true, true, true];
+        List<bool> hasDiffuseRadiationList = [false, true, false, true];
+        List<bool> hasTemperatureList = [true, true, true, false];
+        List<bool> hasWindSpeedList = [true, true, true, false];
+        List<bool> hasSnowDepthList = [true, true, true, false];
+        List<double> weightSunshineDurationList = [3.0, 1.0, 1.0, 1.0];
+        List<double> weightDirectRadiationList = [3.0, 1.0, 1.0, 1.0];
+        List<double> weightDirectNormalIrradianceList = [3.0, 1.0, 1.0, 1.0];         // Used in forecast only
+        List<double> weightGlobalRadiationList = [3.0, 1.0, 1.0, 1.0];
+        List<double> weightDiffuseRadiationList = [0.0, 1.0, 0.0, 1.0];
+        List<double> weightTemperatureList = [1.0, 1.0, 0.0, 0.0];
+        List<double> weightWindSpeedList = [1.0, 1.0, 0.0, 0.0];
+        List<double> weightSnowDepthList = [1.0, 1.0, 0.0, 0.0];
 
         public async Task UpdateWeatherData(DateTime downloadStartDate, List<string> stationsList)
         {
@@ -81,7 +81,7 @@ namespace LEG.PV.Data.Processor
         }
 
         // Import meteo history and merge with actual and calculated pvProduction data
-        public async Task<MeteoImportResult> ImportE3DcAndMeteoHistory(int folder, bool meteoTillNow = false) 
+        public async Task<MeteoImportResult> ImportE3DcAndMeteoHistory(int folder, bool meteoTillNow = false)
         {
             // Fetch pvProduction records
             folder = 1 + (folder - 1) % 2;
@@ -121,7 +121,7 @@ namespace LEG.PV.Data.Processor
                 weightTemperatureList,
                 weightWindSpeedList,
                 weightSnowDepthList,
-                timeStamps, 
+                timeStamps,
                 shiftMeteoTimeStamps: meteoDataOffset + meteoDataLagHistory);
 
             // Merge data
@@ -129,7 +129,7 @@ namespace LEG.PV.Data.Processor
             var countOfMeteoRecords = blendedWeatherData.Count;
             var dataRecords = new List<PvRecord>();
             var validRecords = new List<bool>();
-            for (var i=0; i < countOfMeteoRecords; i++)
+            for (var i = 0; i < countOfMeteoRecords; i++)
             {
                 var recordIndex = i;
                 var meteoParam = blendedWeatherData[i];
@@ -141,8 +141,8 @@ namespace LEG.PV.Data.Processor
                     weight = 0.0;
                 }
                 var age = (timeStamps[i] - firstE3DcTimestamp).TotalMinutes / minutesPerYear;
-                var pvRecord = new PvRecord (
-                    timeStamps[i], 
+                var pvRecord = new PvRecord(
+                    timeStamps[i],
                     recordIndex,                            // TODO: pvDataRecord.Index,
                     directGeometryFactors[i],
                     diffuseGeometryFactor,
@@ -156,7 +156,7 @@ namespace LEG.PV.Data.Processor
                     meteoParam.WindSpeed ?? 0.0,
                     meteoParam.SnowDepth ?? 0.0,
                     weight,
-                    age, 
+                    age,
                     solarProduction
                     );
                 dataRecords.Add(pvRecord);
@@ -169,9 +169,9 @@ namespace LEG.PV.Data.Processor
 
         // Import meteo forecast and merge with calculated pvProduction data
         public async Task<MeteoImportResult> ImportMeteoForecastAndCalculatedProduction(
-            int folder, 
+            int folder,
             DateTime firstE3DcTimestamp,
-            DateTime lastHistoryTimestamp, 
+            DateTime lastHistoryTimestamp,
             int forecastDays = 16)
         {
             folder = 1 + (folder - 1) % 2;
@@ -247,7 +247,7 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportE3DcHistory(int folder, bool meteoTillNow=false)      // 0: downloaded E3Dc history, 1: meteo history till now, 2: including meteo forecast
+            ImportE3DcHistory(int folder, bool meteoTillNow = false)      // 0: downloaded E3Dc history, 1: meteo history till now, 2: including meteo forecast
         {
             var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: meteoTillNow);
 
@@ -256,7 +256,7 @@ namespace LEG.PV.Data.Processor
 
         private void InjectDataRecords(
             PvModelParams pvModelParams,
-            double installedPower, 
+            double installedPower,
             int periodsPerHour,
             List<PvRecord> dataRecords,
             List<bool> validDataRecord,
@@ -338,7 +338,7 @@ namespace LEG.PV.Data.Processor
             ImportE3DcHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded E3Dc history, 1: meteo history till now, 2: including meteo forecast
         {
             List<PvModelParams> pvModelParamsList
-                =  [
+                = [
                 GetDefaultPriorModelParams(),
                 new(
                     0.619,
@@ -358,11 +358,11 @@ namespace LEG.PV.Data.Processor
             var pvModelParams = pvModelParamsList[folder];
 
             // Fetch pvProduction and meteo data
-            var (perStationWeatherHistory, blendedWeatherHistory, siteId, dataRecordsHistory, validRecordsHistory, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod>0);
+            var (perStationWeatherHistory, blendedWeatherHistory, siteId, dataRecordsHistory, validRecordsHistory, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
 
             //var (radiation, radiationLabels, temperature, temperatureLabels, wind, windLabels) = FilterAndLabelSeries(...);
-            var (filteredRadiationHistorySeries, filteredRadiationLabels, 
-                filteredTemperatureHistorySeries, filteredTemperatureLabels, 
+            var (filteredRadiationHistorySeries, filteredRadiationLabels,
+                filteredTemperatureHistorySeries, filteredTemperatureLabels,
                 filteredWindSpeedHistorySeries, filteredWindSpeedLabels) = FilterAndLabelSeries(
                     perStationWeatherHistory,
                     hasGlobalRadiationList,
@@ -393,7 +393,7 @@ namespace LEG.PV.Data.Processor
                 var (perStationWeatherForecast, blendedWeatherForecasty, _, dataRecordsForecast, validRecordsForecast, _, _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstE3DcTimestamp, lHistoryTimestamp);
 
                 var (filteredRadiationForecastSeries, _,
-                    filteredTemperatureForecastSeries,_,
+                    filteredTemperatureForecastSeries, _,
                     filteredWindSpeedForecastSeries, _) = FilterAndLabelSeries(
                     perStationWeatherForecast,
                     hasGlobalRadiationList,
@@ -428,11 +428,11 @@ namespace LEG.PV.Data.Processor
 
         // Fetch computed pv production data and geometry factors
         private async Task<(
-            List<DateTime> timeStamps, 
-            List<double> directGeometryFactors, 
-            double diffuseGeometryFactor, 
-            List<double> sinSunElevations, 
-            double installedPower)> 
+            List<DateTime> timeStamps,
+            List<double> directGeometryFactors,
+            double diffuseGeometryFactor,
+            List<double> sinSunElevations,
+            double installedPower)>
             PvProduction(
             string siteId,
             DateTime startTime,
@@ -474,7 +474,7 @@ namespace LEG.PV.Data.Processor
 
                 installedKwP = results.PeakPowerPerRoof.Sum();
 
-                diffuseGeometryFactor = results.DiffuseGeometryFactor; 
+                diffuseGeometryFactor = results.DiffuseGeometryFactor;
                 for (int i = 0; i < results.TimeStamps.Length; i++)
                 {
                     var ts = results.TimeStamps[i];
@@ -497,9 +497,9 @@ namespace LEG.PV.Data.Processor
             double?[] supportDirectRadiation,
             double?[] supportDirectNormalIrradiance,
             double?[] supportGlobalRadiation,
-            double?[] supportDiffuseRadiation, 
-            double?[] supportTemperature, 
-            double?[] supportWindSpeed, 
+            double?[] supportDiffuseRadiation,
+            double?[] supportTemperature,
+            double?[] supportWindSpeed,
             double?[] supportSnowDepth)
         {
             void AppendValue(double?[] supportArray, int index, double? value, double overLapRatio)
@@ -584,7 +584,7 @@ namespace LEG.PV.Data.Processor
         }
 
         // Aggregation helper for historical and forecast data: Process data from a single station and accumulate weighted sums
-        private new List<MeteoSwiss.Abstractions.Models.MeteoParameters>
+        private new List<MeteoParameters>
             ProcessStationData(
             int stationIndex,
             int countStations,
@@ -636,7 +636,7 @@ namespace LEG.PV.Data.Processor
             {
                 AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval, supportInterval,
                     supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], weatherRecords[iMeteo],
-                    supportSunshineDuration, supportDirectRadiation, supportDirectNormalIrradiance, supportGlobalRadiation, supportDiffuseRadiation, 
+                    supportSunshineDuration, supportDirectRadiation, supportDirectNormalIrradiance, supportGlobalRadiation, supportDiffuseRadiation,
                     supportTemperature, supportWindSpeed, supportSnowDepth);
                 iSupport++;
                 while (iSupport < supportCount && iMeteo < meteoCount - 1 && alignedMeteoTimeStamps[iMeteo].AddMinutes(meteoInterval) <= supportTimeStamps[iSupport])
@@ -644,17 +644,17 @@ namespace LEG.PV.Data.Processor
                     iMeteo++;
                     AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval, supportInterval,
                         supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], weatherRecords[iMeteo],
-                        supportSunshineDuration, supportDirectRadiation, supportDirectNormalIrradiance, supportGlobalRadiation, supportDiffuseRadiation, 
+                        supportSunshineDuration, supportDirectRadiation, supportDirectNormalIrradiance, supportGlobalRadiation, supportDiffuseRadiation,
                         supportTemperature, supportWindSpeed, supportSnowDepth);
                 }
                 iMeteo++;
             }
 
             var weatherParameters =
-                new List<MeteoSwiss.Abstractions.Models.MeteoParameters>();   
+                new List<MeteoParameters>();
             for (var i = 0; i < supportCount; i++)
             {
-                weatherParameters.Add(new MeteoSwiss.Abstractions.Models.MeteoParameters(
+                weatherParameters.Add(new MeteoParameters(
                     supportTimeStamps[i],
                     TimeSpan.FromMinutes(supportInterval),
                     supportSunshineDuration[i],
@@ -695,7 +695,7 @@ namespace LEG.PV.Data.Processor
 
         // 
 
-        private List<MeteoSwiss.Abstractions.Models.MeteoParameters>
+        private List<MeteoParameters>
             GetBlendedMeteoParameters(
             int supportCount,
             List<DateTime> supportTimeStamps,
@@ -711,7 +711,7 @@ namespace LEG.PV.Data.Processor
             double[] squaredSumSupportDirectRadiation)
         {
             var blendedWeatherData =
-                    new List<MeteoSwiss.Abstractions.Models.MeteoParameters>();
+                    new List<MeteoParameters>();
             var timeInterval = (supportTimeStamps[1] - supportTimeStamps[0]).Minutes;
 
             for (var i = 0; i < supportCount; i++)
@@ -724,7 +724,7 @@ namespace LEG.PV.Data.Processor
                     directRadiationVariance = radiationBaselineVariance + (E2i - E1i * E1i) * selectedStationsIdList.Count / (selectedStationsIdList.Count - 1);
                 }
 
-                blendedWeatherData.Add(new MeteoSwiss.Abstractions.Models.MeteoParameters(
+                blendedWeatherData.Add(new MeteoParameters(
                     supportTimeStamps[i],
                     TimeSpan.FromMinutes(timeInterval),
                     weightedSumSupportSunshineDuration[i],
@@ -745,10 +745,7 @@ namespace LEG.PV.Data.Processor
         }
 
         // Load meteo history and blend data from selected stations
-        private (
-            List<StationMeteoData> stationsWeatherdata,
-            List<MeteoSwiss.Abstractions.Models.MeteoParameters> blendedWeatherData)
-            LoadBlendedWeatherHistory(
+        private (List<StationMeteoData> stationsWeatherdata, List<MeteoParameters> blendedWeatherData) LoadBlendedWeatherHistory(
             List<string> selectedStationsIdList,
             List<double> weightSunshineDurationList,
             List<double> weightDirectRadiationList,
@@ -758,7 +755,7 @@ namespace LEG.PV.Data.Processor
             List<double> weightTemperatureList,
             List<double> weightWindSpeedList,
             List<double> weightSnowDepthList,
-            List<DateTime> supportTimeStamps, 
+            List<DateTime> supportTimeStamps,
             int shiftMeteoTimeStamps = 60)                 // shift in minutes UTC -> local time
         {
             var now = DateTime.Now;
@@ -882,7 +879,7 @@ namespace LEG.PV.Data.Processor
 
         private async Task<(
             List<StationMeteoData> stationsWeatherdata,
-            List<MeteoSwiss.Abstractions.Models.MeteoParameters> blendedWeatherData)>
+            List<MeteoParameters> blendedWeatherData)>
             LoadBlendedWeatherForecast(
             List<string> selectedStationsIdList,
             List<double> weightSunshineDurationList,
@@ -1031,7 +1028,7 @@ namespace LEG.PV.Data.Processor
                     sumSupportDirectRadiation,
                     squaredSumSupportDirectRadiation);
 
-            perStationWeatherParameters.Add(new StationMeteoData(stationId, weatherParameters));
+                perStationWeatherParameters.Add(new StationMeteoData(stationId, weatherParameters));
             }
 
             var blendedWeatherData = GetBlendedMeteoParameters(
@@ -1085,22 +1082,22 @@ namespace LEG.PV.Data.Processor
                 var station = perStationWeatherData[i];
                 if (hasGlobalRadiationList[i])
                 {
-                    radiationSeries.Add(station.WeatherData.Select(d => d.GlobalRadiation).ToList());
+                    radiationSeries.Add(station.WeatherData.Select(d => d.GetValue(MeteoParameterType.GlobalRadiation)).ToList());
                     radiationLabels.Add($"Global_{station.StationId}");
                 }
                 if (hasDiffuseRadiationList[i])
                 {
-                    radiationSeries.Add(station.WeatherData.Select(d => d.DiffuseRadiation).ToList());
+                    radiationSeries.Add(station.WeatherData.Select(d => d.GetValue(MeteoParameterType.DiffuseRadiation)).ToList());
                     radiationLabels.Add($"Diffuse_{station.StationId}");
                 }
                 if (hasTemperatureList[i])
                 {
-                    temperatureSeries.Add(station.WeatherData.Select(d => d.Temperature).ToList());
+                    temperatureSeries.Add(station.WeatherData.Select(d => d.GetValue(MeteoParameterType.Temperature)).ToList());
                     temperatureLabels.Add($"Temperature_{station.StationId}");
                 }
                 if (hasWindSpeedList[i])
                 {
-                    windSpeedSeries.Add(station.WeatherData.Select(d => d.WindSpeed).ToList());
+                    windSpeedSeries.Add(station.WeatherData.Select(d => d.GetValue(MeteoParameterType.WindSpeed)).ToList());
                     windSpeedLabels.Add($"WindSpeed_{station.StationId}");
                 }
             }

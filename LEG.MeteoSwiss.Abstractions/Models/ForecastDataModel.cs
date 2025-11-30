@@ -11,16 +11,16 @@ namespace LEG.MeteoSwiss.Abstractions.Models
 
     public record ForecastPeriod(
         DateTime Time,
-        double? TemperatureC,
-        double? RelativeHumidity,
-        double? DewPointC,
-        double? WindSpeedKmh,
-        double? WindDirectionDeg,
         double? DirectRadiationWm2,
         double? DirectNormalIrradianceWm2,
         double? GlobalRadiationWm2, // This is the old SolarRadiationWm2
         double? DiffuseRadiationWm2,
-        double? SnowDepthM
+        double? TemperatureC,
+        double? WindSpeedKmh,
+        double? WindDirectionDeg,
+        double? SnowDepthM,
+        double? RelativeHumidity,
+        double? DewPointC
         )
     {
         // Note: The Open-Meteo API usually returns UTC time. 
@@ -34,23 +34,23 @@ namespace LEG.MeteoSwiss.Abstractions.Models
 
     public record NowcastPeriod(
         DateTime Time,
-        double? TemperatureC,
-        double? RelativeHumidity,
-        double? DewPointC,
-        double? WindSpeedKmh,
-        double? WindDirectionDeg,
         // DirectRadiationWm2 => derived from ShortwaveRadiationWm2 and DiffuseRadiationWm2
         double? DirectNormalIrradianceWm2,
         double? GlobalRadiationWm2, // This is the old SolarRadiationWm2
-        double? DiffuseRadiationWm2
+        double? DiffuseRadiationWm2,
+        double? TemperatureC,
+        double? WindSpeedKmh,
+        double? WindDirectionDeg,
+        double? RelativeHumidity,
+        double? DewPointC
         // SnowDepthM: Not available in nowcast => set to null
         )
     {
         public DateTime LocalTime => Time.AddHours(1);
-        public double? WindSpeedMs => WindSpeedKmh.HasValue ? WindSpeedKmh / 3.6 : null;
         public double? DirectRadiationWm2 => GlobalRadiationWm2.HasValue && DiffuseRadiationWm2.HasValue
             ? GlobalRadiationWm2 - DiffuseRadiationWm2 : null;
         public double? SolarRadiationWm2 => GlobalRadiationWm2;
+        public double? WindSpeedMs => WindSpeedKmh.HasValue ? WindSpeedKmh / 3.6 : null;
         public double? SnowDepthM => null;
         public double? SnowDepthCm => null;
         //    public double? WindGustsMs => WindGustsKmh.HasValue ? WindGustsKmh * 3.6 : null;
