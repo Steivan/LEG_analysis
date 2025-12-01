@@ -17,7 +17,12 @@ namespace PV.Forecasting.App.Controllers
         private static Dictionary<string, List<string>>? _pvRecordLabels;
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<IActionResult> Index(List<string> SelectedTimeSeries, string SelectedPeriod = "All", DateTime? SelectedDate = null, string SelectedView = "Weekly")
+        public async Task<IActionResult> Index(
+            List<string> SelectedTimeSeries,
+            string SelectedPeriod = "All",
+            DateTime? SelectedDate = null,
+            string SelectedView = "Weekly",
+            bool reset = false)
         {
             if (_pvRecords is null)
             {
@@ -39,7 +44,6 @@ namespace PV.Forecasting.App.Controllers
 
             if (_pvRecords is null || !_pvRecords.Any())
             {
-                // No data to display, return an empty model to prevent crashing.
                 ViewBag.ErrorMessage = "No data available to display.";
                 return View(new VisualizationViewModel
                 {
@@ -51,9 +55,30 @@ namespace PV.Forecasting.App.Controllers
                 });
             }
 
-            if (SelectedTimeSeries is null || !SelectedTimeSeries.Any())
+            // Handle reset: restore default selection
+            List<SelectListItem> viewOptions;
+
+            if (reset)
+            {
+                SelectedPeriod = "All";
+                SelectedDate = DateTime.Today;
+                viewOptions = GetFilteredViewOptions(SelectedPeriod);
+                SelectedView = "Weekly"; //viewOptions.FirstOrDefault()?.Value ?? "Weekly";
+                SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
+            }
+            else if (SelectedTimeSeries is null || !SelectedTimeSeries.Any())
             {
                 SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
+                viewOptions = GetFilteredViewOptions(SelectedPeriod);
+            }
+            else
+            {
+                viewOptions = GetFilteredViewOptions(SelectedPeriod);
+            }
+
+            if (!viewOptions.Any(v => v.Value == SelectedView))
+            {
+                SelectedView = viewOptions.First().Value!;
             }
 
             var minDate = _pvRecords[0].Timestamp.Date;
@@ -64,28 +89,20 @@ namespace PV.Forecasting.App.Controllers
             var (startDate, endDate) = GetDateRange(currentDate, SelectedPeriod, minDate, maxDate);
             var recordsForPeriod = _pvRecords.Where(r => r.Timestamp >= startDate && r.Timestamp < endDate).ToList();
 
-            var viewOptions = GetFilteredViewOptions(SelectedPeriod);
-            if (!viewOptions.Any(v => v.Value == SelectedView))
-            {
-                SelectedView = viewOptions.First().Value!;
-            }
-
             var plotHtmls = CreateSubplots(recordsForPeriod, SelectedTimeSeries, SelectedView, startDate, endDate);
 
-            var labelsByGroup = _pvRecordLabels
-                .Where(g => plotHtmls.ContainsKey(g.Key))
-                .ToDictionary(g => g.Key, g => g.Value);
+            var labelsByGroup = _pvRecordLabels ?? new Dictionary<string, List<string>>();
 
             var model = new VisualizationViewModel
             {
                 PlotHtmls = plotHtmls,
                 TimeSeriesLabelsByGroup = labelsByGroup,
                 SelectedTimeSeries = SelectedTimeSeries,
-                SelectedView = SelectedView,
                 ViewOptions = viewOptions,
-                SelectedPeriod = SelectedPeriod,
                 PeriodOptions = GetPeriodOptions(),
-                SelectedDate = currentDate,
+                SelectedPeriod = SelectedPeriod,
+                SelectedView = SelectedView,
+                SelectedDate = SelectedDate ?? DateTime.Today,
                 MinYear = minDate.Year,
                 MaxYear = maxDate.Year
             };
@@ -302,9 +319,9 @@ namespace PV.Forecasting.App.Controllers
             {
                 "Day" => allOptions.Where(o => o.Value == "15-min" || o.Value == "Hourly" || o.Value == "3-hourly").ToList(),
                 "Week" => allOptions.Where(o => o.Value != "Weekly" && o.Value != "Monthly" && o.Value != "Yearly").ToList(),
-                "Month" => allOptions.Where(o => o.Value != "Monthly" && o.Value != "Yearly").ToList(),
-                "Year" => allOptions.Where(o => o.Value != "Yearly").ToList(),
-                "All" => allOptions,
+                "Month" => allOptions.Where(o => o.Value != "15-min" && o.Value != "Monthly" && o.Value != "Yearly").ToList(),
+                "Year" => allOptions.Where(o => o.Value != "15-min" && o.Value != "Hourly" && o.Value != "Yearly").ToList(),
+                "All" => allOptions.Where(o => o.Value != "15-min" && o.Value != "Hourly" && o.Value != "3-hourly").ToList(),
                 _ => allOptions
             };
         }

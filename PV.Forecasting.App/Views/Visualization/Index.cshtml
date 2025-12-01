@@ -3,12 +3,21 @@
     ViewData["Title"] = "Time Series Visualization";
 }
 
+<!-- Debug output: Shows current model value
+<p style="color:red">
+    SelectedPeriod: @Model.SelectedPeriod<br />
+    SelectedView: @Model.SelectedView<br />
+    SelectedDate: @Model.SelectedDate
+</p>s -->
+
 <h2>@ViewData["Title"]</h2>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <form asp-controller="Visualization" asp-action="Index" method="get" id="visualizationForm">
+    <!--   <button type="submit" name="reset" value="true" class="btn btn-secondary" style="margin-bottom: 1em;">Reset Plots</button> -->
+    <button type="button" class="btn btn-secondary" style="margin-bottom: 1em;" onclick="resetPlots()">Reset Plots</button>
     <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px;">
         <div>
             <span>Period:</span>
@@ -27,50 +36,49 @@
     </div>
 
     <div style="display: flex; flex-direction: column;">
-        @if (Model.PlotHtmls.Any())
-        {
+
+        @{
             var plotIndex = 0;
-            foreach (var plot in Model.PlotHtmls)
-            {
-                var groupName = plot.Key;
-                var (htmlWithLegend, htmlWithoutLegend) = plot.Value;
-                var seriesLabels = Model.TimeSeriesLabelsByGroup[groupName];
-
-                <div style="position: relative; margin-bottom: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
-
-                    @* Container for controls *@
-                    <div style="position: absolute; top: 10px; right: 10px; z-index: 10; background-color: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; display: flex; flex-direction: column; gap: 5px;">
-
-                        @* Legend Toggle *@
-                        <div>
-                            <input type="checkbox" id="legendToggle-@plotIndex" checked onchange="toggleLegend(@plotIndex)">
-                            <label for="legendToggle-@plotIndex">Show Legend</label>
-                        </div>
-
-                        @* Per-plot Time Series Toggles *@
-                        <div style="border-top: 1px solid #ccc; padding-top: 5px;">
-                            @foreach (var seriesName in seriesLabels)
-                            {
-                                var displayName = System.Text.RegularExpressions.Regex.Replace(seriesName, "(\\B[A-Z])", " $1");
-                                <div>
-                                    <input type="checkbox" name="SelectedTimeSeries" value="@seriesName" @(Model.SelectedTimeSeries.Contains(seriesName) ? "checked" : "") />
-                                    <label>@displayName</label>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    @* Render both plot versions *@
-                    <div id="@($"plot-{plotIndex}-with-legend")">@Html.Raw(htmlWithLegend)</div>
-                    <div id="@($"plot-{plotIndex}-without-legend")" style="display: none;">@Html.Raw(htmlWithoutLegend)</div>
-                </div>
-                plotIndex++;
-            }
         }
-        @* Add a single update button at the end *@
-        <div style="margin-top: 20px;">
-            <input type="submit" value="Update Plots" class="btn btn-primary" />
-        </div>
+        @foreach (var group in Model.TimeSeriesLabelsByGroup)
+        {
+            var groupName = group.Key;
+            var seriesLabels = group.Value;
+            Model.PlotHtmls.TryGetValue(groupName, out var plotHtml);
+
+            <div style="position: relative; margin-bottom: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                <div style="position: absolute; top: 10px; right: 10px; z-index: 10; background-color: rgba(255,255,255,0.8); padding: 5px; border-radius: 5px; display: flex; flex-direction: column; gap: 5px;">
+                    <div>
+                        <input type="checkbox" id="legendToggle-@plotIndex" checked onchange="toggleLegend(@plotIndex)">
+                        <label for="legendToggle-@plotIndex">Show Legend</label>
+                    </div>
+                    <div style="border-top: 1px solid #ccc; padding-top: 5px;">
+                        @foreach (var seriesName in seriesLabels)
+                        {
+                            var displayName = System.Text.RegularExpressions.Regex.Replace(seriesName, "(\\B[A-Z])", " $1");
+                            <div>
+                                <input type="checkbox" name="SelectedTimeSeries" value="@seriesName"
+                                       @(Model.SelectedTimeSeries.Contains(seriesName) ? "checked" : "")
+                                       onchange="this.form.submit();" />
+                                <label>@displayName</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(plotHtml.HtmlWithLegend))
+                {
+                    <div id="@($"plot-{plotIndex}-with-legend")">@Html.Raw(plotHtml.HtmlWithLegend)</div>
+                    <div id="@($"plot-{plotIndex}-without-legend")" style="display: none;">@Html.Raw(plotHtml.HtmlWithoutLegend)</div>
+                }
+                else
+                {
+                    <div class="empty-plot" style="height:250px; display:flex; align-items:center; justify-content:center; color:#888;">
+                        No curves selected for this group.
+                    </div>
+                }
+            </div>
+            plotIndex++;
+        }
         
     </div>
 </form>
@@ -87,6 +95,10 @@
                 document.getElementById('visualizationForm').submit();
             }
         });
+
+        // Force the input value to match the model after flatpickr initializes
+        document.getElementById('SelectedDate').value = "@Model.SelectedDate.ToString("yyyy-MM-dd")";
+
 
         ['SelectedPeriod', 'SelectedView'].forEach(id => {
             const select = document.getElementById(id);
@@ -131,4 +143,21 @@
             plotWithoutLegend.style.display = 'block';
         }
     }
+
+     function resetPlots() {
+     // Build a new form and submit only the reset parameter
+     var form = document.createElement('form');
+     form.method = 'get';
+     form.action = '@Url.Action("Index", "Visualization")';
+
+     var input = document.createElement('input');
+     input.type = 'hidden';
+     input.name = 'reset';
+     input.value = 'true';
+     form.appendChild(input);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
 </script>
