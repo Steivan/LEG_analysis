@@ -30,6 +30,26 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         public double? WindSpeedMs => WindSpeedKmh.HasValue ? WindSpeedKmh / 3.6 : null;
         public double? SolarRadiationWm2 => GlobalRadiationWm2;
         public double? SnowDepthCm => SnowDepthM * 100;
+
+        // Maps ForecastPeriod to MeteoParameters
+        public MeteoParameters ToMeteoParameters()
+        {
+            return new MeteoParameters(
+                Time,
+                TimeSpan.FromHours(1),
+                null, // SunshineDuration not available
+                DirectRadiation: DirectRadiationWm2,
+                DirectNormalIrradiance: DirectNormalIrradianceWm2,
+                GlobalRadiation: GlobalRadiationWm2,
+                DiffuseRadiation: DiffuseRadiationWm2,
+                Temperature: TemperatureC,
+                WindSpeed: WindSpeedKmh,
+                WindDirection: WindDirectionDeg,
+                SnowDepth: SnowDepthM,
+                RelativeHumidity: RelativeHumidity,
+                DewPoint: DewPointC
+            );
+        }
     }
 
     public record NowcastPeriod(
@@ -54,6 +74,26 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         public double? SnowDepthM => null;
         public double? SnowDepthCm => null;
         //    public double? WindGustsMs => WindGustsKmh.HasValue ? WindGustsKmh * 3.6 : null;
+
+        // Maps NowcastPeriod to MeteoParameters
+        public MeteoParameters ToMeteoParameters()
+        {
+            return new MeteoParameters(
+                Time,
+                TimeSpan.FromMinutes(15),
+                null, // SunshineDuration not available
+                DirectRadiation: DirectRadiationWm2,
+                DirectNormalIrradiance: DirectNormalIrradianceWm2,
+                GlobalRadiation: GlobalRadiationWm2,
+                DiffuseRadiation: DiffuseRadiationWm2,
+                Temperature: TemperatureC,
+                WindSpeed: WindSpeedKmh,
+                WindDirection: WindDirectionDeg,
+                SnowDepth: null,
+                RelativeHumidity: RelativeHumidity,
+                DewPoint: DewPointC
+            );
+        }
     }
 
     // ====================================================================

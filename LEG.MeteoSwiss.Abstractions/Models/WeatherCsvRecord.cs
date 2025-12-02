@@ -201,5 +201,30 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         /// </summary>
         [Name("DniWm2"), TypeConverter(typeof(NullableDoubleConverter))]                             //  Used in Forecast
         public double? DirectNormalIrradiance { get; set; }
+
+        /// <summary>
+        /// Mapping to MeteoParameters record.
+        /// </summary>
+        /// <returns></returns>
+        public MeteoParameters ToMeteoParameters()
+        {
+            return new MeteoParameters(
+                Time: ReferenceTimestamp,
+                Interval: TimeSpan.FromMinutes(10),
+                SunshineDuration: SunshineDuration,
+                DirectRadiation: DirectRadiation,
+                DirectNormalIrradiance: DirectNormalIrradiance,
+                GlobalRadiation: ShortWaveRadiation,
+                DiffuseRadiation: DiffuseRadiation,
+                Temperature: Temperature2m,
+                WindSpeed: WindSpeed10min_kmh,
+                WindDirection: WindDirection,
+                SnowDepth: SnowDepth,
+                RelativeHumidity: RelativeHumidity2m,
+                DewPoint: DewPoint2m,
+                DirectRadiationVariance: null
+            );
+        }
     }
+    
 }

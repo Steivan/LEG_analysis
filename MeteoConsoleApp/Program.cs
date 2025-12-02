@@ -1,11 +1,12 @@
 ﻿
 using LEG.Common.Utils;
+using LEG.MeteoSwiss.Abstractions.Models;
+using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
-using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
-using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MeteoConsoleApp
 {
@@ -34,8 +35,23 @@ namespace MeteoConsoleApp
             var meteoDataService = new MeteoDataService(apiClient);
 
             // Initialize list with valid ground stations
-            MeteoSwissHelper.ValidGroundStations = MeteoSwissHelper.GetBaselineGroundStations();
+            MeteoSwissHelper.ValidGroundStations = MeteoSwissHelper.GetCantoGroundStations("ZH");
 
+            // Load station metadata
+            var selectedStationsMetaDict = StationMetaImporter.Import(MeteoSwissConstants.GroundStationsMetaFile);
+
+            // Fetch latest record for selected stations
+            foreach (var stationId in selectedStationsIdList)
+            {
+                var stationLatestRecord = MeteoAggregator.GetStationLatestRecord(stationId, selectedStationsMetaDict[stationId], granularity: "t", isTower: false);
+            }
+
+            return;
+
+            // ******************************************   
+
+
+            // Initialize list with valid ground stations
             // Load station metadata
             var groundStationsMetaDict =
                 StationMetaImporter.Import(MeteoSwissConstants.GroundStationsMetaFile);
@@ -45,7 +61,6 @@ namespace MeteoConsoleApp
                 LongestPerStationInfoImporter.Import(MeteoSwissConstants.LongestPerStationInfoFile);
             var standardPerStationDict =
                 StandardPerStationInfoImporter.Import(MeteoSwissConstants.StandardPerStationInfoFile);
-
             // Update list with valid ground stations
             var stationIds = new List<string>(groundStationsMetaDict.Keys);
             MeteoSwissHelper.UpdateValidGroundStations([.. stationIds]);
@@ -224,51 +239,42 @@ namespace MeteoConsoleApp
             }
         }
 
+        private static void PrintMeteoParametersDataRecord(string label, MeteoParameters data)
+        {
+            Console.WriteLine($"{label,12} : {data.Time:dd.MM.yyyy} | {data.Interval.Minutes} m | {data.Temperature:F1}°C | WindSpeed: {data.WindSpeed:F1} km/h | " +
+                $"DNI: {data.DirectNormalIrradiance:F0} W/m² | Diffuse: {data.DiffuseRadiation:F0} W/m² | Direct: {data.DirectRadiation:F0} W/m²");
+        }
+
         public static void printForecastSamples(string location, List<ForecastPeriod> longCast, List<ForecastPeriod> midCast, List<NowcastPeriod> nowCast, List<MeteoParameters> blendedForecast)
         {
             Console.WriteLine($"10-Day Forecast for {location}:");
 
             if (longCast.Count > 0)
             {
-                var current = longCast[0];
-                var last = longCast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.DirectRadiationWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.DirectRadiationWm2:F0} W/m²");
+                // Convert to MeteoParameters for uniform output
+                PrintMeteoParametersDataRecord("NOW", longCast[0].ToMeteoParameters());
+                PrintMeteoParametersDataRecord("Outlook", longCast[^1].ToMeteoParameters());
             }
 
             Console.WriteLine($"7-Day Forecast for {location}:");
             if (midCast.Count > 0)
             {
-                var current = midCast[0];
-                var last = midCast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.DirectRadiationWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.DirectRadiationWm2:F0} W/m²");
+                PrintMeteoParametersDataRecord("NOW", midCast[0].ToMeteoParameters());
+                PrintMeteoParametersDataRecord("Outlook", midCast[^1].ToMeteoParameters());
             }
 
             Console.WriteLine($"90-Hour Nowcast: for {location}:");
             if (nowCast.Count > 0)
             {
-                var current = nowCast[0];
-                var last = nowCast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.LocalTime:HH:mm} | {current.TemperatureC:F1}°C | WindSpeed: {current.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {current.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {current.DiffuseRadiationWm2:F0} W/m² | Solar: {current.GlobalRadiationWm2:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.LocalTime:HH:mm} | {last.TemperatureC:F1}°C | WindSpeed: {last.WindSpeedMs:F1} km/h | " +
-                                              $"Direct: {last.DirectNormalIrradianceWm2:F0} W/m² | Diffuse: {last.DiffuseRadiationWm2:F0} W/m² | Solar: {last.GlobalRadiationWm2:F0} W/m²");
+                PrintMeteoParametersDataRecord("NOW", nowCast[0].ToMeteoParameters());
+                PrintMeteoParametersDataRecord("Outlook", nowCast[^1].ToMeteoParameters());
             }
 
             Console.WriteLine($"Blended forecast: for {location}:");
-            if (nowCast.Count > 0)
+            if (blendedForecast.Count > 0)
             {
-                var current = blendedForecast[0];
-                var last = blendedForecast[^1];
-                Console.WriteLine($"NOW     → {current.Time:dd.MM.yyyy} | {current.Time:HH:mm} | {current.Temperature:F1}°C | WindSpeed: {current.WindSpeed:F1} km/h | SnowDepth: {current.SnowDepthCm:F1} cm | " +
-                                              $"Direct: {current.DirectNormalIrradiance:F0} W/m² | Diffuse: {current.DiffuseRadiation:F0} W/m²");
-                Console.WriteLine($"Outlook → {last.Time:dd.MM.yyyy} | {last.Time:HH:mm} | {last.Temperature:F1}°C | WindSpeed: {last.WindSpeed:F1} km/h | SnowDepth: {last.SnowDepthCm:F1} cm | " +
-                                              $"Direct: {last.DirectNormalIrradiance:F0} W/m² | Diffuse: {last.DiffuseRadiation:F0} W/m²");
+                PrintMeteoParametersDataRecord("NOW", blendedForecast[0]);
+                PrintMeteoParametersDataRecord("Outlook", blendedForecast[^1]);
             }
 
             Console.WriteLine();

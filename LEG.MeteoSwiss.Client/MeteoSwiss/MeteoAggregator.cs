@@ -73,26 +73,8 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             }
             if (getNow)
             {
-                // Also get today's data from the "now" file
-                var nowPeriod = "now";
-                var nowFilePath = "";
-                if (isTower)
-                {
-                    (_, nowFilePath) = MeteoSwissHelper.GetTowerCsvFilename(stationId, nowPeriod, granularity: granularity);
-                }
-                else
-                {
-                    (_, nowFilePath) = MeteoSwissHelper.GetGroundCsvFilename(stationId, nowPeriod, granularity: granularity);
-                }
-                if (File.Exists(nowFilePath))
-                {
-                    var nowRecords = ImportCsv.ImportFromFile<WeatherCsvRecord>(nowFilePath, ";");
-                    allRecords.AddRange(nowRecords);
-                }
-                else
-                {
-                    Console.WriteLine($"Warning: Now file not found: {nowFilePath}");
-                }
+                var nowRecords = GetNowRecords(stationId, stationMetaInfo, granularity: granularity, isTower: isTower);
+                if (nowRecords != null) allRecords.AddRange(nowRecords);
             }
 
             // Filter records for the period of interest
@@ -106,6 +88,45 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                 return [];
             }
             return filteredRecords;
+        }
+
+        public static WeatherCsvRecord? GetStationLatestRecord(
+            string stationId,
+            StationMetaInfo stationMetaInfo,
+            string granularity = "t",
+            bool isTower = false)
+        {
+            var nowRecords = GetNowRecords(stationId, stationMetaInfo, granularity: granularity, isTower: isTower);
+
+            return nowRecords == null ? null : nowRecords[^1];
+        }
+
+        private static List<WeatherCsvRecord>? GetNowRecords(
+            string stationId,
+            StationMetaInfo stationMetaInfo,
+            string granularity = "t",
+            bool isTower = false)
+        {
+            var nowPeriod = "now";
+            var nowFilePath = "";
+            if (isTower)
+            {
+                (_, nowFilePath) = MeteoSwissHelper.GetTowerCsvFilename(stationId, nowPeriod, granularity: granularity);
+            }
+            else
+            {
+                (_, nowFilePath) = MeteoSwissHelper.GetGroundCsvFilename(stationId, nowPeriod, granularity: granularity);
+            }
+            if (File.Exists(nowFilePath))
+            {
+                var nowRecords = ImportCsv.ImportFromFile<WeatherCsvRecord>(nowFilePath, ";");
+                return nowRecords;
+            }
+            else
+            {
+                Console.WriteLine($"Warning: Now file not found: {nowFilePath}");
+                return null;
+            }
         }
 
         public static void RunMeteoAggregationForPeriod(string stationId, StationMetaInfo stationMetaInfo, int periodStartYear, int periodEndYear, string granularity = "t", bool isTower = false)

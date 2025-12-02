@@ -61,6 +61,10 @@ namespace LEG.PV.Data.Processor
         {
             var apiClient = new MeteoSwissClient();
             var meteoDataService = new MeteoDataService(apiClient);
+            // Initialize list with valid ground stations
+            MeteoSwissHelper.ValidGroundStations = stationsList.ToArray();
+            // Load station metadata
+            var selectedStationsMetaDict = StationMetaImporter.Import(MeteoSwissConstants.GroundStationsMetaFile);
 
             foreach (var stationId in stationsList)
             {
@@ -77,6 +81,8 @@ namespace LEG.PV.Data.Processor
                 var endDate = new DateTime(DateTime.UtcNow.Year, 12, 31).ToString("o");
 
                 await meteoDataService.GetHistoricalWeatherAsync(startDate, endDate, stationId, "t");
+
+                var stationLatestRecord = MeteoAggregator.GetStationLatestRecord(stationId, selectedStationsMetaDict[stationId], granularity: "t", isTower: false);
             }
         }
 
@@ -526,14 +532,17 @@ namespace LEG.PV.Data.Processor
                 iRight++;
             }
 
-            var priorSunshineDuration = leftRecord.SunshineDuration;        // TODO: currently not used
-            var priorDirectRadiation = leftRecord.DirectRadiation;
-            var priorDirectNormalIrradiance = leftRecord.DirectNormalIrradiance;
-            var priorGlobalRadiation = leftRecord.ShortWaveRadiation;
-            var priorDiffuseRadiation = leftRecord.DiffuseRadiation;
-            var priorTemperature = leftRecord.Temperature2m;
-            var priorWindSpeed = leftRecord.WindSpeed10min_kmh;
-            var priorSnowDepth = leftRecord.SnowDepth;                      // TODO: currently not used
+            // Extract meteo parameters from historical CSV record
+            var historicalMeteoRecord = leftRecord.ToMeteoParameters();
+
+            var priorSunshineDuration = historicalMeteoRecord.SunshineDuration;        // TODO: currently not used
+            var priorDirectRadiation = historicalMeteoRecord.DirectRadiation;
+            var priorDirectNormalIrradiance = historicalMeteoRecord.DirectNormalIrradiance;
+            var priorGlobalRadiation = historicalMeteoRecord.GlobalRadiation;
+            var priorDiffuseRadiation = historicalMeteoRecord.DiffuseRadiation;
+            var priorTemperature = historicalMeteoRecord.Temperature;
+            var priorWindSpeed = historicalMeteoRecord.WindSpeed;
+            var priorSnowDepth = historicalMeteoRecord.SnowDepth;                      // TODO: currently not used
 
             if (iLeft >= 0 && iLeft < supportCount && leftOverlapRatio > 0)
             {
