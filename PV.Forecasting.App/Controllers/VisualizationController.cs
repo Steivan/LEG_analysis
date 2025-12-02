@@ -1,13 +1,15 @@
+﻿using LEG.MeteoSwiss.Abstractions.Models;
+using LEG.PV.Data.Processor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PV.Forecasting.App.Models;
-using LEG.PV.Data.Processor;
-using static LEG.PV.Data.Processor.DataRecords;
 using ScottPlot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LEG.PV.Data.Processor;
+using static LEG.PV.Data.Processor.DataRecords;
 
 namespace PV.Forecasting.App.Controllers
 {
@@ -55,6 +57,66 @@ namespace PV.Forecasting.App.Controllers
                 });
             }
 
+            // 1. Build parameterGroups (already in your code)
+            var parameterGroups = MeteoParameterInfo.ParameterToUnit
+                .GroupBy(kvp => kvp.Value)
+                .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Key).ToList());
+            
+            parameterGroups = new Dictionary<string, List<string>> {
+                { "Power", new List<string> { "MeasuredPower", "ComputedPower" } }
+            }.Concat(parameterGroups).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            var groupVariables = parameterGroups; // Already maps group → variables
+
+            // Build locations per group
+            var groupLocations = new Dictionary<string, List<string>>();
+            foreach (var group in parameterGroups.Keys)
+            {
+                if (group == "Power")
+                    groupLocations[group] = new List<string> { "PV Site" };
+                else
+                    groupLocations[group] = DataImporter.selectedStationsIdList; // or filter as needed
+            }
+
+
+
+
+            // 2. Set up default checked groups, variables, and locations (step 2)
+            var defaultCheckedGroups = new HashSet<string> { "Power", "Radiation", "Temperature", "Wind" };
+            var defaultCheckedVariables = new Dictionary<string, HashSet<string>>
+{
+            { "Temperature", new HashSet<string> { "Temperature" } }, // DewPoint unchecked
+            { "Radiation", new HashSet<string> { "GlobalRadiation", "DiffuseRadiation" } }, // others unchecked
+            { "Wind", new HashSet<string> { "WindSpeed" } }, // others unchecked
+            // Add more as needed
+};
+            // For locations, you can default to all checked or a subset
+            var defaultCheckedLocations = new Dictionary<string, HashSet<string>>();
+            // ...build this as needed...
+
+            // 3. Build the ViewModel
+            var model = new VisualizationViewModel
+            {
+                // ...existing assignments...
+                GroupChecked = parameterGroups.Keys.ToDictionary(
+                    g => g,
+                    g => defaultCheckedGroups.Contains(g)
+                ),
+                GroupVariables = parameterGroups,
+                //GroupLocations = /* build from your data */,                          TODO
+                GroupLocations = groupLocations,
+                CheckedVariables = parameterGroups.Keys.ToDictionary(
+                    g => g,
+                    g => defaultCheckedVariables.ContainsKey(g) ? defaultCheckedVariables[g] : new HashSet<string>()
+                ),
+                //CheckedLocations = /* similar logic for locations */,         TODO
+                CheckedLocations = groupLocations.Keys.ToDictionary(
+                    g => g,
+                    g => defaultCheckedLocations.ContainsKey(g) ? defaultCheckedLocations[g] : new HashSet<string>()
+                ),
+                // ...other assignments...
+            };
+
             // Handle reset: restore default selection
             List<SelectListItem> viewOptions;
 
@@ -93,7 +155,7 @@ namespace PV.Forecasting.App.Controllers
 
             var labelsByGroup = _pvRecordLabels ?? new Dictionary<string, List<string>>();
 
-            var model = new VisualizationViewModel
+            model = new VisualizationViewModel
             {
                 PlotHtmls = plotHtmls,
                 TimeSeriesLabelsByGroup = labelsByGroup,
@@ -104,7 +166,10 @@ namespace PV.Forecasting.App.Controllers
                 SelectedView = SelectedView,
                 SelectedDate = SelectedDate ?? DateTime.Today,
                 MinYear = minDate.Year,
-                MaxYear = maxDate.Year
+                MaxYear = maxDate.Year,    // ... existing properties ...
+                ParameterGroupsByUnit = parameterGroups,
+                //SelectedParameters = SelectedParameters // You may need to add logic to set this list
+                                                        // ... other properties ...
             };
 
             return View(model);

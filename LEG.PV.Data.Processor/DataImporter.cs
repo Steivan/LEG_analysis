@@ -41,12 +41,12 @@ namespace LEG.PV.Data.Processor
         const double lonSma = 8.566;
 
         // Selected stations, available parameters and blending weights
-        List<string> selectedStationsIdList = ["SMA", "KLO", "HOE", "UEB"];
-        List<bool> hasSunshineDurationList = [true, true, true, true];
-        List<bool> hasGlobalRadiationList = [true, true, true, true];
-        List<bool> hasDiffuseRadiationList = [false, true, false, true];
-        List<bool> hasTemperatureList = [true, true, true, false];
-        List<bool> hasWindSpeedList = [true, true, true, false];
+        public static List<string> selectedStationsIdList = ["SMA", "KLO", "HOE", "UEB"];
+        public static List<bool> hasSunshineDurationList = [true, true, true, true];
+        public static List<bool> hasGlobalRadiationList = [true, true, true, true];
+        public static List<bool> hasDiffuseRadiationList = [false, true, false, true];
+        public static List<bool> hasTemperatureList = [true, true, true, false];
+        public static List<bool> hasWindSpeedList = [true, true, true, false];
         List<bool> hasSnowDepthList = [true, true, true, false];
         List<double> weightSunshineDurationList = [3.0, 1.0, 1.0, 1.0];
         List<double> weightDirectRadiationList = [3.0, 1.0, 1.0, 1.0];
@@ -981,7 +981,10 @@ namespace LEG.PV.Data.Processor
                         DiffuseRadiation = record.DiffuseRadiation,
                         Temperature2m = record.Temperature,
                         WindSpeed10min_kmh = record.WindSpeed,
-                        SnowDepth = record.SnowDepthCm
+                        WindDirection = record.WindDirection,
+                        SnowDepth = record.SnowDepthCm,
+                        RelativeHumidity2m = record.RelativeHumidity,
+                        DewPoint2m = record.DewPoint
                     });
                 }
                 var alignedMeteoTimeStamps = weatherRecords.Select(r => r.ReferenceTimestamp.AddMinutes(shiftMeteoTimeStamps)).ToList();
