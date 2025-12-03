@@ -54,28 +54,59 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
 
             return updateStartDate;
         }
-        public async Task UpdateDataForGroundStations(List<string> stationsList, string granularity = "t")
+        public async Task<List<ValidMeteoParameters>> UpdateWeatherData(DateTime downloadStartDate, List<string> stationsList)
+        {
+            var apiClient = new MeteoSwissClient();
+            var meteoDataService = new MeteoDataService(apiClient);
+            // Initialize list with valid ground stations
+            MeteoSwissHelper.ValidGroundStations = stationsList.ToArray();
+            // Load station metadata
+            var selectedStationsMetaDict = StationMetaImporter.Import(MeteoSwissConstants.GroundStationsMetaFile);
+
+            var validMeteoParametersList = new List<ValidMeteoParameters>();
+            foreach (var stationId in stationsList)
+            {
+                var downloadStartYear = downloadStartDate.Year;
+                var filePath = Path.Combine(MeteoSwissConstants.MeteoStationsDataFolder, $"stac_t_{stationId}_{DateTime.UtcNow.Year}.csv");
+
+                if (File.Exists(filePath))
+                {
+                    var fileInfo = new FileInfo(filePath);
+                    downloadStartYear = fileInfo.CreationTime.Year;
+                }
+
+                var startDate = new DateTime(downloadStartYear, 1, 1).ToString("o");
+                var endDate = new DateTime(DateTime.UtcNow.Year, 12, 31).ToString("o");
+
+                await meteoDataService.GetHistoricalWeatherAsync(startDate, endDate, stationId, "t");
+
+                var stationLatestRecord = MeteoAggregator.GetStationLatestMeteoParametersRecord(stationId, selectedStationsMetaDict[stationId], granularity: "t", isTower: false);
+                validMeteoParametersList.Add(stationLatestRecord.GetValidMeteoParameters);
+            }
+
+            return validMeteoParametersList;
+        }
+
+        private async Task UpdateDataForStations(List<string> stationsList, bool isTower = false, string granularity = "t")
         {
             var apiClient = new MeteoSwissClient();
             var downloadEndDate = DateTime.UtcNow;
 
             foreach (var stationId in stationsList)
             {
-                var downloadStartDate = GetUpdateStartDate(stationId, isTower: false, granularity: granularity) ?? new DateTime(2020, 1, 1);
+                var downloadStartDate = GetUpdateStartDate(stationId, isTower: isTower, granularity: granularity) ?? new DateTime(2020, 1, 1);
                 await apiClient.UpdatePeriodFiles(downloadStartDate.ToString("yyyy-MM-dd"), downloadEndDate.ToString("yyyy-MM-dd"), stationId, granularity);
             }
         }
 
+        public async Task UpdateDataForGroundStations(List<string> stationsList, string granularity = "t")
+        {
+            await UpdateDataForStations(stationsList, isTower: false, granularity: granularity);
+        }
+
         public async Task UpdateDataForTowerStations(List<string> stationsList, string granularity = "t")
         {
-            var apiClient = new MeteoSwissClient();
-            var downloadEndDate = DateTime.UtcNow;
-
-            foreach (var stationId in stationsList)
-            {
-                var downloadStartDate = GetUpdateStartDate(stationId, isTower: true, granularity: granularity) ?? new DateTime(2020, 1, 1);
-                await apiClient.UpdatePeriodFiles(downloadStartDate.ToString("yyyy-MM-dd"), downloadEndDate.ToString("yyyy-MM-dd"), stationId, granularity);
-            }
+            await UpdateDataForStations(stationsList, isTower: true, granularity: granularity);
         }
     }
 }

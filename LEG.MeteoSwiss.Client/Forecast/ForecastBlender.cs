@@ -7,9 +7,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
     {
         public static List<MeteoParameters> CreateBlendedForecast(
             DateTime now, // <-- Reference time
-            List<ForecastPeriod> longTermData,
-            List<ForecastPeriod> midTermData,
-            List<NowcastPeriod> shortTermData,
+            List<MeteoParameters> longTermData,
+            List<MeteoParameters> midTermData,
+            List<MeteoParameters> shortTermData,
             int smoothingFilterId = 0)      // smoothing filters 0, 1, 2, ... ; -1 = no smoothing
         {
             // --- STEP 1: Initialize the full 15-minute time axis ---
@@ -30,7 +30,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
 
             // --- STEP 2: Apply Long-Term Base (Hourly to 15-min Upscaling) ---
 
-            foreach (var hourData in longTermData.Where(p => p.TemperatureC.HasValue))
+            foreach (var hourData in longTermData.Where(p => p.Temperature.HasValue))
             {
                 // Upscale the hourly data to four 15-minute slots
                 for (int i = 0; i < 4; i++)
@@ -39,28 +39,11 @@ namespace LEG.MeteoSwiss.Client.Forecast
                     if (blendedData.ContainsKey(quarterTime))
                     {
                         // This is the BASE LAYER.
-                        // Note: Wind speed conversion Km/h -> m/s is required here (factor 0.2778)
-                        blendedData[quarterTime] = hourData.ToMeteoParameters() with
+                        blendedData[quarterTime] = hourData with
                         {
                             Time = quarterTime,
                             Interval = quarterInterval
                         };
-                        //blendedData[quarterTime] = new MeteoParameters(
-                        //    Time: quarterTime,
-                        //    Interval: quarterInterval,
-                        //    SunshineDuration: null,                                     // Not available in forecast
-                        //    DirectRadiation: hourData.DirectRadiationWm2,
-                        //    DirectNormalIrradiance: hourData.DirectNormalIrradianceWm2,
-                        //    GlobalRadiation: hourData.GlobalRadiationWm2,
-                        //    DiffuseRadiation: hourData.DiffuseRadiationWm2,
-                        //    Temperature: hourData.TemperatureC,
-                        //    WindSpeed: hourData.WindSpeedKmh, // Hourly Wind
-                        //    WindDirection: hourData.WindDirectionDeg,
-                        //    SnowDepth: 0.0,                                             // Placeholder for Snow Depth
-                        //    RelativeHumidity: hourData.RelativeHumidity,
-                        //    DewPoint: hourData.DewPointC,
-                        //    DirectRadiationVariance: null                               // Not available in forecast
-                        //);
                     }
                 }
             }
@@ -68,63 +51,38 @@ namespace LEG.MeteoSwiss.Client.Forecast
             // --- STEP 3: Patch with Mid-Term High-Res (Hourly ICON-D2) ---
             // Overwrites the Long-Term data for the first ~3 days.
 
-            foreach (var hourData in midTermData.Where(p => p.TemperatureC.HasValue))
+            foreach (var hourData in midTermData.Where(p => p.Temperature.HasValue))
             {
                 // Repeat the upscaling logic: ICON-D2 is higher quality than ECMWF
-                var midcastRecord = hourData.ToMeteoParameters();
                 for (int i = 0; i < 4; i++)
                 {
                     var quarterTime = hourData.Time.AddMinutes(15 * i - 45);
                     if (blendedData.ContainsKey(quarterTime))
                     {
                         // OVERWRITE: Higher fidelity hourly data
-                        blendedData[quarterTime] = blendedData[quarterTime] with
-                        {
-                            DirectRadiation = midcastRecord.DirectRadiation ?? blendedData[quarterTime].DirectRadiation,
-                            DirectNormalIrradiance = midcastRecord.DirectNormalIrradiance ?? blendedData[quarterTime].DirectNormalIrradiance,
-                            GlobalRadiation = midcastRecord.GlobalRadiation ?? blendedData[quarterTime].GlobalRadiation,
-                            DiffuseRadiation = midcastRecord.DiffuseRadiation ?? blendedData[quarterTime].DiffuseRadiation,
-                            Temperature = midcastRecord.Temperature ?? blendedData[quarterTime].Temperature,
-                            WindSpeed = midcastRecord.WindSpeed ?? blendedData[quarterTime].WindSpeed,
-                            WindDirection = midcastRecord.WindDirection ?? blendedData[quarterTime].WindDirection,
-                            SnowDepth = midcastRecord.SnowDepth ?? blendedData[quarterTime].SnowDepth,
-                            RelativeHumidity = midcastRecord.RelativeHumidity ?? blendedData[quarterTime].RelativeHumidity,
-                            DewPoint = midcastRecord.DewPoint ?? blendedData[quarterTime].DewPoint
-                        };
+                        blendedData[quarterTime] = UpdatMeteoParametersRecord(blendedData[quarterTime], hourData);
                     }
                 }
             }
 
             // Smooth after mid-term patching
-            if (smoothingFilterId >= 0) blendedData = SmoothBlender.SmoothBlendedPeriod(blendedData, filterId : smoothingFilterId);
+            if (smoothingFilterId >= 0) blendedData = SmoothBlender.SmoothBlendedPeriod(blendedData, filterId: smoothingFilterId);
 
             // --- STEP 4: Patch with Short-Term High-Res (15-min Nearcast) ---
             // Overwrites all prior data for the first ~48 hours.
 
-            foreach (var quarterData in shortTermData.Where(p => p.TemperatureC.HasValue))
+            foreach (var quarterData in shortTermData.Where(p => p.Temperature.HasValue))
             {
-                var nearcastRecord = quarterData.ToMeteoParameters();
+                var quarterTime = quarterData.Time;
                 if (blendedData.ContainsKey(quarterData.Time))
                 {
                     // OVERWRITE: Highest fidelity, highest resolution data
-                    blendedData[quarterData.Time] = blendedData[quarterData.Time] with
-                    {
-                        DirectRadiation = nearcastRecord.DirectRadiation ?? blendedData[quarterData.Time].DirectRadiation,
-                        DirectNormalIrradiance = nearcastRecord.DirectNormalIrradiance ?? blendedData[quarterData.Time].DirectNormalIrradiance,
-                        GlobalRadiation = nearcastRecord.GlobalRadiation ?? blendedData[quarterData.Time].GlobalRadiation,
-                        DiffuseRadiation = nearcastRecord.DiffuseRadiation ?? blendedData[quarterData.Time].DiffuseRadiation,
-                        Temperature = nearcastRecord.Temperature ?? blendedData[quarterData.Time].Temperature,
-                        WindSpeed = nearcastRecord.WindSpeed ?? blendedData[quarterData.Time].WindSpeed,
-                        WindDirection = nearcastRecord.WindDirection ?? blendedData[quarterData.Time].WindDirection,
-                        SnowDepth = blendedData[quarterData.Time].SnowDepth,     // No snow depth in nowcast
-                        RelativeHumidity = nearcastRecord.RelativeHumidity ?? blendedData[quarterData.Time].RelativeHumidity,
-                        DewPoint = nearcastRecord.DewPoint ?? blendedData[quarterData.Time].DewPoint
-                    };
+                    blendedData[quarterTime] = UpdatMeteoParametersRecord(blendedData[quarterTime], quarterData);
                 }
             }
-            
+
             // --- STEP 5: Apply Synchronization Filter ---
-             // 1. Find the current hour rounded down (e.g., 10:23 AM becomes 10:00 AM)
+            // 1. Find the current hour rounded down (e.g., 10:23 AM becomes 10:00 AM)
             var endOfCurrentHour = now.Date.AddHours(now.Hour);
 
             // 2. The first 15-minute timestamp we want is the one ending 45 minutes earlier.
@@ -137,6 +95,25 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 .Where(p => p.Time >= filterCutoffTime)
                 .OrderBy(p => p.Time)
                 .ToList();
+        }
+
+        private static MeteoParameters UpdatMeteoParametersRecord(MeteoParameters baseRecord, MeteoParameters newRecord)
+        {
+            return baseRecord with
+            {
+                SunshineDuration = newRecord.SunshineDuration ?? baseRecord.SunshineDuration,
+                DirectRadiation = newRecord.DirectRadiation ?? baseRecord.DirectRadiation,
+                DirectNormalIrradiance = newRecord.DirectNormalIrradiance ?? baseRecord.DirectNormalIrradiance,
+                GlobalRadiation = newRecord.GlobalRadiation ?? baseRecord.GlobalRadiation,
+                DiffuseRadiation = newRecord.DiffuseRadiation ?? baseRecord.DiffuseRadiation,
+                Temperature = newRecord.Temperature ?? baseRecord.Temperature,
+                WindSpeed = newRecord.WindSpeed ?? baseRecord.WindSpeed,
+                WindDirection = newRecord.WindDirection ?? baseRecord.WindDirection,
+                SnowDepth = baseRecord.SnowDepth,     // No snow depth in nowcast
+                RelativeHumidity = newRecord.RelativeHumidity ?? baseRecord.RelativeHumidity,
+                DewPoint = newRecord.DewPoint ?? baseRecord.DewPoint,
+                DirectRadiationVariance = newRecord.DirectRadiationVariance ?? baseRecord.DirectRadiationVariance
+            };
         }
     }
 }

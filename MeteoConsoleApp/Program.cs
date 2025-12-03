@@ -202,9 +202,9 @@ namespace MeteoConsoleApp
 
         public static async Task GetForecastForLatLon(WeatherForecastClient client, double lat, double lon)
         {
-            var longCast = await client.Get16DayPeriodsAsync(lat, lon);
-            var midCast = await client.Get7DayPeriodsAsync(lat, lon);
-            var nowCast = await client.GetNowcast15MinuteAsync(lat, lon);
+            var longCast = await client.Get16DayMeteoParametersAsync(lat, lon);
+            var midCast = await client.Get7DayMeteoParametersAsync(lat, lon);
+            var nowCast = await client.GetNowcast15MinuteMeteoParametersAsync(lat, lon);
 
             var blendedForecast = CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
 
@@ -215,9 +215,9 @@ namespace MeteoConsoleApp
         {
             foreach (var zip in selectedZips)
             {
-                var longCast = await client.Get16DayPeriodsByZipCodeAsync(zip);
-                var midCast = await client.Get7DayPeriodsByZipCodeAsync(zip);
-                var nowCast = await client.GetNowcast15MinuteByZipCodeAsync(zip);
+                var longCast = await client.Get16DayMeteoParametersByZipCodeAsync(zip);
+                var midCast = await client.Get7DayMeteoParametersByZipCodeAsync(zip);
+                var nowCast = await client.GetNowcast15MinuteMeteoParametersByZipCodeAsync(zip);
 
                 var blendedForecast = CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
 
@@ -229,9 +229,9 @@ namespace MeteoConsoleApp
         {
             foreach (var stationId in selectedStationsIdList)
             {
-                var longCast = await client.Get16DayPeriodsByStationIdAsync(stationId);
-                var midCast = await client.Get7DayPeriodsByStationIdAsync(stationId);
-                var nowCast = await client.GetNowcast15MinuteByStationIdAsync(stationId);
+                var longCast = await client.Get16DayMeteoParametersByStationIdAsync(stationId);
+                var midCast = await client.Get7DayMeteoParametersByStationIdAsync(stationId);
+                var nowCast = await client.GetNowcast15MinuteMeteoParametersByStationIdAsync(stationId);
 
                 var blendedForecast = CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
 
@@ -245,29 +245,29 @@ namespace MeteoConsoleApp
                 $"DNI: {data.DirectNormalIrradiance:F0} W/m² | Diffuse: {data.DiffuseRadiation:F0} W/m² | Direct: {data.DirectRadiation:F0} W/m²");
         }
 
-        public static void printForecastSamples(string location, List<ForecastPeriod> longCast, List<ForecastPeriod> midCast, List<NowcastPeriod> nowCast, List<MeteoParameters> blendedForecast)
+        public static void printForecastSamples(string location, List<MeteoParameters> longCast, List<MeteoParameters> midCast, List<MeteoParameters> nowCast, List<MeteoParameters> blendedForecast)
         {
             Console.WriteLine($"10-Day Forecast for {location}:");
 
             if (longCast.Count > 0)
             {
                 // Convert to MeteoParameters for uniform output
-                PrintMeteoParametersDataRecord("NOW", longCast[0].ToMeteoParameters());
-                PrintMeteoParametersDataRecord("Outlook", longCast[^1].ToMeteoParameters());
+                PrintMeteoParametersDataRecord("NOW", longCast[0]);
+                PrintMeteoParametersDataRecord("Outlook", longCast[^1]);
             }
 
             Console.WriteLine($"7-Day Forecast for {location}:");
             if (midCast.Count > 0)
             {
-                PrintMeteoParametersDataRecord("NOW", midCast[0].ToMeteoParameters());
-                PrintMeteoParametersDataRecord("Outlook", midCast[^1].ToMeteoParameters());
+                PrintMeteoParametersDataRecord("NOW", midCast[0]);
+                PrintMeteoParametersDataRecord("Outlook", midCast[^1]);
             }
 
             Console.WriteLine($"90-Hour Nowcast: for {location}:");
             if (nowCast.Count > 0)
             {
-                PrintMeteoParametersDataRecord("NOW", nowCast[0].ToMeteoParameters());
-                PrintMeteoParametersDataRecord("Outlook", nowCast[^1].ToMeteoParameters());
+                PrintMeteoParametersDataRecord("NOW", nowCast[0]);
+                PrintMeteoParametersDataRecord("Outlook", nowCast[^1]);
             }
 
             Console.WriteLine($"Blended forecast: for {location}:");

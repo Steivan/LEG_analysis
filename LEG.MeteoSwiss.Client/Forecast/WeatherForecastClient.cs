@@ -23,7 +23,9 @@ namespace LEG.MeteoSwiss.Client.Forecast
 
         // 10-Day Forecast using ECMWF model
         // =======================================================
-        public async Task<ForecastResponse> Get16DayForecastAsync(string zipCode)
+
+        // Private intermediate methods
+        private async Task<ForecastResponse> Get16DayForecastAsync(string zipCode)
         {
             var (lat, lon) = await GetLatLonAsync(zipCode);
             return await Get16DayForecastAsync(lat, lon);
@@ -55,31 +57,48 @@ namespace LEG.MeteoSwiss.Client.Forecast
             Cache[key] = (DateTime.UtcNow.Add(HourlyCacheDuration), resp);
             return resp;
         }
-
-        public async Task<ForecastResponse> Get16DayForecastByZipCodeAsync(string zipCode)
+        private async Task<ForecastResponse> Get16DayForecastByZipCodeAsync(string zipCode)
         {
             var (lat, lon) = await GetLatLonAsync(zipCode);
             return await Get16DayForecastAsync(lat, lon);
         }
-
-        public async Task<ForecastResponse> Get16DayForecastByStationIdAsync(string stationId)
+        private async Task<ForecastResponse> Get16DayForecastByStationIdAsync(string stationId)
         {
             var (lat, lon) = GetStationLatLon(stationId);
             return await Get16DayForecastAsync(lat, lon);
         }
 
+        // Baseline methods
         public async Task<List<ForecastPeriod>> Get16DayPeriodsAsync(double lat, double lon)
             => ConvertToForecastPeriods(await Get16DayForecastAsync(lat, lon));
-
         public async Task<List<ForecastPeriod>> Get16DayPeriodsByZipCodeAsync(string zipCode)
             => ConvertToForecastPeriods(await Get16DayForecastByZipCodeAsync(zipCode));
-
         public async Task<List<ForecastPeriod>> Get16DayPeriodsByStationIdAsync(string stationId)
             => ConvertToForecastPeriods(await Get16DayForecastByStationIdAsync(stationId));
 
+        // Public convenience method to get MeteoParameters directly
+        public async Task<List<MeteoParameters>> Get16DayMeteoParametersAsync(double lat, double lon)
+        {
+            var forecastPeriods = await Get16DayPeriodsAsync(lat, lon);
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+        public async Task<List<MeteoParameters>> Get16DayMeteoParametersByZipCodeAsync(string zipCode)
+        {
+            var forecastPeriods = await Get16DayPeriodsByZipCodeAsync(zipCode);
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+        public async Task<List<MeteoParameters>> Get16DayMeteoParametersByStationIdAsync(string stationId)
+        {
+            var forecastPeriods = await Get16DayPeriodsByStationIdAsync(stationId);
+
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+
         // 7-Day Forecast using ICON-D2 model
         // =======================================================
-        public async Task<ForecastResponse> Get7DayForecastAsync(double lat, double lon)
+
+        // Private intermediate methods
+        private async Task<ForecastResponse> Get7DayForecastAsync(double lat, double lon)
         {
             string key = $"7day|{lat:F4},{lon:F4}";
             if (Cache.TryGetValue(key, out var c) && DateTime.UtcNow < c.Expires)
@@ -106,30 +125,48 @@ namespace LEG.MeteoSwiss.Client.Forecast
             Cache[key] = (DateTime.UtcNow.Add(HourlyCacheDuration), resp);
             return resp;
         }
-
-        public async Task<ForecastResponse> Get7DayForecastByZipCodeAsync(string zipCode)
+        private async Task<ForecastResponse> Get7DayForecastByZipCodeAsync(string zipCode)
         {
             var (lat, lon) = await GetLatLonAsync(zipCode);
             return await Get7DayForecastAsync(lat, lon);
         }
-
-        public async Task<ForecastResponse> Get7DayForecastByStationIdAsync(string stationId)
+        private async Task<ForecastResponse> Get7DayForecastByStationIdAsync(string stationId)
         {
             var (lat, lon) = GetStationLatLon(stationId);
             return await Get7DayForecastAsync(lat, lon);
         }
 
+        // Public baseline methods
         public async Task<List<ForecastPeriod>> Get7DayPeriodsAsync(double lat, double lon)
             => ConvertToForecastPeriods(await Get7DayForecastAsync(lat, lon));
-
         public async Task<List<ForecastPeriod>> Get7DayPeriodsByZipCodeAsync(string zipCode)
             => ConvertToForecastPeriods(await Get7DayForecastByZipCodeAsync(zipCode));
-
         public async Task<List<ForecastPeriod>> Get7DayPeriodsByStationIdAsync(string stationId)
             => ConvertToForecastPeriods(await Get7DayForecastByStationIdAsync(stationId));
 
-        // 6-Hour Forecast (Nowcast) using ICON-D2 model
+        // Public convenience methods to get MeteoParameters directly
+        public async Task<List<MeteoParameters>> Get7DayMeteoParametersAsync(double lat, double lon)
+        {
+            var forecastPeriods = await Get7DayPeriodsAsync(lat, lon);
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+        public async Task<List<MeteoParameters>> Get7DayMeteoParametersByZipCodeAsync(string zipCode)
+        {
+            var forecastPeriods = await Get7DayPeriodsByZipCodeAsync(zipCode);
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+        public async Task<List<MeteoParameters>> Get7DayMeteoParametersByStationIdAsync(string stationId)
+        {
+            var forecastPeriods = await Get7DayPeriodsByStationIdAsync(stationId);
+
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+
+        // 6-Hour Forecast (Nowca
+        // st) using ICON-D2 model
         // =======================================================
+
+        // Public baseline methods
         public async Task<List<NowcastPeriod>> GetNowcast15MinuteAsync(double lat, double lon)
         {
             string cacheKey = $"nowcast15|{lat:F4},{lon:F4}";
@@ -170,17 +207,33 @@ namespace LEG.MeteoSwiss.Client.Forecast
 
             return result;
         }
-
         public async Task<List<NowcastPeriod>> GetNowcast15MinuteByZipCodeAsync(string zipCode)
         {
             var (lat, lon) = await GetLatLonAsync(zipCode);
             return await GetNowcast15MinuteAsync(lat, lon);
         }
-
         public async Task<List<NowcastPeriod>> GetNowcast15MinuteByStationIdAsync(string stationId)
         {
             var (lat, lon) = GetStationLatLon(stationId);
             return await GetNowcast15MinuteAsync(lat, lon);
+        }
+
+        // Public convenience methods to get MeteoParameters directly
+        public async Task<List<MeteoParameters>> GetNowcast15MinuteMeteoParametersAsync(double lat, double lon)
+        {
+            var forecastPeriods = await GetNowcast15MinuteAsync(lat, lon);
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+        public async Task<List<MeteoParameters>> GetNowcast15MinuteMeteoParametersByZipCodeAsync(string zipCode)
+        {
+            var forecastPeriods = await GetNowcast15MinuteByZipCodeAsync(zipCode);
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
+        }
+        public async Task<List<MeteoParameters>> GetNowcast15MinuteMeteoParametersByStationIdAsync(string stationId)
+        {
+            var forecastPeriods = await GetNowcast15MinuteByStationIdAsync(stationId);
+
+            return forecastPeriods.Select(r => r.ToMeteoParameters()).ToList();
         }
 
         // Helper Methods

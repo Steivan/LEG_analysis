@@ -90,6 +90,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             return filteredRecords;
         }
 
+        // Convenience method to get the latest "now" record
         public static WeatherCsvRecord? GetStationLatestRecord(
             string stationId,
             StationMetaInfo stationMetaInfo,
@@ -101,6 +102,49 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             return nowRecords == null ? null : nowRecords[^1];
         }
 
+        // Convenience method to get MeteoParameters records directly
+        public static List<MeteoParameters> GetFilteredMeteoParametersRecords(
+            string stationId,
+            StationMetaInfo stationMetaInfo,
+            int periodStartYear,
+            int periodEndYear,
+            string granularity = "t",
+            bool isTower = false,
+            bool includeRecent = true,
+            bool includeNow = false)
+        {
+            var weatherRecords = GetFilteredRecords(
+                stationId: stationId,
+                stationMetaInfo: stationMetaInfo,
+                periodStartYear: periodStartYear,
+                periodEndYear: periodEndYear,
+                granularity: granularity,
+                isTower: isTower,
+                includeRecent: includeRecent,
+                includeNow: includeNow);
+
+            return weatherRecords
+                .Select(r => r.ToMeteoParameters())
+                .ToList();
+        }
+
+        public static MeteoParameters? GetStationLatestMeteoParametersRecord(
+            string stationId,
+            StationMetaInfo stationMetaInfo,
+            string granularity = "t",
+            bool isTower = false)
+        {
+            var weatherRecord = GetStationLatestRecord(
+                stationId: stationId,
+                stationMetaInfo: stationMetaInfo,
+                granularity: granularity,
+                isTower: isTower);
+
+            return weatherRecord == null ? null : weatherRecord.ToMeteoParameters();
+        }
+
+
+        // Helpermethod to get "now" records
         private static List<WeatherCsvRecord>? GetNowRecords(
             string stationId,
             StationMetaInfo stationMetaInfo,
