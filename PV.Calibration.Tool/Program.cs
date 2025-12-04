@@ -1,9 +1,9 @@
 ﻿using MathNet.Numerics.Distributions;
 using LEG.PV.Data.Processor;
 using PV.Calibration.Tool;
-using static LEG.PV.Core.Models.PvJacobian;
+using static LEG.PV.Core.Models.PvRTWAJacobian;
 using static LEG.PV.Core.Models.PvPriorConfig;
-using static LEG.PV.Data.Processor.DataRecords;
+using static LEG.PV.Core.Models.DataRecords;
 using static PV.Calibration.Tool.BayesianCalibrator;
 
 //ProcessSyntheticModelData();

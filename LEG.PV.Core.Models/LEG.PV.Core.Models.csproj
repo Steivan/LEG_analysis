@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+
+  <ItemGroup>
+	<ProjectReference Include="..\LEG.MeteoSwiss.Abstractions\LEG.MeteoSwiss.Abstractions.csproj" />
+  </ItemGroup>
+	
 </Project>

@@ -60,6 +60,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.PV.Data.Processor", "LEG.PV.Data.Processor\LEG.PV.Data.Processor.csproj", "{EA12C5BB-F04E-4E41-B86B-139D539B74F3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.PV.Core.Models", "LEG.PV.Core.Models\LEG.PV.Core.Models.csproj", "{063841E8-E324-409E-A40B-04AA23C58B2E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5C0EB842-55DC-432D-B741-8FF6CC83D8D4} = {5C0EB842-55DC-432D-B741-8FF6CC83D8D4}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

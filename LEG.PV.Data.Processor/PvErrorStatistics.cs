@@ -1,5 +1,5 @@
-﻿using static LEG.PV.Data.Processor.DataRecords;
-using static LEG.PV.Core.Models.PvJacobian;
+﻿using static LEG.PV.Core.Models.PvRTWAJacobian;
+using static LEG.PV.Core.Models.DataRecords;
 using System.ComponentModel;
 
 
@@ -22,25 +22,7 @@ namespace LEG.PV.Data.Processor
                 if ( !initialValidRecords[recordIndex] )
                     continue;
                 var pvRecord = pvRecords[recordIndex];
-                var modeledPower = EffectiveCellPower(
-                    installedPower, 
-                    periodsPerHour,
-                    pvRecord.DirectGeometryFactor,
-                    pvRecord.DiffuseGeometryFactor,
-                    pvRecord.SinSunElevation,
-                    pvRecord.GlobalHorizontalRadiation,
-                    pvRecord.SunshineDuration,
-                    pvRecord.DiffuseHorizontalRadiation,
-                    pvRecord.AmbientTemp,
-                    pvRecord.WindSpeed,
-                    pvRecord.SnowDepth,
-                    pvRecord.Age,
-                    ethaSys: pvModelParams.Etha,
-                    gamma: pvModelParams.Gamma,
-                    u0: pvModelParams.U0,
-                    u1: pvModelParams.U1,
-                    lDegr: pvModelParams.LDegr
-                    );
+                var modeledPower = pvRecord.ComputedPower(pvModelParams, installedPower, periodsPerHour);
                 errorList.Add(pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value - modeledPower : 0.0);
             }
 

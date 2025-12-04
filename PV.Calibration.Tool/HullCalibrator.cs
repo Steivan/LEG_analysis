@@ -1,7 +1,6 @@
 ﻿using LEG.PV.Core.Models;
 using MathNet.Numerics;
-using MathNet.Numerics.Distributions;
-using static LEG.PV.Data.Processor.DataRecords;
+using static LEG.PV.Core.Models.DataRecords;
 
 namespace PV.Calibration.Tool
 {
@@ -38,9 +37,7 @@ namespace PV.Calibration.Tool
                 var dayIndex = record.Timestamp.Day;
                 var timeIndex = record.Timestamp.Hour * periodsPerHour + (record.Timestamp.Minute / minutesPerPeriod);
 
-                var theoreticalPower = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.SinSunElevation, 
-                    record.GlobalHorizontalRadiation, record.SunshineDuration, record.DiffuseHorizontalRadiation, record.AmbientTemp, record.WindSpeed, record.SnowDepth, record.Age,
-                    ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
+                var theoreticalPower = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
                 var measuredPower = record.HasMeasuredPower ? record.MeasuredPower.Value : theoreticalPower;
 
                 if (theoreticalPower > 0.0)

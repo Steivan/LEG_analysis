@@ -1,5 +1,5 @@
 ﻿using LEG.PV.Core.Models;
-using static LEG.PV.Data.Processor.DataRecords;
+using static LEG.PV.Core.Models.DataRecords;
 
 namespace LEG.PV.Data.Processor
 {
@@ -101,8 +101,6 @@ namespace LEG.PV.Data.Processor
             var secondRecordDate = pvRecords[1].Timestamp;
 
             var minutesPerPeriod = minutesPerHour / periodsPerHour;
-            //var minutesPerPeriod = (secondRecordDate - firstRecordDate).Minutes;
-            //var periodsPerHour = minutesPerHour / minutesPerPeriod;
             var periodsPerDay = hoursPerDay * periodsPerHour;
 
             var recordsCount = pvRecords.Count;
@@ -131,9 +129,8 @@ namespace LEG.PV.Data.Processor
                         indexOffset = timeIndex;
                     }
                     var age = (record.Timestamp - firstRecordDate).Days / daysPerYear;
-                    pTheoretical[timeIndex] = PvJacobian.EffectiveCellPower(installedPower, periodsPerHour, record.DirectGeometryFactor, record.DiffuseGeometryFactor, record.SinSunElevation,
-                        record.GlobalHorizontalRadiation, record.SunshineDuration, record.DiffuseHorizontalRadiation, record.AmbientTemp, record.WindSpeed, record.SnowDepth, age,
-                        ethaSys: pvModelParams.Etha, gamma: pvModelParams.Gamma, u0: pvModelParams.U0, u1: pvModelParams.U1, lDegr: pvModelParams.LDegr);
+
+                    var theoreticalPower = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
                     pMeasured[timeIndex] = record.HasMeasuredPower ? record.MeasuredPower.Value : pTheoretical[timeIndex];
                     hasPeriodData[timeIndex] = record.HasMeasuredPower && pTheoretical[timeIndex] > 0;
 

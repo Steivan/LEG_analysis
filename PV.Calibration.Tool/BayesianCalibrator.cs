@@ -2,7 +2,8 @@
 using MathNet.Numerics.LinearAlgebra;
 
 using static LEG.PV.Core.Models.PvPriorConfig;
-using static LEG.PV.Data.Processor.DataRecords;
+using static LEG.PV.Core.Models.DataRecords;
+using LEG.MeteoSwiss.Abstractions.Models;
 
 namespace PV.Calibration.Tool
 {
@@ -16,10 +17,11 @@ namespace PV.Calibration.Tool
         // Delegate matching the required Jacobian function signature
         // NOTE: The geometryFactor (GPOA/Gref) is implicitly included in the inputs.
         public delegate (double Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
-            double installedPower, int periodsPerHour,double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-            double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation,
-            double ambientTemp, double windSpeed, double snowDepth, double age,
-            double ethaSys, double gamma, double u0, double u1, double lDegr);
+            double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+            MeteoParameters meteoParameters,
+            //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth, 
+            double age,
+            PvModelParams modelParams);
 
         public record PvPriors
         {
@@ -81,7 +83,7 @@ namespace PV.Calibration.Tool
             for (int k = 0; k < maxIterations; k++)
             {
                 // Unpack current parameters
-                double etha = theta[0], gamma = theta[1], u0 = theta[2], u1 = theta[3], lDegr = theta[4];
+                var modelParams = new PvModelParams(etha: theta[0], gamma: theta[1], u0: theta[2], u1: theta[3], lDegr: theta[4]);
 
                 // 3. Build Jacobian (J) and Residual Vector (r = Y - P_eff)
                 Matrix<double> J = Matrix<double>.Build.Dense(nrRecords, ParameterCount);
@@ -93,6 +95,23 @@ namespace PV.Calibration.Tool
                     if (applyDataFilter && !validRecords![i])
                         continue;
                 
+                    var meteoParameters = new MeteoParameters
+                    (
+                        Time: pvRecords[i].Timestamp,
+                        Interval: TimeSpan.FromHours(1.0 / periodsPerHour),
+                        SunshineDuration: pvRecords[i].SunshineDuration,
+                        DirectRadiation: null,
+                        DirectNormalIrradiance: null,
+                        GlobalRadiation: pvRecords[i].GlobalHorizontalRadiation,
+                        DiffuseRadiation: pvRecords[i].DiffuseHorizontalRadiation,
+                        Temperature: pvRecords[i].AmbientTemp,
+                        WindSpeed: pvRecords[i].WindSpeed,
+                        WindDirection: null,
+                        SnowDepth: pvRecords[i].SnowDepth,
+                        RelativeHumidity: null,
+                        DewPoint: null,
+                        DirectRadiationVariance: null
+                    );
                     var pvRecord = pvRecords[i];
                     // Call the user's provided Jacobian function
                     var (peff, d_etha, d_gamma, d_u0, d_u1, d_lDegr) = jacobianFunc(
@@ -100,15 +119,16 @@ namespace PV.Calibration.Tool
                         periodsPerHour,
                         pvRecord.DirectGeometryFactor, 
                         pvRecord.DiffuseGeometryFactor, 
-                        pvRecord.SinSunElevation, 
-                        pvRecord.GlobalHorizontalRadiation,
-                        pvRecord.SunshineDuration,
-                        pvRecord.DiffuseHorizontalRadiation, 
-                        pvRecord.AmbientTemp, 
-                        pvRecord.WindSpeed,   
-                        pvRecord.SnowDepth,
+                        pvRecord.SinSunElevation,
+                        meteoParameters,
+                        //pvRecord.GlobalHorizontalRadiation,
+                        //pvRecord.SunshineDuration,
+                        //pvRecord.DiffuseHorizontalRadiation, 
+                        //pvRecord.AmbientTemp, 
+                        //pvRecord.WindSpeed,   
+                        //pvRecord.SnowDepth,
                         pvRecord.Age,
-                        ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
+                        modelParams);
 
                     // Weighting (if applicable)
                     var weight = pvRecord.HasMeasuredPower ? pvRecord.Weight : 0.0;

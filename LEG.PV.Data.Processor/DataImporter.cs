@@ -8,7 +8,7 @@ using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
-using static LEG.PV.Data.Processor.DataRecords;
+using static LEG.PV.Core.Models.DataRecords;
 
 namespace LEG.PV.Data.Processor
 {
@@ -188,8 +188,6 @@ namespace LEG.PV.Data.Processor
             lastTimestamp = timeStamps[^1];
 
             // Fetch meteo data
-            //await UpdateWeatherData(firstDateTime, selectedStationsIdList);
-
             meteoDataLagForecast = 5 * (int)Math.Round((double)meteoDataLagForecast / 5);               // Lag to be applied to forecast data
             var (perStationWeatherData, blendedWeatherData) = await LoadBlendedWeatherForecast(
                 stationDictionary,

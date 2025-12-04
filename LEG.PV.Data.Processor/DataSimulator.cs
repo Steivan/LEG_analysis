@@ -1,6 +1,7 @@
 ﻿
-using static LEG.PV.Data.Processor.DataRecords;
-using static LEG.PV.Core.Models.PvJacobian;
+using LEG.MeteoSwiss.Abstractions.Models;
+using static LEG.PV.Core.Models.DataRecords;
+using static LEG.PV.Core.Models.PvRTWAJacobian;
 
 namespace LEG.PV.Data.Processor;
 
@@ -82,11 +83,11 @@ public class DataSimulator
         var pHourOutlier   = 0.001;
         var pBlockOutlier  = 0.001;
 
-        double etha = pvParams.Etha;
-        double gamma = pvParams.Gamma;
-        double u0 = pvParams.U0;
-        double u1 = pvParams.U1;
-        double lDegr = pvParams.LDegr;
+        //double etha = pvParams.Etha;
+        //double gamma = pvParams.Gamma;
+        //double u0 = pvParams.U0;
+        //double u1 = pvParams.U1;
+        //double lDegr = pvParams.LDegr;
 
         // initial values
         double previousDirectIrradiance = maxDirectIrratiance / 2;
@@ -177,9 +178,24 @@ public class DataSimulator
                         windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, newWindSpeed));
 
                         // Calculate theoretical effective power
+                        var meteoParameters = new MeteoParameters(
+                            Time: timeStamp,
+                            Interval: TimeSpan.FromMinutes(minutesPerPeriod),
+                            SunshineDuration: sunshineDuration,
+                            DirectRadiation: null,
+                            DirectNormalIrradiance: null,
+                            GlobalRadiation: globalHorizontalRadiation,
+                            DiffuseRadiation: diffuseHorizontalRadiation,
+                            Temperature: ambientTemp,
+                            WindSpeed: windSpeed,
+                            WindDirection: null,
+                            SnowDepth: snowDepth,
+                            RelativeHumidity: null,
+                            DewPoint: null,
+                            DirectRadiationVariance: null
+                            );
                         var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                            globalHorizontalRadiation, sunshineDuration, diffuseHorizontalRadiation, ambientTemp, windSpeed, snowDepth, age,
-                            ethaSys: etha, gamma: gamma, u0: u0, u1: u1, lDegr: lDegr);
+                            meteoParameters, age, pvParams);
 
                         // Add some noise to the measured power
                         var noise = calculatedPower * randomNoiseStdDev * (random.NextDouble() - 0.5);

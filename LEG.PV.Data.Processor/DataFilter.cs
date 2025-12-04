@@ -1,4 +1,4 @@
-﻿using static LEG.PV.Data.Processor.DataRecords;
+﻿using static LEG.PV.Core.Models.DataRecords;
 using static LEG.PV.Data.Processor.AnomalyDetector;
 
 namespace LEG.PV.Data.Processor

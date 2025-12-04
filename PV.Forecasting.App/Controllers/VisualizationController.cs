@@ -8,8 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LEG.PV.Data.Processor;
-using static LEG.PV.Data.Processor.DataRecords;
+using static LEG.PV.Core.Models.DataRecords;
 
 namespace PV.Forecasting.App.Controllers
 {
