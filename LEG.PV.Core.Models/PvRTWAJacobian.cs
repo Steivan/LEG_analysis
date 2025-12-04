@@ -107,7 +107,6 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
 
     // Derivativs for Jacobian
     public static double DerEthaSys(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-        //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
@@ -129,7 +128,6 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
     }
 
     public static double DerGamma(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-        //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
@@ -150,7 +148,6 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
         return derGamma.Value;
     }
     public static double DerU0(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-        //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
@@ -171,7 +168,6 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
         return derU0;
     }
     public static double DerU1(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-        //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
@@ -194,7 +190,6 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
     }
 
     public static double DerLDegr(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-        //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
@@ -218,7 +213,6 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
     // EffectivePower and Jacobian
     public static (double effP, double derEtha, double derGamma, double derU0, double derU1, double derLDegr)
         PvJacobianFunc(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
-        //double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, double ambientTemp, double windSpeed, double snowDepth,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)

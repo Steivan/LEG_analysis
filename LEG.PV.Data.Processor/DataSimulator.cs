@@ -146,7 +146,7 @@ public class DataSimulator
 
                         var timeStamp = currentHour.AddMinutes(period * minutesPerPeriod);
                         var age = (timeStamp - startDate).TotalMinutes / minutesPerYear;
-                        var timeOfDay = (double)hour + period / periodsPerHour;
+                        var timeOfDay = hour + (double)period / periodsPerHour;
 
                         var cosOmegaDay = Math.Cos(omegaDay * timeOfDay);
                         var diurnalZenithAngle = (90 - siteLatitude) * cosOmegaDay; // zenith angle of the sun is largest at night

@@ -6,10 +6,10 @@ using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.DataRecords;
 using static PV.Calibration.Tool.BayesianCalibrator;
 
-//ProcessSyntheticModelData();
+ProcessSyntheticModelData();
 
-await CalibrateE3DcData(1, "Senn");
-await CalibrateE3DcData(2, "SennV");
+//await CalibrateE3DcData(1, "Senn");
+//await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
 
@@ -78,15 +78,15 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
     var defaultModelParams = GetDefaultPriorModelParams();
 
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
-            pvRecords,
-            installedPower,
-            periodsPerHour,
-            defaultPriors,
-            defaultModelParams,
-            fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
-            snowParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.8),
-            outlierParams: (periodThreshold: 1.5, hourlyThreshold: 1.5, blockThreshold: 1.5)
-            );
+        pvRecords,
+        installedPower,
+        periodsPerHour,
+        defaultPriors,
+        defaultModelParams,
+        fogParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.9),
+        snowParams: (thresholdType: 2, loThreshold: 0.1, hiThreshold: 0.8),
+        outlierParams: (periodThreshold: 1.5, hourlyThreshold: 1.5, blockThreshold: 1.5)
+        );
 
     ProcessPvData(
         siteId,

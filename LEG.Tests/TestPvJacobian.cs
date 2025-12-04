@@ -58,32 +58,20 @@ namespace LEG.Tests
 
             // Calculate analytical derivatives
             var derEtha = DerEthaSys(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    //shortWaveRadiation, sunshineDuration, diffuseRadiation, ambientTemp, windSpeed, snowDepth,
-                    meteoParameters, age,
-                    modelParams);
+                    meteoParameters, age, modelParams);
             var derGamma = DerGamma(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    //shortWaveRadiation, sunshineDuration, diffuseRadiation, ambientTemp, windSpeed, snowDepth,
-                    meteoParameters, age,
-                    modelParams);
+                    meteoParameters, age, modelParams);
             var derU0 = DerU0(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    //shortWaveRadiation, sunshineDuration, diffuseRadiation, ambientTemp, windSpeed, snowDepth,
-                    meteoParameters, age,
-                    modelParams);
+                    meteoParameters, age, modelParams);
             var derU1 = DerU1(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    //shortWaveRadiation, sunshineDuration, diffuseRadiation, ambientTemp, windSpeed, snowDepth,
-                    meteoParameters, age,
-                    modelParams);
+                    meteoParameters, age, modelParams);
             var derLDegr = DerLDegr(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    //shortWaveRadiation, sunshineDuration, diffuseRadiation, ambientTemp, windSpeed, snowDepth,
-                    meteoParameters, age,
-                    modelParams);
+                    meteoParameters, age, modelParams);
 
             // Calculate Jacobian derivatives
             var (effectivePowerJac, derEthaJac, derGammaJac, derU0Jac, derU1Jac, derLDegrJac) = PvJacobianFunc(
                     installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    //shortWaveRadiation, sunshineDuration, diffuseRadiation, ambientTemp, windSpeed, snowDepth,
-                    meteoParameters, age,
-                    modelParams);
+                    meteoParameters, age, modelParams);
 
             // Calculate numerical derivatives
             var derEthaNum = GetNumericalDerivative(0, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
