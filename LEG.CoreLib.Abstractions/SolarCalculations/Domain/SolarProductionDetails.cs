@@ -10,8 +10,8 @@ public record SolarProductionDetails(
     int ValidRecordsCount,                                      // StepsPerHour * 24 * (365 or 366)
     double[] PeakPowerPerRoof,                                  // [DimensionRoofs]
     DateTime[] TimeStamps,                                      // [StepsPerHour * 24 * 366]
-    double[,] TheoreticalIrradiancePerRoofAndInterval,         // [DimensionRoofs, StepsPerHour * 24 * 366]
-    double[,] EffectiveIrradiancePerRoofAndInterval,           // [StepsPerHour * 24 * 366]
+    double[,] TheoreticalIrradiancePerRoofAndInterval,          // [DimensionRoofs, StepsPerHour * 24 * 366]
+    double[,] EffectiveIrradiancePerRoofAndInterval,            // [StepsPerHour * 24 * 366]
     double[] DirectGeometryFactors,                             // [StepsPerHour * 24 * 366]
     double DiffuseGeometryFactor,  
     double[] SinSunElevations,                                  // [StepsPerHour * 24 * 366]

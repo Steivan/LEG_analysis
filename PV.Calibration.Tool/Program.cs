@@ -6,10 +6,10 @@ using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.DataRecords;
 using static PV.Calibration.Tool.BayesianCalibrator;
 
-ProcessSyntheticModelData();
+//ProcessSyntheticModelData();
 
-//await CalibrateE3DcData(1, "Senn");
-//await CalibrateE3DcData(2, "SennV");
+await CalibrateE3DcData(1, "Senn");
+await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
 

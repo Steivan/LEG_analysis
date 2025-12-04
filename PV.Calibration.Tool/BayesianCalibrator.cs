@@ -18,7 +18,8 @@ namespace PV.Calibration.Tool
         // NOTE: The geometryFactor (GPOA/Gref) is implicitly included in the inputs.
         public delegate (double Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
             double installedPower, int periodsPerHour, 
-            double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+            GeometryFactors geometryFactors,
+            //double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
             MeteoParameters meteoParameters,
             double age,
             PvModelParams modelParams);
@@ -94,33 +95,17 @@ namespace PV.Calibration.Tool
                 { 
                     if (applyDataFilter && !validRecords![i])
                         continue;
-                
-                    var meteoParameters = new MeteoParameters
-                    (
-                        Time: pvRecords[i].Timestamp,
-                        Interval: TimeSpan.FromHours(1.0 / periodsPerHour),
-                        SunshineDuration: pvRecords[i].SunshineDuration,
-                        DirectRadiation: null,
-                        DirectNormalIrradiance: null,
-                        GlobalRadiation: pvRecords[i].GlobalHorizontalRadiation,
-                        DiffuseRadiation: pvRecords[i].DiffuseHorizontalRadiation,
-                        Temperature: pvRecords[i].AmbientTemp,
-                        WindSpeed: pvRecords[i].WindSpeed,
-                        WindDirection: null,
-                        SnowDepth: pvRecords[i].SnowDepth,
-                        RelativeHumidity: null,
-                        DewPoint: null,
-                        DirectRadiationVariance: null
-                    );
+
                     var pvRecord = pvRecords[i];
                     // Call the user's provided Jacobian function
                     var (peff, d_etha, d_gamma, d_u0, d_u1, d_lDegr) = jacobianFunc(
                         installedPower,
                         periodsPerHour,
-                        pvRecord.DirectGeometryFactor, 
-                        pvRecord.DiffuseGeometryFactor, 
-                        pvRecord.SinSunElevation,
-                        meteoParameters,
+                        pvRecord.GeometryFactors,
+                        //pvRecord.GeometryFactors.DirectGeometryFactor,
+                        //pvRecord.GeometryFactors.DiffuseGeometryFactor,
+                        //pvRecord.GeometryFactors.SinSunElevation,
+                        pvRecord.MeteoParameters,
                         pvRecord.Age,
                         modelParams);
 

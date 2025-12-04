@@ -1,4 +1,5 @@
 ﻿using LEG.MeteoSwiss.Abstractions.Models;
+using static LEG.PV.Core.Models.DataRecords;
 
 namespace LEG.PV.Core.Models
 {
@@ -8,86 +9,41 @@ namespace LEG.PV.Core.Models
         {
             public PvRecord(
                 DateTime timestamp, 
-                int index, 
-                double directGeometryFactor, 
-                double diffuseGeometryFactor, 
-                double sinSunElevation, 
-                double sunshineDuration,
-                double directHorizontalRadiation,
-                double directNormalIrradiance,
-                double globalHorizontalRadiation,
-                double diffuseHorizontalRadiation,
-                double ambientTemp, 
-                double windSpeed, 
-                double snowDepth,
+                int index,
+                GeometryFactors geometryFactors,
+                MeteoParameters meteoParameters,
                 double weight, 
                 double age, 
                 double? measuredPower)
             {
                 Timestamp = timestamp;
                 Index = index;
-                DirectGeometryFactor = directGeometryFactor;
-                DiffuseGeometryFactor = diffuseGeometryFactor;
-                SinSunElevation = sinSunElevation;
-                SunshineDuration = sunshineDuration;
-                DirectHorizontalRadiation = directHorizontalRadiation;
-                DirectNormalIrradiance = directNormalIrradiance;
-                GlobalHorizontalRadiation = globalHorizontalRadiation;
-                DiffuseHorizontalRadiation = diffuseHorizontalRadiation;
-                AmbientTemp = ambientTemp;
-                WindSpeed = windSpeed;
-                SnowDepth = snowDepth;
+                GeometryFactors = geometryFactors;
+                MeteoParameters = meteoParameters;
                 Weight = weight;
                 Age = age;
                 MeasuredPower = measuredPower;
             }
             public DateTime Timestamp { get; init; }                                            // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                                                     // Index [unitless]
-            public double DirectGeometryFactor { get; init; }                                   // G_POA / G_ref [unitless]
-            public double DiffuseGeometryFactor { get; init; }                                  // G_POA / G_ref [unitless]
-            public double SinSunElevation { get; init; }                                        // G_GHI / G_GNI [unitless]
-            public double SunshineDuration { get; init; }                                       // [min / ten min]
-            public double DirectHorizontalRadiation { get; init; }                              // [W/m²]
-            public double DirectNormalIrradiance { get; init; }                                 // [W/m²]
-            public double GlobalHorizontalRadiation  { get; init; }                             // [W/m²]
-            public double DiffuseHorizontalRadiation { get; init; }                             // [W/m²]
-            public double AmbientTemp { get; init; }                                            // T_amb [°C]
-            public double WindSpeed { get; init; }                                              // v_wind [m/s]
-            public double SnowDepth { get; init; }                                              // d_snow [cm]
+            public GeometryFactors GeometryFactors { get; init; }
+            public MeteoParameters MeteoParameters { get; init; }
             public double Weight { get; init; }
             public double Age { get; init; }                                                    // Age [years]
             public double? MeasuredPower { get; init; }                                         // P_meas [W]
             public bool HasMeasuredPower => MeasuredPower.HasValue;
-            public double GetGlobalHorizontalRadiation() =>  GlobalHorizontalRadiation > 0 ? GlobalHorizontalRadiation : 
-                (DirectHorizontalRadiation > 0 ? DirectHorizontalRadiation : DirectNormalIrradiance * SinSunElevation) + DiffuseHorizontalRadiation;
             
             public double ComputedPower(                                                        // P_meas [W]
                 PvModelParams modelParams, 
                 double installedPower,
                 int periodsPerHour) 
             {
-                var meteoParameters = new MeteoParameters(
-                    Time: Timestamp,
-                    Interval: TimeSpan.FromMinutes(periodsPerHour),
-                    SunshineDuration: SunshineDuration,
-                    DirectRadiation: DirectHorizontalRadiation,
-                    DirectNormalIrradiance: DirectNormalIrradiance,
-                    GlobalRadiation: GlobalHorizontalRadiation,
-                    DiffuseRadiation: DiffuseHorizontalRadiation,
-                    Temperature: AmbientTemp,
-                    WindSpeed: WindSpeed,
-                    WindDirection: null,
-                    SnowDepth: SnowDepth,
-                    RelativeHumidity: null,
-                    DewPoint: null,
-                    DirectRadiationVariance: null
-                    );
-
                 return PvRTWAJacobian.EffectiveCellPower(installedPower, periodsPerHour,
-                    DirectGeometryFactor,
-                    DiffuseGeometryFactor,
-                    SinSunElevation,
-                    meteoParameters, 
+                    GeometryFactors,
+                    //GeometryFactors.DirectGeometryFactor,
+                    //GeometryFactors.DiffuseGeometryFactor,
+                    //GeometryFactors.SinSunElevation,
+                    MeteoParameters, 
                     Age,
                     modelParams
                     );
@@ -97,21 +53,14 @@ namespace LEG.PV.Core.Models
         public record PvRecordCalculated
         {
             public PvRecordCalculated(DateTime timestamp, int index, 
-                double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation, 
-                double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalIrradiatio, double ambientTemp, double windSpeed, double snowDepth,
+                GeometryFactors geometryFactors,
+                MeteoParameters meteoParameters,
                 double age, double measuredPower, double computedPower)
             {
                 Timestamp = timestamp;
                 Index = index;
-                DirectGeometryFactor = directGeometryFactor;
-                DiffuseGeometryFactor = diffuseGeometryFactor;
-                SinSunElevation = sinSunElevation;
-                GlobalHorizontalRadiation = globalHorizontalRadiation;
-                SunshineDuration = sunshineDuration;
-                DiffuseHorizontalRadiation = diffuseHorizontalIrradiatio;
-                AmbientTemp = ambientTemp;
-                WindSpeed = windSpeed;
-                SnowDepth = snowDepth;
+                GeometryFactors = geometryFactors;
+                MeteoParameters = meteoParameters;
                 Age = age;
                 MeasuredPower = measuredPower;
                 ComputedPower = computedPower;
@@ -119,20 +68,25 @@ namespace LEG.PV.Core.Models
 
             public DateTime Timestamp { get; init; }                                            // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                                                     // Index [unitless]
-            public double DirectGeometryFactor { get; init; }                                   // G_POA / G_ref [unitless]
-            public double DiffuseGeometryFactor { get; init; }                                  // G_POA / G_ref [unitless]
-            public double SinSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
-            public double GlobalHorizontalRadiation { get; init; }                              // [W/m²]
-            public double SunshineDuration { get; init; }                                       // [min / ten min]
-            public double DiffuseHorizontalRadiation { get; init; }                             // [W/m²]
-            public double AmbientTemp { get; init; }                                            // T_amb [°C]
-            public double WindSpeed { get; init; }                                              // v_wind [m/s]
-            public double SnowDepth { get; init; }                                              // d_snow [cm]
+            public GeometryFactors GeometryFactors { get; init; }
+            public MeteoParameters MeteoParameters { get; init; }
             public double Weight => 1.0;
             public double Age { get; init; }                                                    // Age [years]
             public double MeasuredPower { get; init; }                                          // P_meas [W]
             public double ComputedPower { get; init; }                                          // P_comp [W]
-            public double Irradiance => GlobalHorizontalRadiation + DiffuseHorizontalRadiation; // G_POA [W/m²]
+        }
+
+        public record GeometryFactors
+        { 
+            public GeometryFactors(double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation)
+            {
+                DirectGeometryFactor = directGeometryFactor;
+                DiffuseGeometryFactor = diffuseGeometryFactor;
+                SinSunElevation = sinSunElevation;
+            }
+            public double DirectGeometryFactor { get; init; }                                   // G_POA / G_ref [unitless]
+            public double DiffuseGeometryFactor { get; init; }                                  // G_POA / G_ref [unitless]
+            public double SinSunElevation { get; init; }                                        // G_GHI / G_DNI [unitless]
         }
 
         public record PvRecordLists

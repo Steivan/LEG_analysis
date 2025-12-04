@@ -26,6 +26,12 @@ namespace LEG.Tests
             var snowDepth = 0.0;                // [m]
             var age = 5.0;                      // [y]
 
+            var geometryFactors = new GeometryFactors
+            (
+                directGeometryFactor, 
+                diffuseGeometryFactor, 
+                sinSunElevation
+            );
             var meteoParameters = new MeteoParameters
             (
                 Time: DateTime.UtcNow,
@@ -53,37 +59,25 @@ namespace LEG.Tests
             var modelSigmas = new PvModelParams(sigmaEtha, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr);
 
             // Calculate effective power
-            var effectivePower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
+            var effectivePower = EffectiveCellPower(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
 
             // Calculate analytical derivatives
-            var derEtha = DerEthaSys(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
-            var derGamma = DerGamma(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
-            var derU0 = DerU0(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
-            var derU1 = DerU1(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
-            var derLDegr = DerLDegr(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
+            var derEtha = DerEthaSys(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
+            var derGamma = DerGamma(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
+            var derU0 = DerU0(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
+            var derU1 = DerU1(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
+            var derLDegr = DerLDegr(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
 
             // Calculate Jacobian derivatives
             var (effectivePowerJac, derEthaJac, derGammaJac, derU0Jac, derU1Jac, derLDegrJac) = PvJacobianFunc(
-                    installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams);
+                    installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
 
             // Calculate numerical derivatives
-            var derEthaNum = GetNumericalDerivative(0, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams, modelSigmas);
-            var derGammaNum = GetNumericalDerivative(1, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams, modelSigmas);
-            var derU0Num = GetNumericalDerivative(2, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams, modelSigmas);
-            var derU1Num = GetNumericalDerivative(3, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams, modelSigmas);
-            var derLDegrNum = GetNumericalDerivative(4, installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-                    meteoParameters, age, modelParams, modelSigmas);
+            var derEthaNum = GetNumericalDerivative(0, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            var derGammaNum = GetNumericalDerivative(1, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            var derU0Num = GetNumericalDerivative(2, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            var derU1Num = GetNumericalDerivative(3, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            var derLDegrNum = GetNumericalDerivative(4, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
 
             Assert.AreEqual(effectivePower, effectivePowerJac, 1e-6);
 

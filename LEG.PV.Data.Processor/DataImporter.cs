@@ -106,7 +106,7 @@ namespace LEG.PV.Data.Processor
             var lastTimestamp = meteoTillNow ? DateTime.Now : DateTime.Now.AddDays(10);
 
             // Fetch geometry factors
-            var (timeStamps, directGeometryFactors, diffuseGeometryFactor, sinSunElevations, installedPower) = await PvProduction(siteId, firstTimestamp, lastTimestamp, minutesPerPeriod, shiftSupportTimeStamps: 0);
+            var (timeStamps, geometryFactors, installedPower) = await PvProduction(siteId, firstTimestamp, lastTimestamp, minutesPerPeriod, shiftSupportTimeStamps: 0);
             firstTimestamp = timeStamps[0];
             lastTimestamp = timeStamps[^1];
 
@@ -132,7 +132,6 @@ namespace LEG.PV.Data.Processor
                 var recordIndex = i;
                 var meteoParam = blendedWeatherData[i];
                 var weight = 1.0 / (1E-6 + meteoParam.DirectRadiationVariance ?? (double.MaxValue - 1E-6));
-                //var pvDataRecord = pvDataRecords[i];
                 double? solarProduction = i < countOfE3DcRecords ? pvDataRecords[i].SolarProduction : null;
                 if (!solarProduction.HasValue)
                 {
@@ -142,24 +141,15 @@ namespace LEG.PV.Data.Processor
                 var pvRecord = new PvRecord(
                     timeStamps[i],
                     recordIndex,                            // TODO: pvDataRecord.Index,
-                    directGeometryFactors[i],
-                    diffuseGeometryFactor,
-                    sinSunElevations[i],
-                    meteoParam.SunshineDuration ?? 0.0,
-                    meteoParam.DirectRadiation ?? 0.0,
-                    meteoParam.DirectNormalIrradiance ?? 0.0,
-                    meteoParam.GlobalRadiation ?? 0.0,
-                    meteoParam.DiffuseRadiation ?? 0.0,
-                    meteoParam.Temperature ?? 0.0,
-                    meteoParam.WindSpeed ?? 0.0,
-                    meteoParam.SnowDepth ?? 0.0,
+                    geometryFactors[i],
+                    meteoParam,
                     weight,
                     age,
                     solarProduction
                     );
                 dataRecords.Add(pvRecord);
                 var validE3Dc = solarProduction.HasValue && solarProduction.Value > 0.0;
-                validRecords.Add(pvRecord.DirectGeometryFactor > 0 || validE3Dc);
+                validRecords.Add(pvRecord.GeometryFactors.DirectGeometryFactor > 0 || validE3Dc);
             }
 
             return new MeteoImportResult(perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
@@ -183,7 +173,7 @@ namespace LEG.PV.Data.Processor
             var lastTimestamp = firstTimestamp.AddDays(forecastDays);
 
             // Fetch geometry factors
-            var (timeStamps, directGeometryFactors, diffuseGeometryFactor, sinSunElevations, installedPower) = await PvProduction(siteId, firstTimestamp, lastTimestamp, minutesPerPeriod, shiftSupportTimeStamps: 0);
+            var (timeStamps, geometryFactors, installedPower) = await PvProduction(siteId, firstTimestamp, lastTimestamp, minutesPerPeriod, shiftSupportTimeStamps: 0);
             firstTimestamp = timeStamps[0];
             lastTimestamp = timeStamps[^1];
 
@@ -201,22 +191,13 @@ namespace LEG.PV.Data.Processor
             for (var i = 0; i < countOfMeteoRecords; i++)
             {
                 var recordIndex = i;
-                var meteoParam = blendedWeatherData[i];
+                //var meteoParam = blendedWeatherData[i];
                 var age = (timeStamps[i] - firstE3DcTimestamp).TotalMinutes / minutesPerYear;
                 var pvRecord = new PvRecord(
                     timeStamps[i],
                     recordIndex,
-                    directGeometryFactors[i],
-                    diffuseGeometryFactor,
-                    sinSunElevations[i],
-                    meteoParam.SunshineDuration ?? 0.0,
-                    meteoParam.DirectRadiation ?? 0.0,
-                    meteoParam.DirectNormalIrradiance ?? 0.0,
-                    meteoParam.GlobalRadiation ?? 0.0,
-                    meteoParam.DiffuseRadiation ?? 0.0,
-                    meteoParam.Temperature ?? 0.0,
-                    meteoParam.WindSpeed ?? 0.0,
-                    meteoParam.SnowDepth ?? 0.0,
+                    geometryFactors[i],
+                    blendedWeatherData[i],
                     0.0,
                     age,
                     null
@@ -412,9 +393,7 @@ namespace LEG.PV.Data.Processor
         // Fetch computed pv production data and geometry factors
         private async Task<(
             List<DateTime> timeStamps,
-            List<double> directGeometryFactors,
-            double diffuseGeometryFactor,
-            List<double> sinSunElevations,
+            List<GeometryFactors> geometryFactors,
             double installedPower)>
             PvProduction(
             string siteId,
@@ -435,9 +414,7 @@ namespace LEG.PV.Data.Processor
             var horizonControlProvider = new SampleSiteHorizonControlProvider();
 
             var timeStamps = new List<DateTime>();
-            var directGeometryFactors = new List<double>();
-            var diffuseGeometryFactor = 0.0;
-            var sinSunElevations = new List<double>();
+            var geometryFactors = new List<GeometryFactors>(); 
 
             var installedKwP = 0.0;
             for (var year = startTime.Year; year <= endTime.Year; year++)
@@ -457,20 +434,23 @@ namespace LEG.PV.Data.Processor
 
                 installedKwP = results.PeakPowerPerRoof.Sum();
 
-                diffuseGeometryFactor = results.DiffuseGeometryFactor;
+                //diffuseGeometryFactor = results.DiffuseGeometryFactor;
                 for (int i = 0; i < results.TimeStamps.Length; i++)
                 {
                     var ts = results.TimeStamps[i];
                     if (ts >= startTime && ts <= endTime && ts.Year == year)
                     {
                         timeStamps.Add(ts);
-                        directGeometryFactors.Add(results.DirectGeometryFactors[i]);
-                        sinSunElevations.Add(results.SinSunElevations[i]);
+                        geometryFactors.Add(new GeometryFactors(
+                            results.DirectGeometryFactors[i],
+                            results.DiffuseGeometryFactor,
+                            results.SinSunElevations[i]
+                            ));
                     }
                 }
             }
 
-            return (timeStamps, directGeometryFactors, diffuseGeometryFactor, sinSunElevations, installedKwP * 1000);
+            return (timeStamps, geometryFactors, installedKwP * 1000);
         }
 
         // Allocate meteo data into support intervals with linear overlap blending

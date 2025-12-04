@@ -6,34 +6,40 @@ namespace LEG.PV.Core.Models;
 
 public class PvRTWAJacobian                  // Base model: Radiation (direc, diffuse), Temperature, Windspeed, Age
 {
-    public static (double gDirectPoa, double gDiffusePoa) GetDecomposedGpoa(
-        double globalHorizontalRadiation, double sunshineDuration, double diffuseHorizontalRadiation, 
-        double sinSunElevation)
+    public static (double gDirectPoa, double gDiffusePoa,  double directGeometryFactor, double diffuseGeometryFactor, bool hasValue) 
+        GetDecomposedGpoa( MeteoParameters meteoParameters, GeometryFactors geometryFactors)
     {
         // TODO: use sunshineDuration as a reference to adjust the decomposition of Gpoa into direct and diffuse components
 
-        var directHorizontalRadiation = Math.Max(0, globalHorizontalRadiation - diffuseHorizontalRadiation);
-        var gDirectPoa = sinSunElevation > 0 ? directHorizontalRadiation / sinSunElevation : 0.0;
-        var gDiffusePoa = diffuseHorizontalRadiation;
+        var directGeometryFactor = Math.Max(geometryFactors.DirectGeometryFactor, 0.0);
+        var diffuseGeometryFactor = Math.Max(geometryFactors.DiffuseGeometryFactor, 0.0);
+        var sinSunElevation = Math.Max(geometryFactors.SinSunElevation, 0.0);
 
-        return (gDirectPoa, gDiffusePoa);
+        var hasDirectRadiation = directGeometryFactor > 0 && sinSunElevation > 0;
+        var hasDiffuseRadiation = diffuseGeometryFactor > 0;
+        var hasValue = hasDirectRadiation || hasDiffuseRadiation;
+
+        var directHorizontalRadiation = Math.Max(0, meteoParameters.GlobalRadiation.Value - meteoParameters.DiffuseRadiation.Value);
+
+        var gDirectPoa = hasDirectRadiation ? directHorizontalRadiation / sinSunElevation : 0.0;
+        var gDiffusePoa = hasDiffuseRadiation ? meteoParameters.DiffuseRadiation.Value : 0.0;
+
+        return (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue);
     }
     // Effective Power
     public static double EffectiveCellPower(
-        double installedPower, int periodsPerHour, 
-        double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+        double installedPower, int periodsPerHour,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        // TODO: use snowDepth as a factor to reduce the effective power output
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
+            return 0.0;
 
         installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
-            return 0.0;
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var degradedPower = installedPower * (1 - modelParams.LDegr * age);
@@ -48,7 +54,7 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
     public static double GetNumericalDerivative(
         int paramIndexinstalledPower, 
         double installedPower, int periodsPerHour,
-        double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams, PvModelParams modelSigmas)
@@ -97,26 +103,25 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
         }
         var modelParams1 = new PvModelParams(ethaSys1,gamma1,u01,u11, lDegr1);
         var modelParams2 = new PvModelParams(ethaSys2, gamma2, u02, u12, lDegr2);
-        var f1 = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-            meteoParameters, age, modelParams1);
-        var f2 = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
-            meteoParameters, age, modelParams2);
+        var f1 = EffectiveCellPower(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams1);
+        var f2 = EffectiveCellPower(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams2);
 
         return (f1 - f2) / delta;
     }
 
     // Derivativs for Jacobian
-    public static double DerEthaSys(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+    public static double DerEthaSys(double installedPower, int periodsPerHour, 
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
             return 0.0;
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        installedPower /= periodsPerHour;
+
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var degradedPower = installedPower * (1 - modelParams.LDegr * age);
@@ -127,17 +132,18 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
         return derEtha.Value;
     }
 
-    public static double DerGamma(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+    public static double DerGamma(double installedPower, int periodsPerHour,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
             return 0.0;
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        installedPower /= periodsPerHour;
+
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var degradedPower = installedPower * (1 - modelParams.LDegr * age);
@@ -147,17 +153,18 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
 
         return derGamma.Value;
     }
-    public static double DerU0(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+    public static double DerU0(double installedPower, int periodsPerHour,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
             return 0.0;
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        installedPower /= periodsPerHour;
+
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var degradedPower = installedPower * (1 - modelParams.LDegr * age);
@@ -167,17 +174,18 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
 
         return derU0;
     }
-    public static double DerU1(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+    public static double DerU1(double installedPower, int periodsPerHour,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
             return 0.0;
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        installedPower /= periodsPerHour;
+
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var degradedPower = installedPower * (1 - modelParams.LDegr * age);
@@ -189,17 +197,18 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
         return derU1.Value;
     }
 
-    public static double DerLDegr(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+    public static double DerLDegr(double installedPower, int periodsPerHour,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
             return 0.0;
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        installedPower /= periodsPerHour;
+
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var derDegradedPower = installedPower * (-age);
@@ -212,17 +221,18 @@ public class PvRTWAJacobian                  // Base model: Radiation (direc, di
 
     // EffectivePower and Jacobian
     public static (double effP, double derEtha, double derGamma, double derU0, double derU1, double derLDegr)
-        PvJacobianFunc(double installedPower, int periodsPerHour, double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
+        PvJacobianFunc(double installedPower, int periodsPerHour,
+        GeometryFactors geometryFactors,
         MeteoParameters meteoParameters,
         double age,
         PvModelParams modelParams)
     {
-        installedPower /= periodsPerHour;
-        if (directGeometryFactor <= 0 && sinSunElevation <= 0)
-            return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        var (gDirectPoa, gDiffusePoa) = GetDecomposedGpoa(meteoParameters.GlobalRadiation.Value, meteoParameters.SunshineDuration.Value, meteoParameters.DiffuseRadiation.Value, sinSunElevation);
+        var (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, hasValue) = GetDecomposedGpoa(meteoParameters, geometryFactors);
+        if (!hasValue)
+            return (0, 0, 0, 0, 0, 0);
 
-        directGeometryFactor = Math.Max(directGeometryFactor, 0.0);
+        installedPower /= periodsPerHour;
+
         var gPoa = gDirectPoa * directGeometryFactor + gDiffusePoa * diffuseGeometryFactor;
         var irradianceRatio = gPoa / baselineIrradiance;
         var derDegradedPower = - installedPower * age;

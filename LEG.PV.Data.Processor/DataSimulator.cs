@@ -83,12 +83,6 @@ public class DataSimulator
         var pHourOutlier   = 0.001;
         var pBlockOutlier  = 0.001;
 
-        //double etha = pvParams.Etha;
-        //double gamma = pvParams.Gamma;
-        //double u0 = pvParams.U0;
-        //double u1 = pvParams.U1;
-        //double lDegr = pvParams.LDegr;
-
         // initial values
         double previousDirectIrradiance = maxDirectIrratiance / 2;
         double windSpeed = 10;
@@ -194,7 +188,11 @@ public class DataSimulator
                             DewPoint: null,
                             DirectRadiationVariance: null
                             );
-                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, directGeometryFactor, diffuseGeometryFactor, sinSunElevation,
+                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, 
+                            new GeometryFactors(
+                                directGeometryFactor, 
+                                diffuseGeometryFactor, 
+                                sinSunElevation),
                             meteoParameters, age, pvParams);
 
                         // Add some noise to the measured power
@@ -236,17 +234,27 @@ public class DataSimulator
                             new PvRecord(
                                 timeStamp, 
                                 pvRecords.Count, 
-                                directGeometryFactor,
-                                diffuseGeometryFactor,
-                                sinSunElevation,
-                                sunshineDuration,
-                                directHorizontalRadiation,
-                                directNormalIrradiance,
-                                globalHorizontalRadiation,
-                                diffuseHorizontalRadiation,
-                                ambientTemp, 
-                                windSpeed,
-                                snowDepth,   
+                                new GeometryFactors(
+                                    directGeometryFactor,
+                                    diffuseGeometryFactor,
+                                    sinSunElevation
+                                    ),
+                                new MeteoParameters(
+                                    Time: timeStamp,
+                                    Interval: TimeSpan.FromMinutes(minutesPerPeriod),
+                                    SunshineDuration: sunshineDuration,
+                                    DirectRadiation: directHorizontalRadiation,
+                                    DirectNormalIrradiance: directNormalIrradiance,
+                                    GlobalRadiation: globalHorizontalRadiation,
+                                    DiffuseRadiation: diffuseHorizontalRadiation,
+                                    Temperature: ambientTemp,
+                                    WindSpeed: windSpeed,
+                                    WindDirection: null,
+                                    SnowDepth: snowDepth,
+                                    RelativeHumidity: null,
+                                    DewPoint: null,
+                                    DirectRadiationVariance: null
+                                    ),
                                 weight: weight,  
                                 age, measuredPower)
                             );
