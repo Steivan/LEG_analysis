@@ -8,7 +8,8 @@ using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
-using static LEG.PV.Core.Models.DataRecords;
+using LEG.PV.Core.Models;
+using static LEG.PV.Core.Models.PvDataClass;
 
 namespace LEG.PV.Data.Processor
 {
@@ -27,7 +28,6 @@ namespace LEG.PV.Data.Processor
         const double hoursPerDay = 24.0;
         const double minutesPerHour = 60.0;
         const double minutesPerYear = minutesPerHour * hoursPerDay * daysPerYear;
-        const double solarConstant = 1361.0;                                                       // [W/m²]
         const double maxGroundIrradiance = 1000.0;                                                 // [W/m²]
         const double radiationNoise = maxGroundIrradiance / 100.0;                                 // [W/m²]      Fluctuation of 1% of max irradiance
         const double radiationBaselineVariance = radiationNoise * radiationNoise;                  // [(W/m²)²]
@@ -284,7 +284,7 @@ namespace LEG.PV.Data.Processor
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
                     record.Index,
-                    [record.MeasuredPower, computedPower],
+                    [record.MeasuredPower, computedPower.PowerGRTW],
                     radiationList,
                     temperatureList,
                     windSpeedList
@@ -393,7 +393,7 @@ namespace LEG.PV.Data.Processor
         // Fetch computed pv production data and geometry factors
         private async Task<(
             List<DateTime> timeStamps,
-            List<GeometryFactors> geometryFactors,
+            List<PvGeometryFactors> geometryFactors,
             double installedPower)>
             PvProduction(
             string siteId,
@@ -414,7 +414,7 @@ namespace LEG.PV.Data.Processor
             var horizonControlProvider = new SampleSiteHorizonControlProvider();
 
             var timeStamps = new List<DateTime>();
-            var geometryFactors = new List<GeometryFactors>(); 
+            var geometryFactors = new List<PvGeometryFactors>(); 
 
             var installedKwP = 0.0;
             for (var year = startTime.Year; year <= endTime.Year; year++)
@@ -441,7 +441,7 @@ namespace LEG.PV.Data.Processor
                     if (ts >= startTime && ts <= endTime && ts.Year == year)
                     {
                         timeStamps.Add(ts);
-                        geometryFactors.Add(new GeometryFactors(
+                        geometryFactors.Add(new PvGeometryFactors(
                             results.DirectGeometryFactors[i],
                             results.DiffuseGeometryFactor,
                             results.SinSunElevations[i]

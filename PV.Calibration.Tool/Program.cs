@@ -1,9 +1,10 @@
 ﻿using MathNet.Numerics.Distributions;
 using LEG.PV.Data.Processor;
 using PV.Calibration.Tool;
-using static LEG.PV.Core.Models.PvRTWAJacobian;
+using LEG.PV.Core.Models;
+using static LEG.PV.Core.Models.PvPowerJacobian;
 using static LEG.PV.Core.Models.PvPriorConfig;
-using static LEG.PV.Core.Models.DataRecords;
+using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
 
 //ProcessSyntheticModelData();
@@ -216,7 +217,7 @@ void ProcessPvData(
         tolerance: tolerance,
         maxIterations: maxIterations);
 
-    //public static (List<PvModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
+    //public static (List<ModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
     //    List<PvRecord> pvRecords,
     //    PvPriors pvPriors,
     //    JacobianFunc jacobianFunc,

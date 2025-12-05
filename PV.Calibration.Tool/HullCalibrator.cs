@@ -1,6 +1,6 @@
 ﻿using LEG.PV.Core.Models;
 using MathNet.Numerics;
-using static LEG.PV.Core.Models.DataRecords;
+using static LEG.PV.Core.Models.PvDataClass;
 
 namespace PV.Calibration.Tool
 {
@@ -37,7 +37,8 @@ namespace PV.Calibration.Tool
                 var dayIndex = record.Timestamp.Day;
                 var timeIndex = record.Timestamp.Hour * periodsPerHour + (record.Timestamp.Minute / minutesPerPeriod);
 
-                var theoreticalPower = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                var computedPower = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                var theoreticalPower = computedPower.PowerGRTW;
                 var measuredPower = record.HasMeasuredPower ? record.MeasuredPower.Value : theoreticalPower;
 
                 if (theoreticalPower > 0.0)

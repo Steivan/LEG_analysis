@@ -1,5 +1,5 @@
 ﻿using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.DataRecords;
+using static LEG.PV.Core.Models.PvDataClass;
 
 namespace LEG.PV.Data.Processor
 {
@@ -130,7 +130,7 @@ namespace LEG.PV.Data.Processor
                     }
                     var age = (record.Timestamp - firstRecordDate).Days / daysPerYear;
 
-                    pTheoretical[timeIndex] = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                    pTheoretical[timeIndex] = record.ComputedPower(pvModelParams, installedPower, periodsPerHour).PowerGRTW;
                     pMeasured[timeIndex] = record.HasMeasuredPower ? record.MeasuredPower.Value : pTheoretical[timeIndex];
                     hasPeriodData[timeIndex] = record.HasMeasuredPower && pTheoretical[timeIndex] > 0;
 

@@ -1,7 +1,8 @@
 ﻿
 using LEG.MeteoSwiss.Abstractions.Models;
-using static LEG.PV.Core.Models.DataRecords;
-using static LEG.PV.Core.Models.PvRTWAJacobian;
+using LEG.PV.Core.Models;
+using static LEG.PV.Core.Models.PvDataClass;
+using static LEG.PV.Core.Models.PvPowerJacobian;
 
 namespace LEG.PV.Data.Processor;
 
@@ -189,16 +190,16 @@ public class DataSimulator
                             DirectRadiationVariance: null
                             );
                         var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, 
-                            new GeometryFactors(
+                            new PvGeometryFactors(
                                 directGeometryFactor, 
                                 diffuseGeometryFactor, 
                                 sinSunElevation),
                             meteoParameters, age, pvParams);
 
                         // Add some noise to the measured power
-                        var noise = calculatedPower * randomNoiseStdDev * (random.NextDouble() - 0.5);
+                        var noise = calculatedPower.PowerGRTW * randomNoiseStdDev * (random.NextDouble() - 0.5);
 
-                        var measuredPower = calculatedPower + (applyRandomNoise ? noise : 0);
+                        var measuredPower = calculatedPower.PowerGRTW + (applyRandomNoise ? noise : 0);
 
                         // Apply weather and outlier effects
                         var isFoggyPeriod = isFoggyDay && hour < fogDissolveEndHour;
@@ -234,7 +235,7 @@ public class DataSimulator
                             new PvRecord(
                                 timeStamp, 
                                 pvRecords.Count, 
-                                new GeometryFactors(
+                                new PvGeometryFactors(
                                     directGeometryFactor,
                                     diffuseGeometryFactor,
                                     sinSunElevation

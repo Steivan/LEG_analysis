@@ -1,4 +1,5 @@
-﻿using static LEG.PV.Core.Models.DataRecords;
+﻿using LEG.PV.Core.Models;
+using static LEG.PV.Core.Models.PvDataClass;
 using System.ComponentModel;
 
 
@@ -21,7 +22,7 @@ namespace LEG.PV.Data.Processor
                 if ( !initialValidRecords[recordIndex] )
                     continue;
                 var pvRecord = pvRecords[recordIndex];
-                var modeledPower = pvRecord.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                var modeledPower = pvRecord.ComputedPower(pvModelParams, installedPower, periodsPerHour).PowerGRTW;
                 errorList.Add(pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value - modeledPower : 0.0);
             }
 
