@@ -50,8 +50,7 @@ namespace LEG.PV.Core.Models
 
         public static PvModelParams GetDefaultPriorModelParams()
         {
-            var (etha, gamma, u0, u1, lDegr) = PvPriorConfig.GetAllPriorsMeans();
-            return new PvModelParams(etha, gamma, u0, u1, lDegr);
+            return PvPriorConfig.GetAllPriorsMeans();
         }
 
         public record PvRecordLists

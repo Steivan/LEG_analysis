@@ -293,8 +293,10 @@ namespace PV.Forecasting.App.Controllers
                 return timeSeriesName switch
                 {
                     "MeasuredPower" => Colors.Red,
-                    "ComputedPower" => Colors.Purple,
-                    _ => Colors.Black
+                    "PowerG" => Colors.Purple,
+                    "PowerGRTW" => Colors.Blue,
+                    "PowerGRTWFS" => Colors.Green,
+                    _ => Colors.Gray
                 };
             }
 

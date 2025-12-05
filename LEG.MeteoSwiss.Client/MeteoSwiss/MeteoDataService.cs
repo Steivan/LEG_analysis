@@ -1,5 +1,4 @@
-﻿using LEG.Common;
-using LEG.MeteoSwiss.Abstractions;
+﻿using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.MeteoSwiss.Parsers;
 

@@ -1,6 +1,4 @@
-﻿using CsvHelper.Configuration.Attributes;
-using LEG.Common;
-using LEG.MeteoSwiss.Abstractions;
+﻿using LEG.Common;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

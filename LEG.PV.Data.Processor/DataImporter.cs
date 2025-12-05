@@ -284,7 +284,7 @@ namespace LEG.PV.Data.Processor
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
                     record.Index,
-                    [record.MeasuredPower, computedPower.PowerGRTW],
+                    [record.MeasuredPower, computedPower.PowerG, computedPower.PowerGRTW, computedPower.PowerGRTWFS],
                     radiationList,
                     temperatureList,
                     windSpeedList
@@ -380,7 +380,7 @@ namespace LEG.PV.Data.Processor
             }
 
             var dataRecordLabels = new PvRecordLabels(
-                ["MeasuredPower", "ComputedPower"],
+                ["MeasuredPower", "PowerG", "PowerGRTW", "PowerGRTWFS"],
                 filteredRadiationLabels,
                 filteredTemperatureLabels,
                 filteredWindSpeedLabels);

@@ -1,12 +1,10 @@
 ﻿
 using LEG.Common.Utils;
 using LEG.MeteoSwiss.Abstractions.Models;
-using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MeteoConsoleApp
 {

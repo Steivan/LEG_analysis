@@ -1,5 +1,4 @@
 ﻿using LEG.MeteoSwiss.Abstractions;
-using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -94,17 +93,20 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
         private HashSet<string> GetPeriods(string startDate, string endDate)
         {
 
-            var start = DateTime.Parse(startDate);
-            var end = DateTime.Parse(endDate);
-            var currentYear = DateTime.UtcNow.Year;
-            // ** THE DEFINITIVE FIX: Determine the unique periods to download, avoiding redundant loops. **
+            var start = DateOnly.Parse(startDate);
+            var end = DateOnly.Parse(endDate);
+            var now = DateOnly.FromDateTime(DateTime.UtcNow);
+            var currentYear = now.Year;
 
             var periodsToFetch = new HashSet<string>();
             for (int year = start.Year; year <= end.Year; year++)
             {
                 if (year >= currentYear - 1)
                 {
-                    periodsToFetch.Add("recent");
+                    if (start < now)
+                    {
+                        periodsToFetch.Add("recent");
+                    }
                     periodsToFetch.Add("now");
                 }
                 else
