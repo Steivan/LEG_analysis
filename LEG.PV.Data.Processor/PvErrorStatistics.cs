@@ -14,7 +14,7 @@ namespace LEG.PV.Data.Processor
             int periodsPerHour,
             PvModelParams pvModelParams)
         {
-            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactors.DirectGeometryFactor > 0.0).ToList();
+            initialValidRecords ??= pvRecords.Select(r => r.SolarGeometry.HasIrradiance).ToList();
 
             var errorList = new List<double>();
             for (var recordIndex = 0; recordIndex < pvRecords.Count; recordIndex++) 
@@ -89,7 +89,7 @@ namespace LEG.PV.Data.Processor
             PvModelParams pvModelParams,
             int countOfBins = 100)
         {
-            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactors.DirectGeometryFactor > 0.0).ToList();
+            initialValidRecords ??= pvRecords.Select(r => r.SolarGeometry.HasIrradiance).ToList();
 
             var errorList = GetErrorList(
                 pvRecords,
@@ -130,7 +130,7 @@ namespace LEG.PV.Data.Processor
         PvModelParams pvModelParams,
         List<double> pCumulative)
         {
-            initialValidRecords ??= pvRecords.Select(r => r.GeometryFactors.DirectGeometryFactor > 0.0).ToList();
+            initialValidRecords ??= pvRecords.Select(r => r.SolarGeometry.HasIrradiance).ToList();
 
             var errorList = GetErrorList(
                 pvRecords,

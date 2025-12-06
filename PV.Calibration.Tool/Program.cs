@@ -21,7 +21,7 @@ async Task CalibrateE3DcData(int folder, string label)
     var installedPower = installedKwP; // / periodsPerHour;
 
     var defaultPriors = new PvPriors();
-    var defaultModelParams = GetDefaultPriorModelParams();
+    var defaultModelParams = GetAllPriorsMeans();
 
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
             pvRecords,
@@ -76,7 +76,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         );
 
     var defaultPriors = new PvPriors();
-    var defaultModelParams = GetDefaultPriorModelParams();
+    var defaultModelParams = GetAllPriorsMeans();
 
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
         pvRecords,
@@ -189,7 +189,7 @@ void ProcessPvData(
 
     var hasModelValidRecords = modelValidRecords != null && modelValidRecords.Any(v => v);
 
-    var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, periodsPerHour, GetDefaultPriorModelParams());
+    var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, periodsPerHour, GetAllPriorsMeans());
     var hullPriors = new PvPriors
     {
         EthaSysMean = ethaHull,

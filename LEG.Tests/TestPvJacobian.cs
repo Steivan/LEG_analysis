@@ -26,7 +26,7 @@ namespace LEG.Tests
             var snowDepth = 0.0;                // [m]
             var age = 5.0;                      // [y]
 
-            var geometryFactors = new PvGeometryFactors
+            var geometryFactors = new PvSolarGeometry
             (
                 directGeometryFactor, 
                 diffuseGeometryFactor, 
@@ -62,35 +62,44 @@ namespace LEG.Tests
             var derU0 = DerU0(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             var derU1 = DerU1(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             var derLDegr = DerLDegr(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
-            // Fog: d (PowerGRTWF / PowerGRTW) / d param_i 
+            // Snow: derivative is a delta function and cannot be tested with numerical derivatives
+            var derLambdaDSnow = DerLambdaDSnow(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
+            // Fog: d (PowerGRTWSF / PowerGRTW) / d param_i 
             var derLambdaAFog = DerLambdaAFog(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             var derBFog = DerBFog(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             var derLambdaKFog = DerLambdaKFog(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
-            // Snow: d (PowerGRTWFS / PowerGRTWF) / d param_i is a delta function and cannot be tested with numerical derivatives
-            var derLambdaDSnow = DerLambdaDSnow(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
 
             // Calculate Jacobian derivatives
             var (jacobianPowerRecord, derivativesRecord) = PvJacobianFunc(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
 
             // Calculate numerical derivatives: d PowerGRTW / d param_i
-            var derEthaNum = GetNumericalDerivative(0, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            var derGammaNum = GetNumericalDerivative(1, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            var derU0Num = GetNumericalDerivative(2, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            var derU1Num = GetNumericalDerivative(3, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            var derLDegrNum = GetNumericalDerivative(4, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            // Fog: d (PowerGRTWF / PowerGRTW) / d param_i 
-            var derLambdaAFogNum = GetNumericalDerivative(5, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            var derBFogNum = GetNumericalDerivative(6, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            var derLambdaKFogNum = GetNumericalDerivative(7, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
-            // Snow: d (PowerGRTWFS / PowerGRTWF) / d param_i is a delta function and cannot be tested with numerical derivatives
-            var derLambdaDSnowNum = GetNumericalDerivative(8, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            int paramIndex = 0;
+            var derEthaNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            var derGammaNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            var derU0Num = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            var derU1Num = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            var derLDegrNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            // Snow: derivative is a delta function and cannot be tested with numerical derivatives
+            var derLambdaDSnowNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            // Fog: d (PowerGRTWS / PowerGRTW) / d param_i
+            var derLambdaAFogNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            var derBFogNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            paramIndex++;
+            var derLambdaKFogNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
 
             Assert.AreEqual(powerRecord.PowerG, jacobianPowerRecord.PowerG, 1e-6);
             Assert.AreEqual(powerRecord.PowerGR, jacobianPowerRecord.PowerGR, 1e-6);
             Assert.AreEqual(powerRecord.PowerGRT, jacobianPowerRecord.PowerGRT, 1e-6);
             Assert.AreEqual(powerRecord.PowerGRTW, jacobianPowerRecord.PowerGRTW, 1e-6);
-            Assert.AreEqual(powerRecord.PowerGRTWF, jacobianPowerRecord.PowerGRTWF, 1e-6);
-            Assert.AreEqual(powerRecord.PowerGRTWFS, jacobianPowerRecord.PowerGRTWFS, 1e-6);
+            Assert.AreEqual(powerRecord.PowerGRTWS, jacobianPowerRecord.PowerGRTWS, 1e-6);
+            Assert.AreEqual(powerRecord.PowerGRTWSF, jacobianPowerRecord.PowerGRTWSF, 1e-6);
 
             Assert.AreEqual(derivativesRecord.Etha / derEtha, 1, 1e-6);
             Assert.AreEqual(derEthaNum / derEtha, 1, 1e-4);
@@ -107,15 +116,15 @@ namespace LEG.Tests
             Assert.AreEqual(derivativesRecord.LDegr / derLDegr, 1, 1e-6);
             Assert.AreEqual(derLDegrNum / derLDegr, 1, 1e-4);
 
+            Assert.AreEqual(derivativesRecord.LambdaDSnow, derLambdaDSnow, 1e-6);
             Assert.AreEqual(derivativesRecord.LambdaAFog / derLambdaAFog, 1, 1e-6);
             Assert.AreEqual(derivativesRecord.BFog / derBFog, 1, 1e-6);
             Assert.AreEqual(derivativesRecord.LambdaKFog / derLambdaKFog, 1, 1e-6);
-            Assert.AreEqual(derivativesRecord.LambdaDSnow, derLambdaDSnow, 1e-6);
 
+            Assert.AreEqual(derLambdaDSnowNum, derLambdaDSnow, 2e-2);
             Assert.AreEqual(derLambdaAFogNum / derLambdaAFog, 1, 2e-2);
             Assert.AreEqual(derBFogNum / derBFog, 1, 2e-2);
             Assert.AreEqual(derLambdaKFogNum / derLambdaKFog, 1, 2e-2);
-            Assert.AreEqual(derLambdaDSnowNum, derLambdaDSnow, 2e-2);
 
             Console.WriteLine($"Effective Power: {powerRecord,10:F5} {jacobianPowerRecord.PowerGRTW / powerRecord.PowerGRTW - 1,12:F8}");
             Console.WriteLine($"Der EthaSys    : {derEtha,10:F5} {derivativesRecord.Etha / derEtha - 1,12:F8} {derEthaNum / derEtha - 1,12:F8}");

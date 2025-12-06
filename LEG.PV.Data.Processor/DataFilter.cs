@@ -20,7 +20,7 @@ namespace LEG.PV.Data.Processor
 
             for (var recordId = 0; recordId < recordsCount; recordId++)
             {      
-                if (pvRecords[recordId].GeometryFactors.DirectGeometryFactor <= 0.0)
+                if (!pvRecords[recordId].SolarGeometry.HasIrradiance)
                 {
                     initialValidRecords[recordId] = false;
                 }

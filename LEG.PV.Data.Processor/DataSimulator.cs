@@ -190,7 +190,7 @@ public class DataSimulator
                             DirectRadiationVariance: null
                             );
                         var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, 
-                            new PvGeometryFactors(
+                            new PvSolarGeometry(
                                 directGeometryFactor, 
                                 diffuseGeometryFactor, 
                                 sinSunElevation),
@@ -235,7 +235,7 @@ public class DataSimulator
                             new PvRecord(
                                 timeStamp, 
                                 pvRecords.Count, 
-                                new PvGeometryFactors(
+                                new PvSolarGeometry(
                                     directGeometryFactor,
                                     diffuseGeometryFactor,
                                     sinSunElevation

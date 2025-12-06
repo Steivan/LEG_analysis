@@ -28,7 +28,7 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(2, displayPeriod: 2);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(1, displayPeriod: 2);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)
@@ -36,6 +36,7 @@ namespace PV.Forecasting.App.Controllers
                     _pvRecordLabels = new Dictionary<string, List<string>>
                     {
                         { "Power", pvRecordLabels.PowerLabels },
+                        { "Residuals", pvRecordLabels.ResidualsLabels },
                         { "Irradiance", pvRecordLabels.RadiationLabels },
                         { "Ambient Temperature", pvRecordLabels.TemperatureLabels },
                         { "Wind Velocity", pvRecordLabels.WindSpeedLabels }
@@ -62,7 +63,8 @@ namespace PV.Forecasting.App.Controllers
                 .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Key).ToList());
             
             parameterGroups = new Dictionary<string, List<string>> {
-                { "Power", new List<string> { "MeasuredPower", "ComputedPower" } }
+                { "Power", new List<string> { "MeasuredPower", "PowerGR", "PowerGRTW", "PowerGRTWSF" } },
+                { "Residuals", new List<string> { "Reference", "UflGR", "UflGRTW", "UflGRTWSF" } }
             }.Concat(parameterGroups).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             var groupVariables = parameterGroups; // Already maps group → variables
@@ -71,24 +73,22 @@ namespace PV.Forecasting.App.Controllers
             var groupLocations = new Dictionary<string, List<string>>();
             foreach (var group in parameterGroups.Keys)
             {
-                if (group == "Power")
+                if (group == "Power" || group == "Residuals")
                     groupLocations[group] = new List<string> { "PV Site" };
                 else
                     groupLocations[group] = DataImporter.selectedStationsIdList; // or filter as needed
             }
 
-
-
-
             // 2. Set up default checked groups, variables, and locations (step 2)
-            var defaultCheckedGroups = new HashSet<string> { "Power", "Radiation", "Temperature", "Wind" };
+            var defaultCheckedGroups = new HashSet<string> { "Power", "Residuals", "Radiation", "Temperature", "Wind" };
             var defaultCheckedVariables = new Dictionary<string, HashSet<string>>
-{
-            { "Temperature", new HashSet<string> { "Temperature" } }, // DewPoint unchecked
-            { "Radiation", new HashSet<string> { "GlobalRadiation", "DiffuseRadiation" } }, // others unchecked
-            { "Wind", new HashSet<string> { "WindSpeed" } }, // others unchecked
-            // Add more as needed
-};
+            {
+                { "Temperature", new HashSet<string> { "Temperature" } }, // DewPoint unchecked
+                { "Radiation", new HashSet<string> { "GlobalRadiation", "DiffuseRadiation" } }, // others unchecked
+                { "Wind", new HashSet<string> { "WindSpeed" } }, // others unchecked
+                // Add more as needed
+            };
+
             // For locations, you can default to all checked or a subset
             var defaultCheckedLocations = new Dictionary<string, HashSet<string>>();
             // ...build this as needed...
@@ -293,9 +293,20 @@ namespace PV.Forecasting.App.Controllers
                 return timeSeriesName switch
                 {
                     "MeasuredPower" => Colors.Red,
-                    "PowerG" => Colors.Purple,
+                    "PowerGR" => Colors.Purple,
                     "PowerGRTW" => Colors.Blue,
-                    "PowerGRTWFS" => Colors.Green,
+                    "PowerGRTWSF" => Colors.Green,
+                    _ => Colors.Gray
+                };
+            }
+            if (groupName == "Residuals")
+            {
+                return timeSeriesName switch
+                {
+                    "Reference" => Colors.Red,
+                    "UflGR" => Colors.Purple,
+                    "UflGRTW" => Colors.Blue,
+                    "UflGRTWSF" => Colors.Green,
                     _ => Colors.Gray
                 };
             }
@@ -354,6 +365,7 @@ namespace PV.Forecasting.App.Controllers
             var list = groupName switch
             {
                 "Power" => record.Power,
+                "Residuals" => record.Residuals,
                 "Irradiance" => record.Radiation,
                 "Ambient Temperature" => record.Temperature,
                 "Wind Velocity" => record.WindSpeed,

@@ -27,7 +27,13 @@
         internal const double minLDegr = 0.0;
         internal const double maxLDegr = 0.03;
 
-        // Fog and Snow priors
+        // Snow and fog priors
+
+        internal const double meanLambdaDSnow = 1.0;
+        internal const double sigmaLambdaDSnow = 5.0;
+        internal const double minLambdaDSnow = double.MinValue;
+        internal const double maxLambdaDSnow = double.MaxValue;
+
         internal const double meanLambdaAFog = 0.0;
         internal const double sigmaLambdaAFog = 0.85;
         internal const double minLambdaAFog = double.MinValue;
@@ -39,22 +45,17 @@
         internal const double maxBFog = double.MaxValue;
 
         internal const double meanLambdaKFog = 1.95;
-        internal const double sigmaKFog = 0.5;
-        internal const double minKFog = double.MinValue;
-        internal const double maxKFog = double.MaxValue;
-
-        internal const double meanLambdaDSnow = 1.0;
-        internal const double sigmaDSnow = 5.0;
-        internal const double minDSnow = double.MinValue;
-        internal const double maxDSnow = double.MaxValue;
+        internal const double sigmaLambdaKFog = 0.5;
+        internal const double minLambdaKFog = double.MinValue;
+        internal const double maxLambdaKFog = double.MaxValue;
 
         public static PvModelParams GetAllPriorsMeans()
         {
-            return new PvModelParams(meanEthaSys, meanGamma, meanU0, meanU1, meanLDegr, meanLambdaAFog, meanBFog, meanLambdaKFog, meanLambdaDSnow);
+            return new PvModelParams(meanEthaSys, meanGamma, meanU0, meanU1, meanLDegr, meanLambdaDSnow, meanLambdaAFog, meanBFog, meanLambdaKFog);
         }
         public static PvModelParams GetAllPriorsSigmas()
         {
-            return new PvModelParams(sigmaEthaSys, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr, sigmaLambdaAFog, sigmaBFog, sigmaKFog, sigmaDSnow);
+            return new PvModelParams(sigmaEthaSys, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr, sigmaLambdaDSnow, sigmaLambdaAFog, sigmaBFog, sigmaLambdaKFog);
         }
         public static (double mean, double sigma, double min, double max) GetPriorsEtha()
         {
@@ -81,7 +82,11 @@
             return (meanLDegr, sigmaLDegr, minLDegr, maxLDegr);
         }
 
-        // Fog and Snow priors
+        // Snow and fog priors
+        public static (double mean, double sigma, double min, double max) GetPriorsDSnow()
+        {
+            return (meanLambdaDSnow, sigmaLambdaDSnow, minLambdaDSnow, maxLambdaDSnow);
+        }
 
         public static (double mean, double sigma, double min, double max) GetPriorsLambdaAFog()
         {
@@ -95,27 +100,22 @@
 
         public static (double mean, double sigma, double min, double max) GetPriorsKFog()
         {
-            return (meanLambdaKFog, sigmaKFog, minKFog, maxKFog);
-        }
-
-        public static (double mean, double sigma, double min, double max) GetPriorsDSnow()
-        {
-            return (meanLambdaDSnow, sigmaDSnow, minDSnow, maxDSnow);
+            return (meanLambdaKFog, sigmaLambdaKFog, minLambdaKFog, maxLambdaKFog);
         }
 
         public static (double mean, double sigma, double min, double max) GetPriorSignature(int priorIndex)
         {
-            return (priorIndex % 5) switch
+            return (priorIndex % PvModelParams.PvModelParamsCount) switch
             {
-                0 => GetPriorsEtha(),
-                1 => GetPriorsGamma(),
-                2 => GetPriorsU0(),
-                3 => GetPriorsU1(),
-                4 => GetPriorsLDegr(),
-                5 => GetPriorsLambdaAFog(),
-                6 => GetPriorsBFog(),
-                7 => GetPriorsKFog(),
-                8 => GetPriorsDSnow(),
+                PvModelParams.IndexEtha => GetPriorsEtha(),
+                PvModelParams.IndexGamma => GetPriorsGamma(),
+                PvModelParams.IndexU0 => GetPriorsU0(),
+                PvModelParams.IndexU1 => GetPriorsU1(),
+                PvModelParams.IndexLDegr => GetPriorsLDegr(),
+                PvModelParams.IndexLambdaDSnow => GetPriorsDSnow(),
+                PvModelParams.IndexLambdaAFog => GetPriorsLambdaAFog(),
+                PvModelParams.IndexBFog => GetPriorsBFog(),
+                PvModelParams.IndexLambdaKFog => GetPriorsKFog(),
                 _ => throw new ArgumentOutOfRangeException(nameof(priorIndex), "Invalid prior index")
             };
         }
@@ -136,6 +136,7 @@
             var (mean, sigma, _, _) = GetPriorSignature(priorIndex);
             return mean != 0 ? Math.Abs(sigma / mean) : double.NaN;
         }
+
         public static double GetPriorMin(int priorIndex)
         {
             var (_, _, min, _) = GetPriorSignature(priorIndex);

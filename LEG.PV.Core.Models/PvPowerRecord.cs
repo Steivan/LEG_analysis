@@ -8,33 +8,33 @@
             PowerGR = power;
             PowerGRT = power;
             PowerGRTW = power;
-            PowerGRTWF = power;
-            PowerGRTWFS = power;
+            PowerGRTWS = power;
+            PowerGRTWSF = power;
         }
-        public PvPowerRecord(double powerG, double powerGRTWFS)  // Simplified constructor for geometry only (G) and geometry + weather
+        public PvPowerRecord(double powerG, double powerGRTWSF)  // Simplified constructor for geometry only (G) and geometry + weather
         {
             PowerG = powerG;
-            PowerGR = powerGRTWFS;
-            PowerGRT = powerGRTWFS;
-            PowerGRTW = powerGRTWFS;
-            PowerGRTWF = powerGRTWFS;
-            PowerGRTWFS = powerGRTWFS;
+            PowerGR = powerGRTWSF;
+            PowerGRT = powerGRTWSF;
+            PowerGRTW = powerGRTWSF;
+            PowerGRTWS = powerGRTWSF;
+            PowerGRTWSF = powerGRTWSF;
         }
-        public PvPowerRecord(double pG, double pGR, double pGRT, double pGRTW, double pGRTWF, double pRTGWFS) // Full constructor
+        public PvPowerRecord(double pG, double pGR, double pGRT, double pGRTW, double pGRTWS, double pRTGWSF) // Full constructor
         {
             PowerG = pG;
             PowerGR = pGR;
             PowerGRT = pGRT;
             PowerGRTW = pGRTW;
-            PowerGRTWF = pGRTWF;
-            PowerGRTWFS = pRTGWFS;
+            PowerGRTWS = pGRTWS;
+            PowerGRTWSF = pRTGWSF;
 
         }
         public double PowerG { get; init; }                                                       // [W] Geometry
         public double PowerGR { get; init; }                                                       // [W] G + Radiation
         public double PowerGRT { get; init; }                                                      // [W] GR + Temperature
         public double PowerGRTW { get; init; }                                                     // [W] GRT + Wind
-        public double PowerGRTWF { get; init; }                                                    // [W] GRTW + Fog
-        public double PowerGRTWFS { get; init; }                                                   // [W] GRTWF + Snow
+        public double PowerGRTWS { get; init; }                                                    // [W] GRTW + Snow
+        public double PowerGRTWSF { get; init; }                                                   // [W] GRTWS + Fog
     }
 }

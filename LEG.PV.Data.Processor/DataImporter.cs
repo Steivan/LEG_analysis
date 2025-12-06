@@ -149,7 +149,7 @@ namespace LEG.PV.Data.Processor
                     );
                 dataRecords.Add(pvRecord);
                 var validE3Dc = solarProduction.HasValue && solarProduction.Value > 0.0;
-                validRecords.Add(pvRecord.GeometryFactors.DirectGeometryFactor > 0 || validE3Dc);
+                validRecords.Add(pvRecord.SolarGeometry.HasIrradiance || validE3Dc);
             }
 
             return new MeteoImportResult(perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
@@ -271,20 +271,27 @@ namespace LEG.PV.Data.Processor
                 }
 
                 var record = dataRecords[index];
-                var computedPower = record.ComputedPower(pvModelParams, installedPower, periodsPerHour: periodsPerHour);
+                var pvDataRecord = record.GetPvResidualsRecord(pvModelParams, installedPower, periodsPerHour: periodsPerHour);
+                var computedPower = pvDataRecord.ComputedPower;
+                var residualsRecord = pvDataRecord.UnexplainedFractionLossRecord;
+                var referenceResidual = computedPower.PowerG / (installedPower / periodsPerHour);
+                var hasCalculated = pvDataRecord.HasCalculated;
 
                 // Build lists for the current record, including the base series and the valid reference series
                 List<double?> radiationList = [];
+                List<double?> residualsList = [];
                 List<double?> temperatureList = [];
                 List<double?> windSpeedList = [];
                 radiationList.AddRange(filteredRadiationSeries.Select(series => series[index]));
+                residualsList.AddRange(filteredRadiationSeries.Select(series => series[index]));
                 temperatureList.AddRange(filteredTemperatureSeries.Select(series => series[index]));
                 windSpeedList.AddRange(filteredWindSpeedSeries.Select(series => series[index]));
 
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
                     record.Index,
-                    [record.MeasuredPower, computedPower.PowerG, computedPower.PowerGRTW, computedPower.PowerGRTWFS],
+                    [record.MeasuredPower, computedPower.PowerGR, computedPower.PowerGRTW, computedPower.PowerGRTWSF],
+                    [referenceResidual, residualsRecord.PowerGR, residualsRecord.PowerGRTW, residualsRecord.PowerGRTWSF],
                     radiationList,
                     temperatureList,
                     windSpeedList
@@ -308,7 +315,7 @@ namespace LEG.PV.Data.Processor
         {
             List<PvModelParams> pvModelParamsList
                 = [
-                GetDefaultPriorModelParams(),
+                PvPriorConfig.GetAllPriorsMeans(),
                 new(
                     0.619,
                     -0.00461,
@@ -380,7 +387,8 @@ namespace LEG.PV.Data.Processor
             }
 
             var dataRecordLabels = new PvRecordLabels(
-                ["MeasuredPower", "PowerG", "PowerGRTW", "PowerGRTWFS"],
+                ["MeasuredPower", "PowerGR", "PowerGRTW", "PowerGRTWSF"],
+                ["Reference", "UflGR", "UflGRTW", "UflGRTWSF"],
                 filteredRadiationLabels,
                 filteredTemperatureLabels,
                 filteredWindSpeedLabels);
@@ -393,7 +401,7 @@ namespace LEG.PV.Data.Processor
         // Fetch computed pv production data and geometry factors
         private async Task<(
             List<DateTime> timeStamps,
-            List<PvGeometryFactors> geometryFactors,
+            List<PvSolarGeometry> geometryFactors,
             double installedPower)>
             PvProduction(
             string siteId,
@@ -414,7 +422,7 @@ namespace LEG.PV.Data.Processor
             var horizonControlProvider = new SampleSiteHorizonControlProvider();
 
             var timeStamps = new List<DateTime>();
-            var geometryFactors = new List<PvGeometryFactors>(); 
+            var geometryFactors = new List<PvSolarGeometry>(); 
 
             var installedKwP = 0.0;
             for (var year = startTime.Year; year <= endTime.Year; year++)
@@ -441,7 +449,7 @@ namespace LEG.PV.Data.Processor
                     if (ts >= startTime && ts <= endTime && ts.Year == year)
                     {
                         timeStamps.Add(ts);
-                        geometryFactors.Add(new PvGeometryFactors(
+                        geometryFactors.Add(new PvSolarGeometry(
                             results.DirectGeometryFactors[i],
                             results.DiffuseGeometryFactor,
                             results.SinSunElevations[i]

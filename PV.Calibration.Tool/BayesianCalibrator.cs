@@ -20,7 +20,7 @@ namespace PV.Calibration.Tool
         public delegate (PvPowerRecord powerRecord, PvModelParams paramDerivatives) JacobianFunc(
         //public delegate (PvPowerRecord Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
             double installedPower, int periodsPerHour, 
-            PvGeometryFactors geometryFactors,
+            PvSolarGeometry geometryFactors,
             //double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
             MeteoParameters meteoParameters,
             double age,
@@ -103,7 +103,7 @@ namespace PV.Calibration.Tool
                     var (powerRecord, derivativesRecord) = jacobianFunc(
                         installedPower,
                         periodsPerHour,
-                        pvRecord.GeometryFactors,
+                        pvRecord.SolarGeometry,
                         pvRecord.MeteoParameters,
                         pvRecord.Age,
                         modelParams);
