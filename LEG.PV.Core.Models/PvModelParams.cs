@@ -1,6 +1,7 @@
 ﻿
 namespace LEG.PV.Core.Models
 {
+
     public record PvModelParams
     {
         internal const int IndexEtha = 0;
@@ -13,11 +14,24 @@ namespace LEG.PV.Core.Models
         internal const int IndexBFog = 7;
         internal const int IndexLambdaKFog = 8;
 
-        internal const int PvModelParamsCount = 9;
+        public const int PvModelParamsCount = 9;
+
+        public const string EthaName = "Etha";
+        public const string GammaName = "Gamma";
+        public const string U0Name = "U0";
+        public const string U1Name = "U1";
+        public const string LDegrName = "LDegr";
+        public const string DSnowName = "DSnow";
+        public const string LambdaDSnowName = "LambdaDSnow";
+        public const string AFogName = "AFog";
+        public const string LambdaAFogName = "LambdaAFog";
+        public const string BFogName = "BFog";
+        public const string KFogName = "KFog";
+        public const string LambdaKFogName = "LambdaKFog";
 
         public PvModelParams(double etha, double gamma, double u0, double u1, double lDegr,
-            double ldaDSnow = PvPriorConfig.meanLambdaDSnow,
-            double ldaAFog = PvPriorConfig.meanLambdaAFog, double bFog = PvPriorConfig.meanBFog, double ldaKFog = PvPriorConfig.meanLambdaKFog)
+            double lambdadaDSnow = PvPriorConfig.meanLambdaDSnow,
+            double lambdaAFog = PvPriorConfig.meanLambdaAFog, double bFog = PvPriorConfig.meanBFog, double lambdaKFog = PvPriorConfig.meanLambdaKFog)
         {
             Etha = etha;
             Gamma = gamma;
@@ -25,16 +39,16 @@ namespace LEG.PV.Core.Models
             U1 = u1;
             LDegr = lDegr;
             // Snow and fog parameters with defaults
-            LambdaDSnow = ldaDSnow;
-            DSnow = Math.Exp(ldaKFog);
-            LambdaAFog = ldaAFog;
-            var zAFog = Math.Exp(-ldaAFog);
+            LambdaDSnow = lambdadaDSnow;
+            DSnow = Math.Exp(lambdaKFog);
+            LambdaAFog = lambdaAFog;
+            var zAFog = Math.Exp(-lambdaAFog);
             var aFog = 1.0 / (1 + zAFog);
             AFog = aFog;
             PartialAFog = aFog * aFog * zAFog;
             BFog = bFog;
-            LambdaKFog = ldaKFog;
-            KFog = Math.Exp(ldaKFog);
+            LambdaKFog = lambdaKFog;
+            KFog = Math.Exp(lambdaKFog);
         }
 
         public double Etha { get; init; }
@@ -54,5 +68,22 @@ namespace LEG.PV.Core.Models
         public double LambdaKFog { get; init; }
         public double KFog { get; init; }
         public double PartialKFog => KFog;
+
+        public (string Name, double Value) GetNameAndValue(int index, bool useLambda = false)
+        {
+            return index switch
+            {
+                IndexEtha => ($"{EthaName}", Etha),
+                IndexGamma => ($"{GammaName}", Gamma),
+                IndexU0 => ($"{U0Name}", U0),
+                IndexU1 => ($"{U1Name}", U1),
+                IndexLDegr => ($"{LDegrName}", LDegr),
+                IndexLambdaDSnow => useLambda ? ($"{LambdaDSnowName}", LambdaDSnow) : ($"{DSnowName}", DSnow),
+                IndexLambdaAFog => useLambda ? ($"{LambdaAFogName}", LambdaAFog) : ($"{AFogName}", AFog),
+                IndexBFog => ($"{BFogName}", BFog),
+                IndexLambdaKFog => useLambda ? ($"{LambdaKFogName}", LambdaKFog) : ($"{KFogName}", KFog),
+                _ => throw new ArgumentOutOfRangeException(nameof(index), "Invalid index")
+            };
+        }
     }
 }

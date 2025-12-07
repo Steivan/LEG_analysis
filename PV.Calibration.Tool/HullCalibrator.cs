@@ -6,7 +6,8 @@ namespace PV.Calibration.Tool
 {
     public class HullCalibrator
     {
-        public static (double EthaSystem, double LDeg, double EthaSystemUncertainty, double LDegUncertainty) CalibrateTrend(
+        public static (double EthaSystem, double LDeg, double EthaSystemUncertainty, double LDegUncertainty) 
+            CalibrateTrend(
             List<PvRecord> pvRecords, 
             double installedPower,
             int periodsPerHour,
@@ -37,8 +38,8 @@ namespace PV.Calibration.Tool
                 var dayIndex = record.Timestamp.Day;
                 var timeIndex = record.Timestamp.Hour * periodsPerHour + (record.Timestamp.Minute / minutesPerPeriod);
 
-                var computedPower = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
-                var theoreticalPower = computedPower.PowerGRTW;
+                var (computedPower, _) = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                var theoreticalPower = computedPower.PowerGRTWSF;
                 var measuredPower = record.HasMeasuredPower ? record.MeasuredPower.Value : theoreticalPower;
 
                 if (theoreticalPower > 0.0)

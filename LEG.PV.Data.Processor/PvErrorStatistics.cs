@@ -22,7 +22,8 @@ namespace LEG.PV.Data.Processor
                 if ( !initialValidRecords[recordIndex] )
                     continue;
                 var pvRecord = pvRecords[recordIndex];
-                var modeledPower = pvRecord.ComputedPower(pvModelParams, installedPower, periodsPerHour).PowerGRTW;
+                var (power, _) = pvRecord.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                var modeledPower = power.PowerGRTWSF;
                 errorList.Add(pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value - modeledPower : 0.0);
             }
 

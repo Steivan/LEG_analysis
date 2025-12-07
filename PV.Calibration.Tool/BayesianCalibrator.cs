@@ -1,43 +1,66 @@
-﻿using LEG.PV.Data.Processor;
-using MathNet.Numerics.LinearAlgebra;
-
+﻿using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.PvPriorConfig;
+using LEG.PV.Data.Processor;
+using MathNet.Numerics.LinearAlgebra;
 using static LEG.PV.Core.Models.PvDataClass;
-using LEG.MeteoSwiss.Abstractions.Models;
+using static LEG.PV.Core.Models.PvPriorConfig;
+using static PV.Calibration.Tool.BayesianCalibrator;
 
 namespace PV.Calibration.Tool
 {
     public class BayesianCalibrator
     {
-        // Define the number of parameters being calibrated (etha, gamma, u0, u1, lDegr)
-        private const int ParameterCount = 5;
+        // Define the number of parameters being calibrated
+        // GRTW: etha, gamma, u0, u1, lDegr
+        // SF: lambdaA, B, lambdaK
+        private const int Offset_GRTW = 0;
+        private const int ParameterCount_GRTW = 5;
+        private const int Offset_SF = ParameterCount_GRTW + 1;
+        private const int ParameterCount_SF = 3;
         // Estimated variance of measurement noise (Adjust this based on data analysis)
-        private const double SigmaDataSquared = 50.0 * 50.0; // e.g., 50W standard deviation
+        private const double BaselineCv = 0.005; // => 50W per 10kW standard deviation
 
         // Delegate matching the required Jacobian function signature
-        // NOTE: The geometryFactor (GPOA/Gref) is implicitly included in the inputs.
         public delegate (PvPowerRecord powerRecord, PvModelParams paramDerivatives) JacobianFunc(
-        //public delegate (PvPowerRecord Peff, double d_etha, double d_gamma, double d_u0, double d_u1, double d_lDegr) JacobianFunc(
             double installedPower, int periodsPerHour, 
             PvSolarGeometry geometryFactors,
-            //double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
             MeteoParameters meteoParameters,
             double age,
             PvModelParams modelParams);
 
         public record PvPriors
         {
-            public double EthaSysMean { get; init; } = GetPriorMean(0);
-            public double EthaSysStdDev { get; init; } = GetPriorSigma(0);
-            public double GammaMean { get; init; } = GetPriorMean(1);
-            public double GammaStdDev { get; init; } = GetPriorSigma(1);
-            public double U0Mean { get; init; } = GetPriorMean(2);
-            public double U0StdDev { get; init; } = GetPriorSigma(2);
-            public double U1Mean { get; init; } = GetPriorMean(3);
-            public double U1StdDev { get; init; } = GetPriorSigma(3);
-            public double LDegrMean { get; init; } = GetPriorMean(4);
-            public double LDegrStdDev { get; init; } = GetPriorSigma(4);
+            public PvModelParams PriorMeans { get; init; } = GetAllPriorsMeans();
+            public PvModelParams PriorSigmas { get; init; } = GetAllPriorsSigmas();
+        }
+
+        private static PvModelParams ThetaToPvModelParams(Vector<double> theta_GRTW, Vector<double> theta_SF, PvModelParams defaultParams)
+        {
+            return new PvModelParams(
+                etha: theta_GRTW[0],
+                gamma: theta_GRTW[1],
+                u0: theta_GRTW[2],
+                u1: theta_GRTW[3],
+                lDegr: theta_GRTW[4],
+                lambdadaDSnow: defaultParams.LambdaDSnow,
+                lambdaAFog: theta_SF[0],
+                bFog: theta_SF[1],
+                lambdaKFog: theta_SF[2]
+                );
+        }
+
+        private static (Vector<double> theta_GRTW, Vector<double> theta_SF) PvModelParamsToTheta(PvModelParams modelParams)
+        {
+            return ( 
+                Vector<double>.Build.DenseOfArray(new double[]
+                {
+                    modelParams.Etha, modelParams.Gamma, modelParams.U0, modelParams.U1, modelParams.LDegr
+                }),
+                Vector<double>.Build.DenseOfArray(new double[]
+                {
+                    modelParams.LambdaAFog, modelParams.BFog, modelParams.LambdaKFog
+                })
+                );
         }
 
         // --- Core Calibration Method ---
@@ -45,39 +68,48 @@ namespace PV.Calibration.Tool
             List<PvRecord> pvRecords,
             PvPriors pvPriors,
             JacobianFunc jacobianFunc,
-            List<bool>? validRecords = null,
-            double installedPower = 10.0,
+            List<bool>? validRecords,
+            double installedPower,
             int periodsPerHour = 6,
             double tolerance = 1e-6,
             int maxIterations = 50)
         {
             // 1. Setup Initial Parameter Vector (theta_0)
-            Vector<double> theta = Vector<double>.Build.DenseOfArray(new double[]
-            {
-                pvPriors.EthaSysMean, pvPriors.GammaMean, pvPriors.U0Mean, pvPriors.U1Mean, pvPriors.LDegrMean
-            });
+            var modelParams = pvPriors.PriorMeans;
+            var (theta_GRTW, theta_SF) = PvModelParamsToTheta(modelParams);
 
             // 2. Setup Prior Precision Matrix (Lambda_prior = Sigma_prior^-1)
             // Assuming diagonal covariance (independent priors)
 
             // 1. Vector of Variances (sigma^2 for each parameter)
-            Vector<double> sigma2 = Vector<double>.Build.DenseOfArray(new double[]
+            Vector<double> sigma2_GRTW = Vector<double>.Build.DenseOfArray(new double[]
             {
-                pvPriors.EthaSysStdDev * pvPriors.EthaSysStdDev,
-                pvPriors.GammaStdDev * pvPriors.GammaStdDev,
-                pvPriors.U0StdDev * pvPriors.U0StdDev,
-                pvPriors.U1StdDev * pvPriors.U1StdDev,
-                pvPriors.LDegrStdDev * pvPriors.LDegrStdDev
+                pvPriors.PriorSigmas.Etha * pvPriors.PriorSigmas.Etha,
+                pvPriors.PriorSigmas.Gamma * pvPriors.PriorSigmas.Gamma,
+                pvPriors.PriorSigmas.U0 * pvPriors.PriorSigmas.U0,
+                pvPriors.PriorSigmas.U1 * pvPriors.PriorSigmas.U1,
+                pvPriors.PriorSigmas.LDegr * pvPriors.PriorSigmas.LDegr
+            });
+            Vector<double> sigma2_SF = Vector<double>.Build.DenseOfArray(new double[]
+            {
+                pvPriors.PriorSigmas.LambdaAFog * pvPriors.PriorSigmas.LambdaAFog,
+                pvPriors.PriorSigmas.BFog * pvPriors.PriorSigmas.BFog,
+                pvPriors.PriorSigmas.LambdaKFog * pvPriors.PriorSigmas.LambdaKFog
             });
 
-             // 2. Calculate the scaled precision vector (1/sigma^2 * 1/SigmaDataSquared)
-            Vector<double> diagonalValuesVector = sigma2.Map(x => 1.0 / x).Multiply(1.0 / SigmaDataSquared);
+            // 2. Calculate the scaled precision vector (1/sigma^2 * 1/SigmaDataSquared)
+            var dataPrecision = 1.0 / Math.Pow(installedPower * BaselineCv, 2);
+            Vector<double> diagonalValuesVector_GRTW = sigma2_GRTW.Map(x => 1.0 / x).Multiply(dataPrecision);
+            Vector<double> diagonalValuesVector_SF = sigma2_SF.Map(x => 1.0 / x).Multiply(dataPrecision);
 
             // 3. Convert the Vector<double> to a double array to match the Build.Diagonal signature
-            Matrix<double> lambdaPrior = Matrix<double>.Build.Diagonal(diagonalValuesVector.ToArray());
+            Matrix<double> lambdaPrior_GRTW = Matrix<double>.Build.Diagonal(diagonalValuesVector_GRTW.ToArray());
+            Matrix<double> lambdaPrior_SF = Matrix<double>.Build.Diagonal(diagonalValuesVector_SF.ToArray());
 
-            Vector<double> muPrior = Vector<double>.Build.DenseOfArray(new double[]
-                { pvPriors.EthaSysMean, pvPriors.GammaMean, pvPriors.U0Mean, pvPriors.U1Mean, pvPriors.LDegrMean });
+            Vector<double> muPrior_GRTW = Vector<double>.Build.DenseOfArray(new double[]
+                { pvPriors.PriorMeans.Etha, pvPriors.PriorMeans.Gamma, pvPriors.PriorMeans.U0, pvPriors.PriorMeans.U1, pvPriors.PriorMeans.LDegr });
+            Vector<double> muPrior_SF = Vector<double>.Build.DenseOfArray(new double[]
+                { pvPriors.PriorMeans.LambdaAFog, pvPriors.PriorMeans.BFog, pvPriors.PriorMeans.LambdaKFog });
 
             int nrRecords = pvRecords.Count;
             bool applyDataFilter = validRecords != null && validRecords.Count == nrRecords;
@@ -86,12 +118,16 @@ namespace PV.Calibration.Tool
             for (int k = 0; k < maxIterations; k++)
             {
                 // Unpack current parameters
-                var modelParams = new PvModelParams(etha: theta[0], gamma: theta[1], u0: theta[2], u1: theta[3], lDegr: theta[4]);
+                modelParams = ThetaToPvModelParams(theta_GRTW, theta_SF, modelParams);
 
                 // 3. Build Jacobian (J) and Residual Vector (r = Y - P_eff)
-                Matrix<double> J = Matrix<double>.Build.Dense(nrRecords, ParameterCount);
-                Vector<double> Y = Vector<double>.Build.Dense(nrRecords);
-                Vector<double> Peff_model = Vector<double>.Build.Dense(nrRecords);
+                Matrix<double> J_GRTW = Matrix<double>.Build.Dense(nrRecords, ParameterCount_GRTW);
+                Vector<double> Y_GRTW = Vector<double>.Build.Dense(nrRecords);
+                Vector<double> Peff_Model_GRTW = Vector<double>.Build.Dense(nrRecords);
+
+                Matrix<double> J_SF = Matrix<double>.Build.Dense(nrRecords, ParameterCount_SF);
+                Vector<double> Y_SF = Vector<double>.Build.Dense(nrRecords);
+                Vector<double> Peff_Model_SF = Vector<double>.Build.Dense(nrRecords);
 
                 for (int i = 0; i < nrRecords; i++)
                 { 
@@ -99,66 +135,89 @@ namespace PV.Calibration.Tool
                         continue;
 
                     var pvRecord = pvRecords[i];
-                    // Call the user's provided Jacobian function
-                    var (powerRecord, derivativesRecord) = jacobianFunc(
-                        installedPower,
-                        periodsPerHour,
-                        pvRecord.SolarGeometry,
-                        pvRecord.MeteoParameters,
-                        pvRecord.Age,
-                        modelParams);
+                    // Call the user's provided Jacobian function => obtained via pvRecord.GetPvResidualsRecord(...)
+
+                    //var (powerRecord, derivativesRecord) = jacobianFunc(
+                    //    installedPower,
+                    //    periodsPerHour,
+                    //    pvRecord.SolarGeometry,
+                    //    pvRecord.MeteoParameters,
+                    //    pvRecord.Age,
+                    //    modelParams);
 
                     // Weighting (if applicable)
-                    var weight = pvRecord.HasMeasuredPower ? pvRecord.Weight : 0.0;
-                    //weight = 1.0;
+                    var weight_GRTW = pvRecord.HasMeasuredPower ? pvRecord.Weight : 0.0;
+                    var weight_SF = pvRecord.HasMeasuredPower ? 1.0 : 0.0;
 
-                    // Residual Vector r
-                    Y[i] = pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value * weight : 0.0;      // TODO: Apply weighting
-                    Peff_model[i] = powerRecord.PowerGRTW * weight;
+                    // Power, Derivatives and Residual Vector r
+                    var recordValues = pvRecord.GetPvResidualsRecord(modelParams, installedPower, periodsPerHour);
+                    var calculated = recordValues.HasCalculated;
+                    var measured = recordValues.HasMeasured;
+
+                    if (!calculated || !measured)
+                        continue;
+
+                    var powerRecord = recordValues.ComputedPower;
+                    var derivativesRecord = recordValues.Derivatives;
+                    var unexplainedFractionLossRecord = recordValues.UnexplainedFractionLossRecord;
+
+                    Y_GRTW[i] = pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value * weight_GRTW : 0.0; 
+                    Peff_Model_GRTW[i] = powerRecord.PowerGRTWSF * weight_GRTW;
+
+                    Y_SF[i] = 0.0 * weight_SF;   // Target is zero unexplained loss 
+                    Peff_Model_SF[i] = unexplainedFractionLossRecord.PowerGRTWSF * weight_SF;
 
                     // Jacobian Matrix J
-                    J[i, 0] = derivativesRecord.Etha* weight;
-                    J[i, 1] = derivativesRecord.Gamma * weight;
-                    J[i, 2] = derivativesRecord.U0 * weight;
-                    J[i, 3] = derivativesRecord.U1 * weight;
-                    J[i, 4] = derivativesRecord.LDegr * weight;
+                    J_GRTW[i, 0] = derivativesRecord.Etha* weight_GRTW;
+                    J_GRTW[i, 1] = derivativesRecord.Gamma * weight_GRTW;
+                    J_GRTW[i, 2] = derivativesRecord.U0 * weight_GRTW;
+                    J_GRTW[i, 3] = derivativesRecord.U1 * weight_GRTW;
+                    J_GRTW[i, 4] = derivativesRecord.LDegr * weight_GRTW;
+
+                    J_SF[i, 0] = derivativesRecord.LambdaAFog * weight_SF;
+                    J_SF[i, 1] = derivativesRecord.BFog * weight_SF;
+                    J_SF[i, 2] = derivativesRecord.LambdaKFog * weight_SF;
                 }
 
-                Vector<double> residual = Y.Subtract(Peff_model);
+                Vector<double> residual_GRTW = Y_GRTW.Subtract(Peff_Model_GRTW);
+
+                Vector<double> residual_SF = Y_SF.Subtract(Peff_Model_SF);              // Remark: Y_SF = 0
 
                 // 4. Form the Penalized Normal Equation components: M * Delta_theta = b
                 // M = J^T * J + Lambda_prior
-                Matrix<double> JTJ = J.Transpose() * J;
-                Matrix<double> M = JTJ.Add(lambdaPrior);
+                Matrix<double> JTJ_GRTW = J_GRTW.Transpose() * J_GRTW;
+                Matrix<double> M_GRTW = JTJ_GRTW.Add(lambdaPrior_GRTW);
+
+                Matrix<double> JTJ_SF = J_SF.Transpose() * J_SF;
+                Matrix<double> M_SF = JTJ_SF.Add(lambdaPrior_SF);
 
                 // b = J^T * r - Lambda_prior * (theta_k - mu_prior)
-                Vector<double> JT_r = J.Transpose() * residual;
-                Vector<double> prior_penalty = lambdaPrior * (theta.Subtract(muPrior));
-                Vector<double> b = JT_r.Subtract(prior_penalty);
+                Vector<double> JT_r_GRTW = J_GRTW.Transpose() * residual_GRTW;
+                Vector<double> prior_penalty_GRTW = lambdaPrior_GRTW * (theta_GRTW.Subtract(muPrior_GRTW));
+                Vector<double> b_GRTW = JT_r_GRTW.Subtract(prior_penalty_GRTW);
+
+                Vector<double> JT_r_SF = J_SF.Transpose() * residual_SF;
+                Vector<double> prior_penalty_SF = lambdaPrior_SF * (theta_SF.Subtract(muPrior_SF));
+                Vector<double> b_SF = JT_r_SF.Subtract(prior_penalty_SF);
 
                 // 5. Solve for Delta_theta
-                Vector<double> deltaTheta = M.Solve(b);
+                Vector<double> deltaTheta_GRTW = M_GRTW.Solve(b_GRTW);
+                Vector<double> deltaTheta_SF = M_SF.Solve(b_SF);
 
                 // 6. Update Parameters
-                theta = theta.Add(deltaTheta);
+                theta_GRTW = theta_GRTW.Add(deltaTheta_GRTW);
+                theta_SF = theta_SF.Add(deltaTheta_SF);
 
                 // 7. Enforce Hard Physical Constraints (Clamping/Projection)
-                ClampParameters(ref theta);
+                ClampParameters_GRTW(ref theta_GRTW);
+                ClampParameters_SF(ref theta_SF);
 
                 // Store calibrated parameters for this iteration
-                thetaCalibratedList.Add(
-                    new PvModelParams(
-                        etha: theta[0],
-                        gamma: theta[1],
-                        u0: theta[2],
-                        u1: theta[3],
-                        lDegr: theta[4]
-                        )
-                    );
+                thetaCalibratedList.Add(ThetaToPvModelParams(theta_GRTW, theta_SF, modelParams));
 
                 // Check for convergence before update
                 iterations++;
-                if (deltaTheta.L2Norm() < tolerance)
+                if (deltaTheta_GRTW.L2Norm() < tolerance)
                 {
                     System.Console.WriteLine($"Converged after {k + 1} iterations.");
                     break;
@@ -177,11 +236,19 @@ namespace PV.Calibration.Tool
         }
 
         // --- Helper Method for Clamping ---
-        private static void ClampParameters(ref Vector<double> theta)
+        private static void ClampParameters_GRTW(ref Vector<double> theta)
         {
             for (int i = 0; i < theta.Count; i++)
             {
-                theta[i] = Math.Min(GetPriorMax(i), Math.Max(GetPriorMin(i), theta[i]));
+                theta[i] = Math.Min(GetPriorMax(i), Math.Max(GetPriorMin(Offset_GRTW + i), theta[i]));
+            }
+        }
+        private static void ClampParameters_SF(ref Vector<double> theta)
+        {
+            for (int i = 0; i < theta.Count; i++)
+            {
+                var paramIndex = Offset_SF + i;
+                theta[i] = Math.Min(GetPriorMax(paramIndex), Math.Max(GetPriorMin(paramIndex), theta[i]));
             }
         }
     }

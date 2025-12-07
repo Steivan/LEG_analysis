@@ -129,8 +129,8 @@ namespace LEG.PV.Data.Processor
                         indexOffset = timeIndex;
                     }
                     var age = (record.Timestamp - firstRecordDate).Days / daysPerYear;
-
-                    pTheoretical[timeIndex] = record.ComputedPower(pvModelParams, installedPower, periodsPerHour).PowerGRTW;
+                    var (power, _) = record.ComputedPower(pvModelParams, installedPower, periodsPerHour);
+                    pTheoretical[timeIndex] = power.PowerGRTWSF;
                     pMeasured[timeIndex] = record.HasMeasuredPower ? record.MeasuredPower.Value : pTheoretical[timeIndex];
                     hasPeriodData[timeIndex] = record.HasMeasuredPower && pTheoretical[timeIndex] > 0;
 

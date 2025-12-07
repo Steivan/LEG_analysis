@@ -6,6 +6,7 @@ namespace LEG.PV.Core.Models
         public bool HasCalculated { get; set; }
         public bool HasMeasured { get; set; }
         public PvPowerRecord ComputedPower { get; set; }
+        public PvModelParams Derivatives { get; set; }
         public PvPowerRecord UnexplainedFractionLossRecord { get; set; }
     }
 }

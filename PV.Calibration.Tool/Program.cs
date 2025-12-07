@@ -181,27 +181,19 @@ void ProcessPvData(
     double initialMeanSquaredError
     )
 {
-    var (meanEtha, sigmaEtha, minEtha, maxEtha) = GetPriorsEtha();
-    var (meanGamma, sigmaGamma, minGamma, maxGamma) = GetPriorsGamma();
-    var (meanU0, sigmaU0, minU0, maxU0) = GetPriorsU0();
-    var (meanU1, sigmaU1, minU1, maxU1) = GetPriorsU1();
-    var (meanLDegr, sigmaLDegr, minLDegr, maxLDegr) = GetPriorsLDegr();
+    var priorMeans = GetAllPriorsMeans();
+    var priorSigmas = GetAllPriorsMeans();
 
     var hasModelValidRecords = modelValidRecords != null && modelValidRecords.Any(v => v);
 
     var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, periodsPerHour, GetAllPriorsMeans());
+
     var hullPriors = new PvPriors
     {
-        EthaSysMean = ethaHull,
-        EthaSysStdDev = ethaHullUncertainty,
-        LDegrMean = LDegHull,
-        LDegrStdDev = LDegHullUncertainty,
-        GammaMean = meanGamma,
-        GammaStdDev = sigmaGamma,
-        U0Mean = meanU0,
-        U0StdDev = sigmaU0,
-        U1Mean = meanU1,
-        U1StdDev = sigmaU1
+        PriorMeans = new PvModelParams(ethaHull, priorMeans.Gamma, priorMeans.U0, priorMeans.U1, LDegHull,
+            priorMeans.LambdaDSnow, priorMeans.LambdaAFog, priorMeans.BFog, priorMeans.LambdaKFog),
+        PriorSigmas = new PvModelParams(ethaHullUncertainty, priorSigmas.Gamma, priorSigmas.U0, priorSigmas.U1, LDegHullUncertainty,
+            priorSigmas.LambdaDSnow, priorSigmas.LambdaAFog, priorSigmas.BFog, priorSigmas.LambdaKFog)
     };
 
     Console.WriteLine();
@@ -216,16 +208,6 @@ void ProcessPvData(
         periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
-
-    //public static (List<ModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
-    //    List<PvRecord> pvRecords,
-    //    PvPriors pvPriors,
-    //    JacobianFunc jacobianFunc,
-    //    List<bool>? validRecords = null,
-    //    double installedPower = 10.0,
-    //    int periodsPerHour = 6,
-    //    double tolerance = 1e-6,
-    //    int maxIterations = 50)
 
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 
@@ -305,15 +287,28 @@ void PrintCalibrationResults(PvPriors pvPriors, PvModelParams thetaModel, List<P
     int iterations, int maxIterations, 
     double meanSquaredError, double initialMeanSquaredError)
 {
+    void PrintModelParameters(int parameterIndex)
+    {
+        string name;
+        double prior, model, firstIt, calibrated;
+
+        (name, prior) = pvPriors.PriorMeans.GetNameAndValue(parameterIndex);
+        (_, model) = thetaModel.GetNameAndValue(parameterIndex);
+        (_, firstIt) = thetaCalibratedList[0].GetNameAndValue(parameterIndex);
+        (_, calibrated) = thetaCalibratedList[^1].GetNameAndValue(parameterIndex);
+
+        Console.WriteLine($"{name,9}{prior,10:F5}{model,10:F5}{firstIt,10:F5} ... {calibrated,10:F5}{(calibrated / model - 1) * 100,10:F3}");
+    }
+
     var thetaFirst = thetaCalibratedList[0];
     var thetaCalibrated = thetaCalibratedList[^1];
     Console.WriteLine($"Calibration Results ({iterations} / {maxIterations} iterations):");
     Console.WriteLine($"Parameter{"prior",10}{"model",10}{"1st it.",10}{"calibrated",15}{"delta %",10}");
-    Console.WriteLine($"Etha     {pvPriors.EthaSysMean,10:F5}{thetaModel.Etha,10:F5}{thetaFirst.Etha,10:F5} ... {thetaCalibrated.Etha,10:F5}{(thetaCalibrated.Etha / thetaModel.Etha - 1) * 100,10:F3}");
-    Console.WriteLine($"Gamma    {pvPriors.GammaMean,10:F5}{thetaModel.Gamma,10:F5}{thetaFirst.Gamma,10:F5} ... {thetaCalibrated.Gamma,10:F5}{(thetaCalibrated.Gamma / thetaModel.Gamma - 1) * 100,10:F3}");
-    Console.WriteLine($"U0       {pvPriors.U0Mean,10:F5}{thetaModel.U0,10:F5}{thetaFirst.U0,10:F5} ... {thetaCalibrated.U0,10:F5}{(thetaCalibrated.U0 / thetaModel.U0 - 1) * 100,10:F3}");
-    Console.WriteLine($"U1       {pvPriors.U1Mean,10:F5}{thetaModel.U1,10:F5}{thetaFirst.U1,10:F5} ... {thetaCalibrated.U1,10:F5}{(thetaCalibrated.U1 / thetaModel.U1 - 1) * 100,10:F3}");
-    Console.WriteLine($"LDegr    {pvPriors.LDegrMean,10:F5}{thetaModel.LDegr,10:F5}{thetaFirst.LDegr,10:F5} ... {thetaCalibrated.LDegr,10:F5}{(thetaCalibrated.LDegr / thetaModel.LDegr - 1) * 100,10:F3}");
+    for (int i = 0; i < PvModelParams.PvModelParamsCount; i++)
+    {
+        PrintModelParameters(i);
+    }
+
     Console.WriteLine($"Mean Squared Error: {meanSquaredError:F6} (initial: {initialMeanSquaredError:F6})");
     Console.WriteLine();
 }

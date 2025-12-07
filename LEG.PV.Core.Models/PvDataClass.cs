@@ -36,13 +36,30 @@ namespace LEG.PV.Core.Models
                 double installedPower,
                 int periodsPerHour)
             {
-                var computedPowerRecord = ComputedPower(modelParams, installedPower, periodsPerHour);
+                var (computedPowerRecord, derivatives) = ComputedPower(modelParams, installedPower, periodsPerHour);
                 var referencePower = installedPower / periodsPerHour;
                 var measuredPower = MeasuredPower ?? 0;
 
                 var unexplainedFractionalLoss = new PvPowerRecord(0);
                 if (SolarGeometry.HasIrradiance)
                 {
+                    // Calibration weight for snow and fog adjustments (implicitly applied to unexplainedFractionalLoss)
+                    // f_Snow and f_Fog are relative to PowerGRTW and PowerGRTWS, respectively
+                    // UFL is instead evaluated relative to installed power
+                    var weight_S = computedPowerRecord.PowerGRTW / referencePower;
+                    var weight_SF = computedPowerRecord.PowerGRTWS / referencePower;
+
+                    derivatives = new PvModelParams(
+                        etha: derivatives.Etha,
+                        gamma: derivatives.Gamma,
+                        u0: derivatives.U0,
+                        u1: derivatives.U1,
+                        lDegr: derivatives.LDegr,
+                        lambdadaDSnow: derivatives.LambdaDSnow * weight_S,
+                        lambdaAFog: derivatives.LambdaAFog * weight_SF,
+                        bFog: derivatives.BFog * weight_SF,
+                        lambdaKFog: derivatives.LambdaKFog * weight_SF
+                        );
                     unexplainedFractionalLoss = new PvPowerRecord(
                         (computedPowerRecord.PowerG - measuredPower) / referencePower,
                         (computedPowerRecord.PowerGR - measuredPower) / referencePower,
@@ -58,26 +75,31 @@ namespace LEG.PV.Core.Models
                     HasCalculated = SolarGeometry.HasIrradiance,
                     HasMeasured = HasMeasuredPower,
                     ComputedPower = computedPowerRecord,
+                    Derivatives = derivatives,
                     UnexplainedFractionLossRecord = unexplainedFractionalLoss
                 };
             }
-            public PvPowerRecord ComputedPower(                                                // P_computed [W]
+            public (PvPowerRecord power, PvModelParams derivatives) ComputedPower(                                                // P_computed [W]
                 PvModelParams modelParams,
                 double installedPower,
                 int periodsPerHour)
             {
-                if (!SolarGeometry.HasIrradiance)
+                var power = new PvPowerRecord(0);
+                var derivatives = new PvModelParams(0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+                if (SolarGeometry.HasIrradiance)
                 {
-                    return new PvPowerRecord(0);
+                    (power, derivatives) = PvPowerJacobian.PvJacobianFunc(
+                        installedPower,
+                        periodsPerHour,
+                        SolarGeometry,
+                        MeteoParameters,
+                        Age,
+                        modelParams
+                        );
                 }
-                return PvPowerJacobian.EffectiveCellPower(
-                    installedPower,
-                    periodsPerHour,
-                    SolarGeometry,
-                    MeteoParameters,
-                    Age,
-                    modelParams
-                    );
+
+                return (power, derivatives);
             }
         }
     }
