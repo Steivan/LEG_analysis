@@ -331,20 +331,50 @@ namespace LEG.PV.Data.Processor
         {
             List<PvModelParams> pvModelParamsList
                 = [
-                PvPriorConfig.GetAllPriorsMeans(),
+                PvPriorConfig.GetAllPriorsMeans(),      // Default priors used for index=0
                 new(
-                    0.619,
-                    -0.00461,
-                    213.7,
-                    0.173,
-                    0.0139
+                    etha: 0.606,
+                    gamma: -0.00503,
+                    u0: 2700,
+                    u1: 0.0,
+                    lDegr: 0.0117,
+                    lambdaDSnow: 2.72,
+                    lambdaAFog: 0.476,
+                    bFog: 1.38,
+                    lambdaKFog: 1.1
                 ),
                 new(             // SennV: elevation 35° 
-                    0.478,
-                    -0.00096,
-                    29.0,
-                    0.500,
-                    0.00631
+                    etha: 0.477,
+                    gamma: -0.0006,
+                    u0: 6.8,
+                    u1: 0.0,
+                    lDegr: 0.00747,
+                    lambdaDSnow: 2.72,
+                    lambdaAFog: 0.433,
+                    bFog: -3.57,
+                    lambdaKFog: 0.018
+                ),
+                new(                                    // initial calibration without Snow/Fog
+                    etha: 0.619,
+                    gamma: -0.00461,
+                    u0: 213.7,
+                    u1: 0.173,
+                    lDegr: 0.0139,
+                    lambdaDSnow: 2.0,
+                    lambdaAFog: 2.0,
+                    bFog: 1.0,
+                    lambdaKFog: 2.0
+                ),
+                new(             // SennV: elevation 35° 
+                    etha: 0.478,
+                    gamma: -0.00096,
+                    u0: 29.0,
+                    u1: 0.500,
+                    lDegr: 0.00631,
+                    lambdaDSnow: 2.0,
+                    lambdaAFog: 2.0,
+                    bFog: 1.0,
+                    lambdaKFog: 2.0
                 )
             ];
             var pvModelParams = pvModelParamsList[folder];

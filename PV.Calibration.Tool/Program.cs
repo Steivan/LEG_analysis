@@ -2,15 +2,14 @@
 using LEG.PV.Data.Processor;
 using PV.Calibration.Tool;
 using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.PvPowerJacobian;
 using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
 
-//ProcessSyntheticModelData();
+ProcessSyntheticModelData();
 
-await CalibrateE3DcData(1, "Senn");
-await CalibrateE3DcData(2, "SennV");
+//await CalibrateE3DcData(1, "Senn");
+//await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
 

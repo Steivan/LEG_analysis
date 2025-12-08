@@ -18,14 +18,6 @@
         IntervalAnchor Anchor = IntervalAnchor.End // Default to End
     )
     {
-        public double? GlobalHRWm2 =>
-            GlobalRadiation.HasValue ? GlobalRadiation.Value
-            : (DirectRadiation.HasValue && DiffuseRadiation.HasValue)
-            ? DirectRadiation.Value + DiffuseRadiation.Value
-            : (double?)null;
-
-        public double? SnowDepthCm => SnowDepth.HasValue ? SnowDepth.Value * 100.0 : (double?)null;
-
         public double GetDirectPoa(bool hasDirectIrradiance, double sinSunElevation)
         {
             if (!hasDirectIrradiance)
@@ -41,11 +33,18 @@
             return hasDiffuseIrradiance ? DiffuseRadiation.Value : 0.0;
         }
 
-        public double GetDewPoint(double defaultT = 15.0, double defaultRH = 60.0)
+        public double DewPointFromRH(double temperature, double relativeHumidity)
         {
+            // Magnus formula for dew point approximation
             const double a = 17.62;     // 17.27;
             const double b = 243.12;    // 237.7; // degrees Celsius
 
+            double alpha = a * temperature / (b + temperature) + Math.Log(relativeHumidity / 100.0);
+
+            return (b * alpha) / (a - alpha);
+        }
+        public double GetDewPoint(double defaultT = 15.0, double defaultRH = 60.0)
+        {
             // Measured value
             if (DewPoint.HasValue)
                 return DewPoint.Value;
@@ -53,9 +52,8 @@
             // Magnus formula for dew point approximation
             var temperature = Temperature ?? defaultT;
             var relativeHumidity = RelativeHumidity ?? defaultRH;
-            double alpha = a * temperature / (b + temperature) + Math.Log(relativeHumidity / 100.0);
 
-            return (b * alpha) / (a - alpha);
+            return DewPointFromRH(temperature, relativeHumidity);
         }
 
         public double GetDewPointDepression(double defaultT = 15.0, double defaultRH = 60.0)
