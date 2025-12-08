@@ -34,7 +34,7 @@
         internal const double minLambdaDSnow = double.MinValue;
         internal const double maxLambdaDSnow = double.MaxValue;
 
-        internal const double meanLambdaAFog = 0.0;
+        internal const double meanLambdaAFog = 2.0;
         internal const double sigmaLambdaAFog = 0.85;
         internal const double minLambdaAFog = double.MinValue;
         internal const double maxLambdaAFog = double.MaxValue;

@@ -55,7 +55,7 @@ namespace LEG.PV.Core.Models
                         u0: derivatives.U0,
                         u1: derivatives.U1,
                         lDegr: derivatives.LDegr,
-                        lambdadaDSnow: derivatives.LambdaDSnow * weight_S,
+                        lambdaDSnow: derivatives.LambdaDSnow * weight_S,
                         lambdaAFog: derivatives.LambdaAFog * weight_SF,
                         bFog: derivatives.BFog * weight_SF,
                         lambdaKFog: derivatives.LambdaKFog * weight_SF

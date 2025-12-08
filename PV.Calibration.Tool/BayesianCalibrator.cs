@@ -4,14 +4,13 @@ using LEG.PV.Data.Processor;
 using MathNet.Numerics.LinearAlgebra;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPriorConfig;
-using static PV.Calibration.Tool.BayesianCalibrator;
 
 namespace PV.Calibration.Tool
 {
     public class BayesianCalibrator
     {
         // Define the number of parameters being calibrated
-        // GRTW: etha, gamma, u0, u1, lDegr
+        // - GRTW: etha, gamma, u0, u1, lDegr
         // SF: lambdaA, B, lambdaK
         private const int Offset_GRTW = 0;
         private const int ParameterCount_GRTW = 5;
@@ -42,7 +41,7 @@ namespace PV.Calibration.Tool
                 u0: theta_GRTW[2],
                 u1: theta_GRTW[3],
                 lDegr: theta_GRTW[4],
-                lambdadaDSnow: defaultParams.LambdaDSnow,
+                lambdaDSnow: defaultParams.LambdaDSnow,
                 lambdaAFog: theta_SF[0],
                 bFog: theta_SF[1],
                 lambdaKFog: theta_SF[2]
@@ -67,7 +66,6 @@ namespace PV.Calibration.Tool
         public static (List<PvModelParams> thetaCalibrated, int iterations, double meanSquaredError) Calibrate(
             List<PvRecord> pvRecords,
             PvPriors pvPriors,
-            JacobianFunc jacobianFunc,
             List<bool>? validRecords,
             double installedPower,
             int periodsPerHour = 6,
@@ -129,6 +127,21 @@ namespace PV.Calibration.Tool
                 Vector<double> Y_SF = Vector<double>.Build.Dense(nrRecords);
                 Vector<double> Peff_Model_SF = Vector<double>.Build.Dense(nrRecords);
 
+                // For Debugging Purposes
+                var DEBUG_maxF = double.MinValue;
+                var DEBUG_minF = double.MaxValue;
+                var DEBUG_maxW = double.MinValue;
+                var DEBUG_minW = double.MaxValue;
+
+                var DEBUG_maxU = double.MinValue;
+                var DEBUG_minU = double.MaxValue;
+                var DEBUG_maxA = double.MinValue;
+                var DEBUG_minA = double.MaxValue;
+                var DEBUG_maxB = double.MinValue;
+                var DEBUG_minB = double.MaxValue;
+                var DEBUG_maxK = double.MinValue;
+                var DEBUG_minK = double.MaxValue;
+
                 for (int i = 0; i < nrRecords; i++)
                 { 
                     if (applyDataFilter && !validRecords![i])
@@ -137,16 +150,8 @@ namespace PV.Calibration.Tool
                     var pvRecord = pvRecords[i];
                     // Call the user's provided Jacobian function => obtained via pvRecord.GetPvResidualsRecord(...)
 
-                    //var (powerRecord, derivativesRecord) = jacobianFunc(
-                    //    installedPower,
-                    //    periodsPerHour,
-                    //    pvRecord.SolarGeometry,
-                    //    pvRecord.MeteoParameters,
-                    //    pvRecord.Age,
-                    //    modelParams);
-
                     // Weighting (if applicable)
-                    var weight_GRTW = pvRecord.HasMeasuredPower ? pvRecord.Weight : 0.0;
+                    var weight_GRTW = pvRecord.HasMeasuredPower ? Math.Sqrt(pvRecord.Weight) : 0.0;
                     var weight_SF = pvRecord.HasMeasuredPower ? 1.0 : 0.0;
 
                     // Power, Derivatives and Residual Vector r
@@ -160,6 +165,7 @@ namespace PV.Calibration.Tool
                     var powerRecord = recordValues.ComputedPower;
                     var derivativesRecord = recordValues.Derivatives;
                     var unexplainedFractionLossRecord = recordValues.UnexplainedFractionLossRecord;
+                    var derivativeAdjustmentFactor_GRTW = powerRecord.PowerGRTW > 0 ? powerRecord.PowerGRTWSF / powerRecord.PowerGRTW : 1.0;
 
                     Y_GRTW[i] = pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value * weight_GRTW : 0.0; 
                     Peff_Model_GRTW[i] = powerRecord.PowerGRTWSF * weight_GRTW;
@@ -168,19 +174,33 @@ namespace PV.Calibration.Tool
                     Peff_Model_SF[i] = unexplainedFractionLossRecord.PowerGRTWSF * weight_SF;
 
                     // Jacobian Matrix J
-                    J_GRTW[i, 0] = derivativesRecord.Etha* weight_GRTW;
-                    J_GRTW[i, 1] = derivativesRecord.Gamma * weight_GRTW;
-                    J_GRTW[i, 2] = derivativesRecord.U0 * weight_GRTW;
-                    J_GRTW[i, 3] = derivativesRecord.U1 * weight_GRTW;
-                    J_GRTW[i, 4] = derivativesRecord.LDegr * weight_GRTW;
+                    J_GRTW[i, 0] = derivativesRecord.Etha * derivativeAdjustmentFactor_GRTW * weight_GRTW;
+                    J_GRTW[i, 1] = derivativesRecord.Gamma * derivativeAdjustmentFactor_GRTW * weight_GRTW;
+                    J_GRTW[i, 2] = derivativesRecord.U0 * derivativeAdjustmentFactor_GRTW * weight_GRTW;
+                    J_GRTW[i, 3] = derivativesRecord.U1 * derivativeAdjustmentFactor_GRTW * weight_GRTW;
+                    J_GRTW[i, 4] = derivativesRecord.LDegr * derivativeAdjustmentFactor_GRTW * weight_GRTW;
 
                     J_SF[i, 0] = derivativesRecord.LambdaAFog * weight_SF;
                     J_SF[i, 1] = derivativesRecord.BFog * weight_SF;
                     J_SF[i, 2] = derivativesRecord.LambdaKFog * weight_SF;
+
+                    // For Debugging Purposes
+                    DEBUG_maxF = Math.Max(DEBUG_maxF, derivativeAdjustmentFactor_GRTW);
+                    DEBUG_minF = Math.Min(DEBUG_minF, derivativeAdjustmentFactor_GRTW);
+                    DEBUG_maxW = Math.Max(DEBUG_maxW, weight_GRTW);
+                    DEBUG_minW = Math.Min(DEBUG_minW, weight_GRTW);
+
+                    DEBUG_maxU = Math.Max(DEBUG_maxU, Peff_Model_SF[i]);
+                    DEBUG_minU = Math.Min(DEBUG_minU, Peff_Model_SF[i]);
+                    DEBUG_maxA = Math.Max(DEBUG_maxA, J_SF[i, 0]);
+                    DEBUG_minA = Math.Min(DEBUG_minA, J_SF[i, 0]);
+                    DEBUG_maxB = Math.Max(DEBUG_maxB, J_SF[i, 1]);
+                    DEBUG_minB = Math.Min(DEBUG_minB, J_SF[i, 1]);
+                    DEBUG_maxK = Math.Max(DEBUG_maxK, J_SF[i, 2]);
+                    DEBUG_minK = Math.Min(DEBUG_minK, J_SF[i, 2]);
                 }
 
                 Vector<double> residual_GRTW = Y_GRTW.Subtract(Peff_Model_GRTW);
-
                 Vector<double> residual_SF = Y_SF.Subtract(Peff_Model_SF);              // Remark: Y_SF = 0
 
                 // 4. Form the Penalized Normal Equation components: M * Delta_theta = b

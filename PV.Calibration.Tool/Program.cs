@@ -56,7 +56,11 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         gamma: -0.005,
         u0: 25,
         u1: 0.4,
-        lDegr: 0.01
+        lDegr: 0.01,
+        lambdaDSnow: 0.2,
+        lambdaAFog: 0.1,
+        bFog: 0.5,
+        lambdaKFog: 2.0
         );
     var siteId = "SyntheticModelSite";
     var installedKwP = 10.0;      // [kWp]
@@ -76,7 +80,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         );
 
     var defaultPriors = new PvPriors();
-    var defaultModelParams = GetAllPriorsMeans();
+    var defaultModelParams = defaultPriors.PriorMeans;
 
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
         pvRecords,
@@ -182,18 +186,34 @@ void ProcessPvData(
     )
 {
     var priorMeans = GetAllPriorsMeans();
-    var priorSigmas = GetAllPriorsMeans();
+    var priorSigmas = GetAllPriorsSigmas();
 
     var hasModelValidRecords = modelValidRecords != null && modelValidRecords.Any(v => v);
 
-    var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, periodsPerHour, GetAllPriorsMeans());
+    var (ethaHull, LDegHull, ethaHullUncertainty, LDegHullUncertainty) = HullCalibrator.CalibrateTrend(pvRecords, installedPower, periodsPerHour, priorMeans);
 
     var hullPriors = new PvPriors
     {
-        PriorMeans = new PvModelParams(ethaHull, priorMeans.Gamma, priorMeans.U0, priorMeans.U1, LDegHull,
-            priorMeans.LambdaDSnow, priorMeans.LambdaAFog, priorMeans.BFog, priorMeans.LambdaKFog),
-        PriorSigmas = new PvModelParams(ethaHullUncertainty, priorSigmas.Gamma, priorSigmas.U0, priorSigmas.U1, LDegHullUncertainty,
-            priorSigmas.LambdaDSnow, priorSigmas.LambdaAFog, priorSigmas.BFog, priorSigmas.LambdaKFog)
+        PriorMeans = new PvModelParams(
+            etha: ethaHull, 
+            gamma: priorMeans.Gamma, 
+            u0: priorMeans.U0, 
+            u1: priorMeans.U1, 
+            lDegr: LDegHull,
+            lambdaDSnow: priorMeans.LambdaDSnow, 
+            lambdaAFog: priorMeans.LambdaAFog, 
+            bFog: priorMeans.BFog, 
+            lambdaKFog: priorMeans.LambdaKFog),
+        PriorSigmas = new PvModelParams(
+            etha: ethaHullUncertainty, 
+            gamma: priorSigmas.Gamma, 
+            u0: priorSigmas.U0, 
+            u1: priorSigmas.U1,
+            lDegr: LDegHullUncertainty,
+            lambdaDSnow: priorSigmas.LambdaDSnow, 
+            lambdaAFog: priorSigmas.LambdaAFog, 
+            bFog: priorSigmas.BFog, 
+            lambdaKFog: priorSigmas.LambdaKFog)
     };
 
     Console.WriteLine();
@@ -202,7 +222,6 @@ void ProcessPvData(
     var (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
         pvRecords: pvRecords,
         defaultPriors,
-        PvJacobianFunc,
         validRecords: null,
         installedPower: installedPower,
         periodsPerHour: periodsPerHour,
@@ -218,7 +237,6 @@ void ProcessPvData(
         (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
             pvRecords: pvRecords,
             defaultPriors,
-            PvJacobianFunc,
             validRecords: modelValidRecords,
             installedPower: installedPower,
             periodsPerHour: periodsPerHour,
@@ -239,7 +257,6 @@ void ProcessPvData(
         (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
             pvRecords: pvRecords,
             hullPriors,
-            PvJacobianFunc,
             validRecords: modelValidRecords,
             installedPower: installedPower,
             periodsPerHour: periodsPerHour,
@@ -252,7 +269,6 @@ void ProcessPvData(
     (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
         pvRecords: pvRecords,
         defaultPriors,
-        PvJacobianFunc,
         validRecords: filteredValidRecors,
         installedPower: installedPower,
         periodsPerHour: periodsPerHour,

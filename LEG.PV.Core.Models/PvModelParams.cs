@@ -30,7 +30,7 @@ namespace LEG.PV.Core.Models
         public const string LambdaKFogName = "LambdaKFog";
 
         public PvModelParams(double etha, double gamma, double u0, double u1, double lDegr,
-            double lambdadaDSnow = PvPriorConfig.meanLambdaDSnow,
+            double lambdaDSnow = PvPriorConfig.meanLambdaDSnow,
             double lambdaAFog = PvPriorConfig.meanLambdaAFog, double bFog = PvPriorConfig.meanBFog, double lambdaKFog = PvPriorConfig.meanLambdaKFog)
         {
             Etha = etha;
@@ -39,16 +39,20 @@ namespace LEG.PV.Core.Models
             U1 = u1;
             LDegr = lDegr;
             // Snow and fog parameters with defaults
-            LambdaDSnow = lambdadaDSnow;
-            DSnow = Math.Exp(lambdaKFog);
-            LambdaAFog = lambdaAFog;
+            var dSnow = Math.Exp(lambdaDSnow);
             var zAFog = Math.Exp(-lambdaAFog);
             var aFog = 1.0 / (1 + zAFog);
+            var kFog = Math.Exp(lambdaKFog);
+            LambdaDSnow = lambdaDSnow;
+            DSnow = dSnow;
+            PartialDSnow = dSnow;
+            LambdaAFog = lambdaAFog;
             AFog = aFog;
-            PartialAFog = aFog * aFog * zAFog;
+            PartialLambdaAFog = zAFog * aFog * aFog;
             BFog = bFog;
             LambdaKFog = lambdaKFog;
-            KFog = Math.Exp(lambdaKFog);
+            KFog = kFog;
+            PartialLambdaKFog = kFog;
         }
 
         public double Etha { get; init; }
@@ -60,14 +64,14 @@ namespace LEG.PV.Core.Models
         // Snow and fog parameters with partial derivatives d X / d ldaX
         public double LambdaDSnow { get; init; }
         public double DSnow { get; init; }
-        public double PartialDSnow => DSnow;
+        public double PartialDSnow;
         public double LambdaAFog { get; init; }
         public double AFog { get; init; }
-        public double PartialAFog { get; init; }
+        public double PartialLambdaAFog { get; init; }
         public double BFog { get; init; }
         public double LambdaKFog { get; init; }
         public double KFog { get; init; }
-        public double PartialKFog => KFog;
+        public double PartialLambdaKFog;
 
         public (string Name, double Value) GetNameAndValue(int index, bool useLambda = false)
         {

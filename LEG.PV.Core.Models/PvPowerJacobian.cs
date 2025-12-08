@@ -1,25 +1,21 @@
-﻿using static LEG.PV.Core.Models.PvConstants;
-using LEG.MeteoSwiss.Abstractions.Models;
+﻿using LEG.MeteoSwiss.Abstractions.Models;
+using static LEG.PV.Core.Models.PvConstants;
 
 namespace LEG.PV.Core.Models;
 
 public class PvPowerJacobian                  // Base model: Radiation (direc, diffuse), Temperature, Windspeed, Age
 {
-    public static (double gDirectPoa, double gDiffusePoa, 
+    private static (double gDirectPoa, double gDiffusePoa, 
         double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
         bool hasValue) 
         PvModelFilter(MeteoParameters meteoParameters, PvSolarGeometry geometryFactors)
     {
-        // TODO: use sunshineDuration as a reference to adjust the decomposition of Gpoa into direct and diffuse component
-        // TODO: use direct normal irradiance if available
-
         var directGeometryFactor = geometryFactors.ConstrainedDirectGeometryFactor;
         var diffuseGeometryFactor = geometryFactors.ConstrainedDiffuseGeometryFactor;
         var sinSunElevation = geometryFactors.ConstrainedSinSunElevation;
 
-        var directHorizontalRadiation = Math.Max(0, meteoParameters.GlobalRadiation.Value - meteoParameters.DiffuseRadiation.Value);
-        var gDirectPoa = geometryFactors.HasDirectIrradiance ? directHorizontalRadiation / sinSunElevation : 0.0;
-        var gDiffusePoa = geometryFactors.HasDiffuseIrradiance ? meteoParameters.DiffuseRadiation.Value : 0.0;
+        var gDirectPoa = meteoParameters.GetDirectPoa(geometryFactors.HasDirectIrradiance, sinSunElevation);
+        var gDiffusePoa = meteoParameters.GetDiffusePoa(geometryFactors.HasDiffuseIrradiance);
 
         return (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, sinSunElevation, geometryFactors.HasIrradiance);
     }
@@ -53,7 +49,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 
         var snowFactor = meteoParameters.SnowDepth >= modelParams.DSnow ? 0.0 : 1.0;
 
-        var dpd = meteoParameters.DewPoint.HasValue ? meteoParameters.Temperature.Value - meteoParameters.DewPoint.Value : 5.0;
+        var dpd = meteoParameters.GetDewPointDepression();
         var fogFactor = 1.0 - modelParams.AFog / (1.0 + Math.Exp(modelParams.KFog * (dpd - modelParams.BFog)));
 
         var geometryFactor = Math.Max(directGeometryFactor, sinSunElevation * diffuseRatio);
@@ -297,7 +293,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         if (!hasValue)
             return 0.0;
 
-        var snowDeriv = 0.0;
+        var snowDeriv = 0.0 * modelParams.PartialLambdaKFog;
 
         return snowDeriv;
     }
@@ -312,9 +308,9 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         if (!hasValue)
             return 0.0;
 
-        var dpd = meteoParameters.DewPoint.HasValue ? meteoParameters.Temperature.Value - meteoParameters.DewPoint.Value : 5.0;
+        var dpd = meteoParameters.GetDewPointDepression();
 
-        return - modelParams.PartialAFog / (1.0 + Math.Exp(modelParams.KFog * (dpd - modelParams.BFog)));
+        return - modelParams.PartialLambdaAFog / (1.0 + Math.Exp(modelParams.KFog * (dpd - modelParams.BFog)));
     }
 
     public static double DerBFog(double installedPower, int periodsPerHour,
@@ -327,7 +323,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         if (!hasValue)
             return 0.0;
 
-        var dpd = meteoParameters.DewPoint.HasValue ? meteoParameters.Temperature.Value - meteoParameters.DewPoint.Value : 5.0;
+        var dpd = meteoParameters.GetDewPointDepression();
         var eZ = Math.Exp(modelParams.KFog * (dpd - modelParams.BFog));
         var denom = 1.0 + eZ;
 
@@ -344,11 +340,11 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         if (!hasValue)
             return 0.0;
 
-        var dpd = meteoParameters.DewPoint.HasValue ? meteoParameters.Temperature.Value - meteoParameters.DewPoint.Value : 5.0;
+        var dpd = meteoParameters.GetDewPointDepression();
         var eZ = Math.Exp(modelParams.KFog * (dpd - modelParams.BFog));
         var denom = 1.0 + eZ;
 
-        return modelParams.AFog * (dpd - modelParams.BFog) * eZ / (denom * denom) * modelParams.PartialKFog;          // d fogLoss / d lambdaKFog
+        return modelParams.AFog * (dpd - modelParams.BFog) * eZ / (denom * denom) * modelParams.PartialLambdaKFog;          // d fogLoss / d lambdaKFog
     }
 
     // EffectivePower and Jacobian PvModelParams paramDerivatives
@@ -404,18 +400,18 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 
         // Snow and fog
         var snowFactor = meteoParameters.SnowDepth >= modelParams.DSnow ? 0.0 : 1.0;
-        var snowDeriv = 0.0;
+        var snowDeriv = 0.0 * modelParams.PartialLambdaKFog;
 
-        var dpd = meteoParameters.DewPoint.HasValue ? meteoParameters.Temperature.Value - meteoParameters.DewPoint.Value : 5.0;
+        var dpd = meteoParameters.GetDewPointDepression();
         var eZ = Math.Exp(modelParams.KFog * (dpd - modelParams.BFog));
         var denom = 1.0 + eZ;
         var fogLoss = modelParams.AFog / denom;
         var aFogfZ = fogLoss * eZ / denom;
 
         var fogFactor = 1.0 - modelParams.AFog / denom;
-        var lambdaAFogDeriv = -1.0 / denom * modelParams.PartialAFog;                                   // d fogLoss / d lambdaAFog
-        var bFogDeriv = -modelParams.KFog * aFogfZ;                                                     // d fogLoss / d bFog
-        var lambdaKFogDeriv = (dpd - modelParams.BFog) * aFogfZ * modelParams.PartialKFog;              // d fogLoss / d lambdaKFog
+        var lambdaAFogDeriv = -1.0 / denom * modelParams.PartialLambdaAFog;                                     // d fogLoss / d lambdaAFog
+        var bFogDeriv = -modelParams.KFog * aFogfZ;                                                             // d fogLoss / d bFog
+        var lambdaKFogDeriv = (dpd - modelParams.BFog) * aFogfZ * modelParams.PartialLambdaKFog;                // d fogLoss / d lambdaKFog
 
         var pGRTWS = pGRTW * snowFactor; 
         var pGRTWSF = pGRTWS * fogFactor;

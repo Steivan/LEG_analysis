@@ -10,21 +10,45 @@ namespace LEG.Tests
     [TestClass]
     public class TestPvJacobian
     {
+        // Test model parameters priors
+        const double meanEtha = 0.75;
+        const double meanGamma = -0.005;                   // [/°C]
+        const double meanU0 = 25;                          // [W/m^2 K]
+        const double meanU1 = 0.5;                         // [W/m^2 K per km/h]
+        const double meanLDegr = 0.01;                     // [/year]
+        const double cvGRTW = 0.1;
+        // Snow and fog priors
+        const double meanLambdaDSnow = 1.0;
+        const double meanLambdaAFog = 2.0;
+        const double meanBFog = 1.0;                       // [/°C]  
+        const double meanLambdaKFog = 2.0;
+        const double cvSF = 0.5;
+
+        // Test input parameters
+        const double installedPower = 10000.0;       // [Wp]
+        const int periodsPerHour = 4;                // [1/h]
+        const double directGeometryFactor = 0.7;     // [unitless]
+        const double diffuseGeometryFactor = 0.9;    // [unitless]
+        const double sinSunElevation = 0.8;          // [unitless]
+        const double shortWaveRadiation = 1200.0;    // [W/m^2]
+        const double sunshineDuration = 12.0;        // [m / 15 m]
+        const double diffuseRadiation = 200.0;       // [W/m^2]
+        const double ambientTemp = 30.0;             // [°C]
+        const double windSpeed = 20;                 // [km/h]
+        const double snowDepth = 0.0;                // [cm]
+        const double RelativeHumidity = 95;          // [%] 
+        const double DewPoint = ambientTemp - (1 - RelativeHumidity / 100) * (ambientTemp - 14); 
+        const double age = 5.0;                      // [y]
+
         [TestMethod]
         public void TestJacobian()
         {
-            var installedPower = 10000.0;       // [Wp]
-            var periodsPerHour = 4;             // [1/h]
-            var directGeometryFactor = 0.7;     // [unitless]
-            var diffuseGeometryFactor = 0.8;    // [unitless]
-            var sinSunElevation = 0.8;          // [unitless]
-            var shortWaveRadiation = 1175.0;    // [W/m^2]
-            var sunshineDuration = 12.0;        // [m / 15 m]
-            var diffuseRadiation = 375.0;       // [W/m^2]
-            var ambientTemp = 35.0;             // [°C]
-            var windSpeed = 22;                 // [km/h]
-            var snowDepth = 0.0;                // [m]
-            var age = 5.0;                      // [y]
+            // Define model parameters and their sigmas
+            var modelParams = new PvModelParams(etha: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
+                lambdaDSnow: meanLambdaDSnow, lambdaAFog: meanLambdaAFog, bFog: meanBFog, lambdaKFog: meanLambdaKFog);
+
+            var modelSigmas = new PvModelParams(etha: cvGRTW * meanEtha, gamma: cvGRTW * meanGamma, u0: cvGRTW * meanU0, u1: cvGRTW * meanU1, lDegr: cvGRTW * meanLDegr,
+                lambdaDSnow: cvSF * meanLambdaDSnow, lambdaAFog: cvSF * meanLambdaAFog, bFog: cvSF * meanBFog, lambdaKFog: cvSF * meanLambdaKFog);
 
             var geometryFactors = new PvSolarGeometry
             (
@@ -32,6 +56,7 @@ namespace LEG.Tests
                 diffuseGeometryFactor, 
                 sinSunElevation
             );
+
             var meteoParameters = new MeteoParameters
             (
                 Time: DateTime.UtcNow,
@@ -43,15 +68,12 @@ namespace LEG.Tests
                 DiffuseRadiation: diffuseRadiation,
                 Temperature: ambientTemp,
                 WindSpeed: windSpeed,
-                WindDirection: null,
+                WindDirection: 0,
                 SnowDepth: snowDepth,
-                RelativeHumidity: null,
-                DewPoint: null,
-                DirectRadiationVariance: null
+                RelativeHumidity: RelativeHumidity,
+                DewPoint: DewPoint,
+                DirectRadiationVariance: shortWaveRadiation * shortWaveRadiation * 0.01
             );
-
-            var modelParams = GetAllPriorsMeans();
-            var modelSigmas = GetAllPriorsSigmas();
 
             // Calculate effective power
             var powerRecord = EffectiveCellPower(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
