@@ -31,7 +31,7 @@ namespace LEG.PV.Data.Processor
 
         public static (MeteoParameters meteoParam, double weight) UpdatedMeteoParameters(
             DateTime timeStamp, int minutesPerPeriod, 
-            MeteoParameters priortMeteoParameters, 
+            MeteoParameters? priortMeteoParameters, 
             PvSolarGeometry sunGeometry, double cosOmegaYear, double cosOmegaDay,
             bool isSnowyDay, double newSnow,
             bool isFoggyDay, double fogDissolveStartHour, double fogDissolveEndHour,
@@ -83,7 +83,7 @@ namespace LEG.PV.Data.Processor
                 hour >= fogDissolveEndHour ? fogLoRH :
                 fogHighRH - fogDeltaRH * (hour - fogDissolveStartHour) / (fogDissolveEndHour - fogDissolveStartHour);
             var dewPoint =
-                initialize ? temperature -0.1 * (temperature - relativeHumidity) :
+                initialize ? temperature - 0.1 * (100.0 - relativeHumidity) :
                 priortMeteoParameters.DewPointFromRH(temperature, relativeHumidity);                             // Convert T and RH into DP
             dewPoint = temperature - (temperature - dewPoint) * (1.0 + (2.0 * random.NextDouble() - 1.0) * deltaDewPoint) ;
 

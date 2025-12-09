@@ -16,34 +16,52 @@ public class DataSimulator
         double roofElevation = 20,
         double simulationsPeriod = 5,
         bool applyRandomNoise = false,
-        bool applyFoggyDays = false,
         bool applySnowDays = false,
+        bool applyFoggyDays = false,
         bool applyOutliers = false)
     {
         double siteLongitude = 0;
 
-        //const double earthTilt = 23.4; // [degrees]
         const double daysPerYears = 365.2422;
         const int hoursPerDay = 24;
         const int minutesPerHour = 60;
         const int periodsPerHour = 4;
+        const int hoursPerBlock = 3;
+        const int blocksPerDay = hoursPerDay / hoursPerBlock;
         const int minutesPerPeriod = minutesPerHour / periodsPerHour;
         const Double minutesPerYear = daysPerYears * hoursPerDay * minutesPerHour;
 
+        // General model parameters => see also: SunGeometrySimulator.GetSolarGeometry and MeteoSimulator.UpdatedMeteoParameters
         const int startHour = 12;
         const int startMinute = 0;
-        var startBlock = startHour / 3; // start at 6am
-        var startBlockHour = startHour % 3;  // start at 6am
+        const double randomNoiseVariation = 0.1;
+        var daysPerMonth = new List<int> { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+        var averageSnowyowDaysPerMonth = new List<int> { 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 5, 10 };
+        var minNewSnow = 1;
+        var maxNewSnow = 20;
+        var maxNewSnowRandom = 1 + maxNewSnow - minNewSnow;
+        var averageFoggyDaysPerMonth = new List<int> { 10, 5, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10 };
+        var fogDissolveStartLo = 6;
+        var fogDissolveStartHi = 8;
+        var fogDissolveEndLo = 10;
+        var fogDissolveEndHi = 14;
+        var probabilityPeriodOutlier = 0.001;
+        var probabilityHourOutlier = 0.001;
+        var probabilityBlockOutlier = 0.001;
+
+        var startBlock = startHour / hoursPerBlock; 
+        var startBlockHour = startHour % hoursPerBlock; 
         var startPeriod = startMinute / minutesPerPeriod; // start at first period
 
         var sinRoofElevation = Math.Sin(roofElevation * Math.PI / 180.0);
         var cosRoofElevation = Math.Cos(roofElevation * Math.PI / 180.0);
-        //var diffuseGeometryFactor = (1.0 + cosRoofElevation) / 2;
 
+        // Simulation period
         var now = DateTime.Now;
         var tomorrow = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0).AddDays(1);
-        var endDate = new DateTime(tomorrow.Year, tomorrow.Month, 1, startBlock * 3 + startBlockHour, startPeriod * 15, 0).AddDays(-1); // last day of previous month
-        var startDate = now.AddDays(-(int)Math.Ceiling(daysPerYears * simulationsPeriod)); // first of first month post simulationsPeriod years ago
+        var endDate = new DateTime(tomorrow.Year, tomorrow.Month, 1, startBlock * hoursPerBlock + startBlockHour, startPeriod * 15, 0).AddDays(-1); // last day of previous month
+        var simulationDays= (int)Math.Ceiling(daysPerYears * simulationsPeriod);
+        var startDate = now.AddDays(-simulationDays);
         var startYear = startDate.Year;
         if (startDate.Month == 12 && startDate.Day > 1)
         {
@@ -51,68 +69,28 @@ public class DataSimulator
         }
         else if (startDate.Day > 1)
         {
-            startDate = new DateTime(startYear, startDate.Month + 1, 1, 0, 0, 0);
+            startDate = new DateTime(startYear, startDate.Month + 1, 1, 0, 0, 0); // first of first month post simulationsPeriod years ago
         }
-        var daysTotal = (endDate - startDate).Days + 1;
+        // Update
+        startYear = startDate.Year;
+        simulationDays = (endDate - startDate).Days + 1;
 
-        const double maxIrradiance = 1361;     // [W/m^2] Solar constant
-        const double diffuseRadiationRatio = 0.3;
-        const Double averagediffuseRadiation = maxIrradiance * diffuseRadiationRatio;
-        const double maxDirectIrratiance = maxIrradiance - averagediffuseRadiation;
-        const double weightPreviousIrradiance = 0.7;
-
-        const double averageTemp = 15;          // [°C]
-        const double annualTempAmplitude = 10;  // [°C]
-        const double diurnalTempAmplitude = 5;  // [°C]
-
-        const double maxWindSpeed = 150;     // [km/h]
-        const double maxNewWindGust = 10;       // [km/h]
-        const double windGustProbability = 0.1;
-        const double weightPreviousWindSpeed = 0.95;
-
-        const double randomNoiseStdDev = 0.1;
-
-        var daysPerMonth = new List<int> { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-        var fogDaysPerMonth = new List<int> { 10, 5, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10 };
-        var snowDaysPerMonth = new List<int> { 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 5, 10 };
-        var pPeriodOutlier = 0.001;
-        var pHourOutlier = 0.001;
-        var pBlockOutlier = 0.001;
-
-        //// initial values
-        double previousDirectIrradiance = maxDirectIrratiance / 2;
-        double windSpeed = 10;
+        // Initial values
         var random = new Random();
         var pvRecords = new List<PvRecord>();
         var validRecords = new List<bool>();
+        PvSolarGeometry? solarGeometry = null;
+        double cosOmegaYear, cosOmegaDay;
+        MeteoParameters? meteoParameters = null;
+        double weight;
         var firstSnowDay = -1;
         var lastSnowDay = -1;
 
-        var (initSolarGeometry, initCosOmegaYear, initCosOmegaDay) = 
-            SunGeometrySimulator.GetSolarGeometry(
-                startYear, startDate, 
-                siteLatitude, siteLongitude, 
-                roofAzimuth, sinRoofElevation, cosRoofElevation);
-
-        var (meteoParameters, _) = MeteoSimulator.UpdatedMeteoParameters(
-            startDate, minutesPerPeriod,
-            null,
-            initSolarGeometry, initCosOmegaYear, initCosOmegaDay,
-            false, 0,
-            false, 0, 24,
-            initialize: true);
-
-        for (int day = 0; day < daysTotal; day++)
+        var initialize = true;
+        for (int day = 0; day < simulationDays; day++)
         {
-            //var age = (double)day / daysPerYears;
             var currentDate = startDate.AddDays(day);
             var monthIndex = currentDate.Month - 1;
-
-            // Random fog day
-            var randomDayOfMonth = random.Next(1, daysPerMonth[monthIndex] + 1);
-            var isFoggyDay = randomDayOfMonth <= fogDaysPerMonth[monthIndex];
-            double fogDissolveStartHour = random.Next(6, 8 + 1);
-            double fogDissolveEndHour = random.Next(10, 14 + 1);
 
             // Random snow period
             var dayOfMonth = currentDate.Day;
@@ -120,121 +98,84 @@ public class DataSimulator
             {
                 firstSnowDay = -1;
                 lastSnowDay = -1;
-                if (snowDaysPerMonth[monthIndex] > 0)
+                if (averageSnowyowDaysPerMonth[monthIndex] > 0)
                 {
-                    var durationSnowDays = random.Next(0, 2 * snowDaysPerMonth[monthIndex] + 1);
+                    var durationSnowDays = random.Next(0, 2 * averageSnowyowDaysPerMonth[monthIndex] + 1);
                     firstSnowDay = random.Next(1, daysPerMonth[monthIndex] - durationSnowDays + 2);
                     lastSnowDay = firstSnowDay + durationSnowDays - 1;
                 }
             }
             var isSnowyDay = (firstSnowDay <= dayOfMonth && dayOfMonth <= lastSnowDay);
-            var newSnow = applySnowDays ? (isSnowyDay ? 20 : 0) : 0; // [cm]
+            var newSnow = applySnowDays ? (isSnowyDay ? minNewSnow + random.NextInt64(maxNewSnowRandom) : 0) : 0; // [cm]
 
-            for (int block = startBlock; block < 8; block++)
+            // Random foggy day
+            var randomDayOfMonth = random.Next(1, daysPerMonth[monthIndex] + 1);
+            var isFoggyDay = randomDayOfMonth <= averageFoggyDaysPerMonth[monthIndex];
+            double fogDissolveStartHour = random.Next(fogDissolveStartLo, fogDissolveStartHi + 1);
+            double fogDissolveEndHour = random.Next(fogDissolveEndLo, fogDissolveEndHi + 1);
+
+            for (int block = startBlock; block < blocksPerDay; block++)
             {                   
                 // Block outliers
-                var blockOutlier = random.NextDouble() < pBlockOutlier;
-                for (var blockHour = startBlockHour; blockHour < 3; blockHour++)
+                var blockOutlier = random.NextDouble() < probabilityBlockOutlier;
+
+                for (var blockHour = startBlockHour; blockHour < hoursPerBlock; blockHour++)
                 {  
                     // Hour outliers
-                    var hourOutlier = random.NextDouble() < pHourOutlier;
+                    var hourOutlier = random.NextDouble() < probabilityHourOutlier;
 
-                    var hour = 3 * block + blockHour;
+                    var hour = hoursPerBlock * block + blockHour;
                     var currentHour = currentDate.AddHours(hour);
                     for (int period = startPeriod; period < periodsPerHour; period++)
                     {
-                        var timeStamp = currentHour.AddMinutes(period * minutesPerPeriod);
-                        var age = (timeStamp - startDate).TotalMinutes / minutesPerYear;
-                        var timeOfDay = hour + (double)period / periodsPerHour;
-
-                        // Solar position
-                        var (solarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
-                        var sinSunElevation = solarGeometry.SinSunElevation;
-
                         // Period outliers
-                        var periodOutlier = random.NextDouble() < pPeriodOutlier;
+                        var periodOutlier = random.NextDouble() < probabilityPeriodOutlier;
                         var isOutlier = blockOutlier || hourOutlier || periodOutlier;
 
-                        // Update radiation with some randomness
-                        var r = random.NextDouble();
-                        var newRandomDirectIrradiance = previousDirectIrradiance * weightPreviousIrradiance + (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * r;  // hypothetical irradiance as a function of cloudiness
-                        previousDirectIrradiance = newRandomDirectIrradiance;
-                        var diffuseRadiation = averagediffuseRadiation + (maxDirectIrratiance - newRandomDirectIrradiance) * 0.1;
-                        var globalHorizontalRadiation = sinSunElevation > 0.0 ? newRandomDirectIrradiance * sinSunElevation + diffuseRadiation : 0.0;
-                        var diffuseHorizontalRadiation = sinSunElevation > 0.0 ? diffuseRadiation : 0.0;
-                        var sunshineDuration = sinSunElevation > 0 ? (int) (newRandomDirectIrradiance / maxDirectIrratiance * minutesPerPeriod) : 0; // [min]
-                        var weight = sinSunElevation > 0 ? 1E-3 + Math.Pow(newRandomDirectIrradiance / maxDirectIrratiance, 3) : 0.0;
+                        var timeStamp = currentHour.AddMinutes(period * minutesPerPeriod);
+                        var age = (double)(timeStamp - startDate).TotalMinutes / minutesPerYear;
+                        var timeOfDay = hour + (double)period / periodsPerHour;
 
-                        // Calculate ambient temperature
-                        var ambientTemp = averageTemp - annualTempAmplitude * cosOmegaYear - diurnalTempAmplitude * cosOmegaDay; // [°C]
+                        if (initialize)
+                        {
+                            var priorPeriodDateTime = timeStamp - TimeSpan.FromMinutes(minutesPerPeriod);
+                            (solarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(
+                                startYear, priorPeriodDateTime,
+                                siteLatitude, siteLongitude,
+                                roofAzimuth, sinRoofElevation, cosRoofElevation);
+                            (meteoParameters, weight) = MeteoSimulator.UpdatedMeteoParameters(  // meteo parameters for prior interval
+                                priorPeriodDateTime, minutesPerPeriod,
+                                meteoParameters,
+                                solarGeometry, cosOmegaYear, cosOmegaDay,
+                                false, 0,
+                                false, 0, 24,
+                                initialize: true);
 
-                        // Update wind velocity with some randomness
-                        var newWindGustVelocity = (random.NextDouble() < windGustProbability) ? random.NextDouble() * maxNewWindGust : 0.0;
-                        var newWindSpeed = windSpeed * weightPreviousWindSpeed + newWindGustVelocity;
-                        windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, newWindSpeed));
+                            initialize = false;
+                        }
 
-                        // Calculate theoretical effective power
-                        //var meteoParameters = new MeteoParameters(
-                        //    Time: timeStamp,
-                        //    Interval: TimeSpan.FromMinutes(minutesPerPeriod),
-                        //    SunshineDuration: sunshineDuration,
-                        //    DirectRadiation: null,
-                        //    DirectNormalIrradiance: null,
-                        //    GlobalRadiation: globalHorizontalRadiation,
-                        //    DiffuseRadiation: diffuseHorizontalRadiation,
-                        //    Temperature: ambientTemp,
-                        //    WindSpeed: windSpeed,
-                        //    WindDirection: null,
-                        //    SnowDepth: snowDepth,
-                        //    RelativeHumidity: null,
-                        //    DewPoint: null,
-                        //    DirectRadiationVariance: null
-                        //    );
+                        // Solar position
+                        (solarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
+                        var sinSunElevation = solarGeometry.SinSunElevation;
 
                         (meteoParameters, weight) = MeteoSimulator.UpdatedMeteoParameters(
                             timeStamp, minutesPerPeriod, 
                             meteoParameters,
                             solarGeometry, cosOmegaYear, cosOmegaDay,
-                            isSnowyDay, newSnow,
-                            applyFoggyDays, fogDissolveStartHour, fogDissolveEndHour);
+                            applySnowDays && isSnowyDay, newSnow,
+                            applyFoggyDays && isFoggyDay, fogDissolveStartHour, fogDissolveEndHour);
 
                         var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, solarGeometry, meteoParameters, age, pvParams);
 
-                        // Add some noise to the measured power
-                        var noise = calculatedPower.PowerGRTWSF * randomNoiseStdDev * (random.NextDouble() - 0.5);
+                        // If applcable, add some noise to the measured power and apply outlier factor
+                        var noiseFactor = 1.0 + (applyRandomNoise ? randomNoiseVariation * (random.NextDouble() - 0.5) : 0.0);
+                        var outlierFactor = (applyOutliers && isOutlier) ? 1.5 : 1.0;
+                        var measuredPower = (calculatedPower.PowerGRTWSF > 0 ? calculatedPower.PowerGRTWSF : 0.0) * noiseFactor * outlierFactor;
 
-                        var measuredPower = calculatedPower.PowerGRTWSF + (applyRandomNoise ? noise : 0);
-
-                        //// Apply weather and outlier effects
-                        //var isFoggyPeriod = isFoggyDay && hour < fogDissolveEndHour;
-                        //if (applyFoggyDays)
-                        //{
-                        //    if (isFoggyPeriod)
-                        //    {
-                        //        var fogFactor = hour <= fogDissolveStartHour ? 0.0 : hour >= fogDissolveEndHour ? 1.0 : (hour - fogDissolveStartHour) / (fogDissolveEndHour - fogDissolveStartHour);
-                        //        measuredPower *= fogFactor; // Reduced power in foggy mornings
-                        //    }
-                        //}
-
-                        //if (applySnowDays)
-                        //{
-                        //    if (isSnowyDay)
-                        //    {
-                        //        measuredPower = 0.0; // No power generation on snowy days
-                        //    }
-                        //}
-
-                        if (applyOutliers)
+                        if (!isSnowyDay || outlierFactor > 1)
                         {
-                            if (isOutlier)
-                            {
-                                measuredPower *= 1.5; // Distorted power for outliers
-                            }
+                            var DEBUG = 1;
                         }
-
-                        var directHorizontalRadiation = globalHorizontalRadiation - diffuseHorizontalRadiation;
-                        var directNormalIrradiance = sinSunElevation > 0 ? directHorizontalRadiation / sinSunElevation : 0.0; // used in forecasting models
-
 
                         pvRecords.Add(
                             new PvRecord(
@@ -242,22 +183,6 @@ public class DataSimulator
                                 pvRecords.Count,
                                 solarGeometry,
                                 meteoParameters,
-                                //new MeteoParameters(
-                                //    Time: timeStamp,
-                                //    Interval: TimeSpan.FromMinutes(minutesPerPeriod),
-                                //    SunshineDuration: sunshineDuration,
-                                //    DirectRadiation: directHorizontalRadiation,
-                                //    DirectNormalIrradiance: directNormalIrradiance,
-                                //    GlobalRadiation: globalHorizontalRadiation,
-                                //    DiffuseRadiation: diffuseHorizontalRadiation,
-                                //    Temperature: ambientTemp,
-                                //    WindSpeed: windSpeed,
-                                //    WindDirection: null,
-                                //    SnowDepth: snowDepth,
-                                //    RelativeHumidity: null,
-                                //    DewPoint: null,
-                                //    DirectRadiationVariance: null
-                                //    ),
                                 weight: weight,  
                                 age, measuredPower)
                             );

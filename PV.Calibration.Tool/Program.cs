@@ -73,8 +73,8 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         roofElevation: 20,
         simulationsPeriod: simulationsPeriod,
         applyRandomNoise: true,
+        applySnowDays: !true,
         applyFoggyDays: true,
-        applySnowDays: true,
         applyOutliers: true
         );
 
@@ -193,26 +193,16 @@ void ProcessPvData(
 
     var hullPriors = new PvPriors
     {
-        PriorMeans = new PvModelParams(
-            etha: ethaHull, 
-            gamma: priorMeans.Gamma, 
-            u0: priorMeans.U0, 
-            u1: priorMeans.U1, 
-            lDegr: LDegHull,
-            lambdaDSnow: priorMeans.LambdaDSnow, 
-            lambdaAFog: priorMeans.LambdaAFog, 
-            bFog: priorMeans.BFog, 
-            lambdaKFog: priorMeans.LambdaKFog),
-        PriorSigmas = new PvModelParams(
-            etha: ethaHullUncertainty, 
-            gamma: priorSigmas.Gamma, 
-            u0: priorSigmas.U0, 
-            u1: priorSigmas.U1,
-            lDegr: LDegHullUncertainty,
-            lambdaDSnow: priorSigmas.LambdaDSnow, 
-            lambdaAFog: priorSigmas.LambdaAFog, 
-            bFog: priorSigmas.BFog, 
-            lambdaKFog: priorSigmas.LambdaKFog)
+        PriorMeans = priorMeans with 
+        { 
+            Etha = ethaHull,
+            LDegr = LDegHull
+        },
+        PriorSigmas = priorSigmas with
+        {
+            Etha = ethaHullUncertainty,
+            LDegr = LDegHullUncertainty
+        }
     };
 
     Console.WriteLine();
@@ -221,7 +211,7 @@ void ProcessPvData(
     var (thetaCalibratedList, iterations, meanError) = BayesianCalibrator.Calibrate(
         pvRecords: pvRecords,
         defaultPriors,
-        validRecords: null,
+        validRecords: pvRecords.Select(v => true).ToList(),
         installedPower: installedPower,
         periodsPerHour: periodsPerHour,
         tolerance: tolerance,

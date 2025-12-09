@@ -20,7 +20,7 @@
     {
         public double GetDirectPoa(bool hasDirectIrradiance, double sinSunElevation)
         {
-            if (!hasDirectIrradiance)
+            if (!hasDirectIrradiance || sinSunElevation <= 0.0)
                 return 0.0;
 
             var directHorizontalRadiation = Math.Max(0, GlobalRadiation.Value - DiffuseRadiation.Value);

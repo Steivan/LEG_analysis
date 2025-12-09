@@ -150,6 +150,10 @@ namespace PV.Calibration.Tool
                     var pvRecord = pvRecords[i];
                     // Call the user's provided Jacobian function => obtained via pvRecord.GetPvResidualsRecord(...)
 
+                    if (pvRecord.Weight <= 0.0)
+                    {
+                        var DEBUG_1 = 0;
+                    }
                     // Weighting (if applicable)
                     var weight_GRTW = pvRecord.HasMeasuredPower ? Math.Sqrt(pvRecord.Weight) : 0.0;
                     var weight_SF = pvRecord.HasMeasuredPower ? 1.0 : 0.0;
@@ -166,6 +170,11 @@ namespace PV.Calibration.Tool
                     var derivativesRecord = recordValues.Derivatives;
                     var unexplainedFractionLossRecord = recordValues.UnexplainedFractionLossRecord;
                     var derivativeAdjustmentFactor_GRTW = powerRecord.PowerGRTW > 0 ? powerRecord.PowerGRTWSF / powerRecord.PowerGRTW : 1.0;
+
+                    if (double.IsNaN(powerRecord.PowerGRTW))
+                    {
+                        var DEBUG_2 = 0;
+                    }
 
                     Y_GRTW[i] = pvRecord.HasMeasuredPower ? pvRecord.MeasuredPower.Value * weight_GRTW : 0.0; 
                     Peff_Model_GRTW[i] = powerRecord.PowerGRTWSF * weight_GRTW;
