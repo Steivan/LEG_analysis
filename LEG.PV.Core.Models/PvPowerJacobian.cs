@@ -1,6 +1,7 @@
 ﻿using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.PV.Core.Models.PvConstants;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Core.Models;
 

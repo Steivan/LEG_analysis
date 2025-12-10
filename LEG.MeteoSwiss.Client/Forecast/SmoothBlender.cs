@@ -1,7 +1,8 @@
 ﻿
 using LEG.MeteoSwiss.Abstractions.Models;
-    
-    namespace LEG.MeteoSwiss.Client.Forecast
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+
+namespace LEG.MeteoSwiss.Client.Forecast
 {
 
 internal class SmoothBlender
@@ -92,20 +93,20 @@ internal class SmoothBlender
                     }
                 }
                 smoothedQuarterForecast[quarterTime] = new MeteoParameters(
-                    Time: quarterTime,
-                    Interval: quarterForecast[quarterTime].Interval,
-                    weightSunshineDuration > 0 ? sumSunshineDuration / weightSunshineDuration : null,
-                    weightDirectRadiation > 0 ? sumDirectRadiation / weightDirectRadiation : null,
-                    weightDirectNormalIrradiance > 0 ? sumDirectNormalIrradiance / weightDirectNormalIrradiance : null,
-                    weightGlobalRadiation > 0 ? sumGlobalRadiation / weightGlobalRadiation : null,
-                    weightDiffuseRadiation > 0 ? sumDiffuseRadiation / weightDiffuseRadiation : null,
-                    weightTemperature > 0 ? sumTemperatue / weightTemperature : null,
-                    weightWindSpeed > 0 ? sumWindSpeed / weightWindSpeed : null,
-                    weightWindDirection > 0 ? Math.Atan2(sumWind_Y, sumWind_X) / DegToRad : null,
-                    weightSnowDepth > 0 ? sumSnowDepth / weightSnowDepth : null,
-                    weightRelativeHumidity > 0 ? sumRelativeHumidity / weightRelativeHumidity : null,
-                    weightDewPoint > 0 ? sumDewPoint / weightDewPoint : null,
-                    weightDirectRadiationVariance > 0 ? sumDirectRadiationVariance / weightDirectRadiationVariance : null
+                    time: quarterTime,
+                    interval: quarterForecast[quarterTime].Interval,
+                    sunshineDuration: weightSunshineDuration > 0 ? sumSunshineDuration / weightSunshineDuration : null,
+                    directRadiation: weightDirectRadiation > 0 ? sumDirectRadiation / weightDirectRadiation : null,
+                    directNormalIrradiance: weightDirectNormalIrradiance > 0 ? sumDirectNormalIrradiance / weightDirectNormalIrradiance : null,
+                    globalRadiation: weightGlobalRadiation > 0 ? sumGlobalRadiation / weightGlobalRadiation : null,
+                    diffuseRadiation: weightDiffuseRadiation > 0 ? sumDiffuseRadiation / weightDiffuseRadiation : null,
+                    temperature: weightTemperature > 0 ? sumTemperatue / weightTemperature : null,
+                    windSpeed: weightWindSpeed > 0 ? sumWindSpeed / weightWindSpeed : null,
+                    windDirection: weightWindDirection > 0 ? Math.Atan2(sumWind_Y, sumWind_X) / DegToRad : null,
+                    snowDepth: weightSnowDepth > 0 ? sumSnowDepth / weightSnowDepth : null,
+                    relativeHumidity: weightRelativeHumidity > 0 ? sumRelativeHumidity / weightRelativeHumidity : null,
+                    dewPoint: weightDewPoint > 0 ? sumDewPoint / weightDewPoint : null,
+                    radiationVariance: weightDirectRadiationVariance > 0 ? sumDirectRadiationVariance / weightDirectRadiationVariance : null
                 );
             }
 

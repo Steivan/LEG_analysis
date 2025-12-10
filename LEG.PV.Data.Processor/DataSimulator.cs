@@ -3,6 +3,7 @@ using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPowerJacobian;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Data.Processor;
 

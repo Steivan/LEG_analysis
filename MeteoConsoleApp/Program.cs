@@ -5,6 +5,7 @@ using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace MeteoConsoleApp
 {

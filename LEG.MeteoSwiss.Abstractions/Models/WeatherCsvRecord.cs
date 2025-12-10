@@ -1,4 +1,5 @@
 ﻿using CsvHelper.Configuration.Attributes;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.MeteoSwiss.Abstractions.Models
 {
@@ -209,20 +210,20 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         public MeteoParameters ToMeteoParameters()
         {
             return new MeteoParameters(
-                Time: ReferenceTimestamp,
-                Interval: TimeSpan.FromMinutes(10),
-                SunshineDuration: SunshineDuration,
-                DirectRadiation: DirectRadiation,
-                DirectNormalIrradiance: DirectNormalIrradiance,
-                GlobalRadiation: ShortWaveRadiation,
-                DiffuseRadiation: DiffuseRadiation,
-                Temperature: Temperature2m,
-                WindSpeed: WindSpeed10min_kmh,
-                WindDirection: WindDirection,
-                SnowDepth: SnowDepth,
-                RelativeHumidity: RelativeHumidity2m,
-                DewPoint: DewPoint2m,
-                RadiationVariance: null
+                time: ReferenceTimestamp,
+                interval: TimeSpan.FromMinutes(10),
+                sunshineDuration: SunshineDuration,
+                directRadiation: DirectRadiation,
+                directNormalIrradiance: DirectNormalIrradiance,
+                globalRadiation: ShortWaveRadiation,
+                diffuseRadiation: DiffuseRadiation,
+                temperature: Temperature2m,
+                windSpeed: WindSpeed10min_kmh,
+                windDirection: WindDirection,
+                snowDepth: SnowDepth,
+                relativeHumidity: RelativeHumidity2m,
+                dewPoint: DewPoint2m,
+                radiationVariance: null
             );
         }
     }

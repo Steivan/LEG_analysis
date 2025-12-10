@@ -3,6 +3,7 @@ using LEG.MeteoSwiss.Client.Forecast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.Tests
 {

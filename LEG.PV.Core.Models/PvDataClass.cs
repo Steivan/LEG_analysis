@@ -1,4 +1,5 @@
 ﻿using LEG.MeteoSwiss.Abstractions.Models;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Core.Models
 {
@@ -18,7 +19,7 @@ namespace LEG.PV.Core.Models
                 Timestamp = timestamp;
                 Index = index;
                 SolarGeometry = geometryFactors;
-                MeteoParameters = meteoParameters;
+                MeteoDataRecord = meteoParameters;
                 Weight = weight;
                 Age = age;
                 MeasuredPower = measuredPower;
@@ -26,7 +27,7 @@ namespace LEG.PV.Core.Models
             public DateTime Timestamp { get; init; }                                            // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                                                     // Index [unitless]
             public PvSolarGeometry SolarGeometry { get; set; }
-            public MeteoParameters MeteoParameters { get; set; }
+            public MeteoParameters MeteoDataRecord { get; set; }
             public double Weight { get; set; }
             public double Age { get; set; }                                                     // Age [years]
             public double? MeasuredPower { get; init; }                                         // P_meas [W]
@@ -93,7 +94,7 @@ namespace LEG.PV.Core.Models
                         installedPower,
                         periodsPerHour,
                         SolarGeometry,
-                        MeteoParameters,
+                        MeteoDataRecord,
                         Age,
                         modelParams
                         );

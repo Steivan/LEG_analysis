@@ -81,7 +81,7 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
                 await meteoDataService.GetHistoricalWeatherAsync(startDate, endDate, stationId, "t");
 
                 var stationLatestRecord = MeteoAggregator.GetStationLatestMeteoParametersRecord(stationId, selectedStationsMetaDict[stationId], granularity: "t", isTower: false);
-                validMeteoParametersList.Add(stationLatestRecord.GetValidMeteoParameters);
+                validMeteoParametersList.Add(stationLatestRecord.GetValidMeteoParameters());
             }
 
             return validMeteoParametersList;

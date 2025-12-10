@@ -10,6 +10,7 @@ using System.Data;
 using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
 using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvDataClass;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Data.Processor
 {
@@ -55,7 +56,7 @@ namespace LEG.PV.Data.Processor
             MeteoParameterType.DewPoint
         };
         public Dictionary<MeteoParameterType, double?[]> MeteoValuesArrays { get; set; } = new();
-        public  Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
+        public Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightedSumMeteoValuesArrays { get; set; } = new();
 
         // Selected stations, available parameters and blending weights
@@ -943,7 +944,7 @@ namespace LEG.PV.Data.Processor
             {
                 var stationId = stationData.StationId;
                 var stationDataRecords = stationData.WeatherData;
-                var validParameters = stationDataRecords[0].GetValidMeteoParameters;  // Use first record to check valid parameters
+                var validParameters = stationDataRecords[0].GetValidMeteoParameters();  // Use first record to check valid parameters
 
                 if (validParameters.HasValidGlobalRadiation)
                 {

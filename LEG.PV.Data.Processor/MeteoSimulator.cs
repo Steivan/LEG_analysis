@@ -1,5 +1,6 @@
 ﻿using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.PV.Core.Models;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Data.Processor
 {
@@ -88,20 +89,20 @@ namespace LEG.PV.Data.Processor
             dewPoint = temperature - (temperature - dewPoint) * (1.0 + (2.0 * random.NextDouble() - 1.0) * deltaDewPoint) ;
 
             var updatedMeteoParameters = new MeteoParameters(
-                Time:  timeStamp,
-                Interval: TimeSpan.FromMinutes(minutesPerPeriod),
-                SunshineDuration: Math.Max(0,Math.Min(minutesPerPeriod, (int)sunshineDuration)),
-                DirectRadiation: directRadiation,
-                DirectNormalIrradiance: direcNormaltIrradiance,
-                DiffuseRadiation: diffuseRadiation,
-                GlobalRadiation: directRadiation + diffuseRadiation,
-                Temperature: temperature,
-                WindSpeed: windSpeed,
-                WindDirection: null,
-                SnowDepth: snowDepth,
-                RelativeHumidity: relativeHumidity,
-                DewPoint: dewPoint,
-                RadiationVariance: directRadiation * directRadiationCV
+                time:  timeStamp,
+                interval: TimeSpan.FromMinutes(minutesPerPeriod),
+                sunshineDuration: Math.Max(0,Math.Min(minutesPerPeriod, (int)sunshineDuration)),
+                directRadiation: directRadiation,
+                directNormalIrradiance: direcNormaltIrradiance,
+                diffuseRadiation: diffuseRadiation,
+                globalRadiation: directRadiation + diffuseRadiation,
+                temperature: temperature,
+                windSpeed: windSpeed,
+                windDirection: null,
+                snowDepth: snowDepth,
+                relativeHumidity: relativeHumidity,
+                dewPoint: dewPoint,
+                radiationVariance: directRadiation * directRadiationCV
             );
 
             return (updatedMeteoParameters, weight);

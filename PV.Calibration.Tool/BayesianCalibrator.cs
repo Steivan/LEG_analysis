@@ -192,7 +192,7 @@ namespace PV.Calibration.Tool
                     // Call the user's provided Jacobian function => obtained via pvRecord.GetPvResidualsRecord(...)
 
                     // Weighting (if applicable)
-                    var (weightR, weightS, weightF) = pvRecord.MeteoParameters.GetWeightsRSW();
+                    var (weightR, weightS, weightF) = pvRecord.MeteoDataRecord.GetWeightsRSW();
                     var weight_GRTW = weightR *(pvRecord.HasMeasuredPower ? Math.Sqrt(pvRecord.Weight) : 0.0);
                     var weight_SF = pvRecord.HasMeasuredPower ? 1.0 : 0.0;
                     var weight_S = weightS * weight_SF;
@@ -216,7 +216,7 @@ namespace PV.Calibration.Tool
 
                     if (weight_S > 0.0)
                     {
-                        UpdateErrors_S(errors_S, support_S, pvRecord.MeteoParameters.SnowDepth.Value, pvRecord.MeasuredPower.Value, weight_S);
+                        UpdateErrors_S(errors_S, support_S, pvRecord.MeteoDataRecord.SnowDepth.Value, pvRecord.MeasuredPower.Value, weight_S);
                     }
 
                     Y_F[i] = 0.0 * weight_F;   // Target is zero unexplained loss 

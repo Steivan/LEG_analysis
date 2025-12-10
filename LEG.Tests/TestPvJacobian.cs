@@ -4,6 +4,7 @@ using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvPowerJacobian;
 using LEG.MeteoSwiss.Abstractions.Models;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.Tests
 {
@@ -36,8 +37,8 @@ namespace LEG.Tests
         const double ambientTemp = 30.0;             // [°C]
         const double windSpeed = 20;                 // [km/h]
         const double snowDepth = 0.0;                // [cm]
-        const double RelativeHumidity = 95;          // [%] 
-        const double DewPoint = ambientTemp - (1 - RelativeHumidity / 100) * (ambientTemp - 14); 
+        const double relativeHumidity = 95;          // [%] 
+        const double dewPoint = ambientTemp - (1 - relativeHumidity / 100) * (ambientTemp - 14); 
         const double age = 5.0;                      // [y]
 
         [TestMethod]
@@ -59,20 +60,20 @@ namespace LEG.Tests
 
             var meteoParameters = new MeteoParameters
             (
-                Time: DateTime.UtcNow,
-                Interval: TimeSpan.FromMinutes(15),
-                SunshineDuration: sunshineDuration,
-                DirectRadiation: null,
-                DirectNormalIrradiance: null,
-                GlobalRadiation: shortWaveRadiation,
-                DiffuseRadiation: diffuseRadiation,
-                Temperature: ambientTemp,
-                WindSpeed: windSpeed,
-                WindDirection: 0,
-                SnowDepth: snowDepth,
-                RelativeHumidity: RelativeHumidity,
-                DewPoint: DewPoint,
-                RadiationVariance: shortWaveRadiation * shortWaveRadiation * 0.01
+                time: DateTime.UtcNow,
+                interval: TimeSpan.FromMinutes(15),
+                sunshineDuration: sunshineDuration,
+                directRadiation: null,
+                directNormalIrradiance: null,
+                globalRadiation: shortWaveRadiation,
+                diffuseRadiation: diffuseRadiation,
+                temperature: ambientTemp,
+                windSpeed: windSpeed,
+                windDirection: 0,
+                snowDepth: snowDepth,
+                relativeHumidity: relativeHumidity,
+                dewPoint: dewPoint,
+                radiationVariance: shortWaveRadiation * shortWaveRadiation * 0.01
             );
 
             // Calculate effective power

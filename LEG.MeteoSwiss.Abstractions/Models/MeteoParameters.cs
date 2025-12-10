@@ -1,126 +1,217 @@
-﻿namespace LEG.MeteoSwiss.Abstractions.Models
+﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+
+namespace LEG.MeteoSwiss.Abstractions.Models
 {
-    public record MeteoParameters(
-        DateTime Time,
-        TimeSpan Interval,
-        double? SunshineDuration,
-        double? DirectRadiation,
-        double? DirectNormalIrradiance,
-        double? GlobalRadiation,
-        double? DiffuseRadiation,
-        double? Temperature,
-        double? WindSpeed,
-        double? WindDirection,
-        double? SnowDepth,
-        double? RelativeHumidity,
-        double? DewPoint,
-        double? RadiationVariance = null, // Optional for history/forecast
-        IntervalAnchor Anchor = IntervalAnchor.End // Default to End
-    )
+    public class MeteoParameterTypes
     {
-        public double? ValueFromType(MeteoParameterType parameterType)
+        public record MeteoParameters
         {
-            return parameterType switch
+            public MeteoParameters
+            (
+                DateTime time,
+                TimeSpan interval,
+                double? sunshineDuration,
+                double? directRadiation,
+                double? directNormalIrradiance,
+                double? globalRadiation,
+                double? diffuseRadiation,
+                double? temperature,
+                double? windSpeed,
+                double? windDirection,
+                double? snowDepth,
+                double? relativeHumidity,
+                double? dewPoint,
+                double? radiationVariance = null, // Optional for history/forecast
+                IntervalAnchor anchor = IntervalAnchor.End // Default to End
+            )
             {
-                MeteoParameterType.SunshineDuration => SunshineDuration ?? null,
-                MeteoParameterType.DirectRadiation => DirectRadiation ?? null,
-                MeteoParameterType.DirectNormalIrradiance => DirectNormalIrradiance ?? null,
-                MeteoParameterType.GlobalRadiation => GlobalRadiation ?? null,
-                MeteoParameterType.DiffuseRadiation => DiffuseRadiation ?? null,
-                MeteoParameterType.Temperature => Temperature ?? null,
-                MeteoParameterType.WindSpeed => WindSpeed ?? null,
-                MeteoParameterType.WindDirection => WindDirection ?? null,
-                MeteoParameterType.SnowDepth => SnowDepth ?? null,
-                MeteoParameterType.RelativeHumidity => RelativeHumidity ?? null,
-                MeteoParameterType.DewPoint => DewPoint ?? null,
-                _ => null,
-            };
+                Time = time;
+                Interval = interval;
+                SunshineDuration = sunshineDuration;
+                DirectNormalIrradiance = directNormalIrradiance;
+                (DirectRadiation, DiffuseRadiation, GlobalRadiation) = Get_Dr_Df_G_Radiation(directRadiation, diffuseRadiation, globalRadiation);
+                (Temperature, DewPoint, RelativeHumidity) = Get_T_DP_RH(temperature, dewPoint, relativeHumidity);
+                WindSpeed = windSpeed;
+                WindDirection = windDirection;
+                SnowDepth = snowDepth;
+                RadiationVariance = radiationVariance;
+                Anchor = anchor;
+            }
+
+            public DateTime Time { get; init; }
+            public TimeSpan Interval { get; init; }
+            public double? SunshineDuration { get; init; }
+            public double? DirectRadiation { get; init; }
+            public double? DirectNormalIrradiance { get; init; }
+            public double? GlobalRadiation { get; init; }
+            public double? DiffuseRadiation { get; init; }
+            public double? Temperature { get; init; }
+            public double? WindSpeed { get; init; }
+            public double? WindDirection { get; init; }
+            public double? SnowDepth { get; init; }
+            public double? RelativeHumidity { get; init; }
+            public double? DewPoint { get; init; }
+            public double? RadiationVariance { get; init; } = null; // Optional for history/forecast
+            public IntervalAnchor Anchor { get; init; } = IntervalAnchor.End; // Default to End
+
+            private (double? Dr, double? Df, double? G) Get_Dr_Df_G_Radiation(double? directRadiation, double? diffuseRadiation, double? globalRadiation)
+            {
+                double? Dr = directRadiation;
+                double? Df = diffuseRadiation;
+                double? G = globalRadiation;
+                if (G.HasValue && Dr.HasValue && !Df.HasValue)
+                {
+                    Df = G.Value - Dr.Value;
+                }
+                else if (G.HasValue && Df.HasValue && !Dr.HasValue)
+                {
+                    Dr = G.Value - Df.Value;
+                }
+                else if (Dr.HasValue && Df.HasValue && !G.HasValue)
+                {
+                    G = Dr.Value + Df.Value;
+                }
+                return (Dr, Df, G);
+            }
+            private (double? T, double? DP, double? RH) Get_T_DP_RH(double? temperature, double? dewPoint, double? relativeHumidity)
+            {
+                double? T = temperature;
+                double? DP = dewPoint;
+                double? RH = relativeHumidity;
+                if (T.HasValue && DP.HasValue && !RH.HasValue)
+                {
+                    RH = RHFromDP(T.Value, DP.Value);
+                }
+                else if (T.HasValue && RH.HasValue && !DP.HasValue)
+                {
+                    DP = DewPointFromRH(T.Value, RH.Value);
+                }
+                else if (DP.HasValue && RH.HasValue && !T.HasValue)
+                {
+                    // Rearranged Magnus formula to get T from DP and RH
+                    const double a = 17.62;
+                    const double b = 243.12;
+                    double alpha = Math.Log(RH.Value / 100.0) + (a * DP.Value) / (b + DP.Value);
+                    T = (b * alpha) / (a - alpha);
+                }
+                return (T, DP, RH);
+            }
+
+            public double? ValueFromType(MeteoParameterType parameterType)
+            {
+                return parameterType switch
+                {
+                    MeteoParameterType.SunshineDuration => SunshineDuration ?? null,
+                    MeteoParameterType.DirectRadiation => DirectRadiation ?? null,
+                    MeteoParameterType.DirectNormalIrradiance => DirectNormalIrradiance ?? null,
+                    MeteoParameterType.GlobalRadiation => GlobalRadiation ?? null,
+                    MeteoParameterType.DiffuseRadiation => DiffuseRadiation ?? null,
+                    MeteoParameterType.Temperature => Temperature ?? null,
+                    MeteoParameterType.WindSpeed => WindSpeed ?? null,
+                    MeteoParameterType.WindDirection => WindDirection ?? null,
+                    MeteoParameterType.SnowDepth => SnowDepth ?? null,
+                    MeteoParameterType.RelativeHumidity => RelativeHumidity ?? null,
+                    MeteoParameterType.DewPoint => DewPoint ?? null,
+                    _ => null,
+                };
+            }
+            public (double weightR, double weightS, double weightF) GetWeightsRSW()
+            {
+                const double gammaR = 10.0 / 1000.0;        // [1/(W/m2)] for Global Radiation
+                const double gammaS = 10.0 / 10.0;          // [1/(cm)] for Snow Depth
+                const double gammaF = 10.0 / 2.0;           // [1/(°C)] for Dew Point
+                double conjugateWeight(double gamma, double x) => x <= 0 ? 1.0 : 2.0 / (1.0 + Math.Exp(gamma * x));
+
+                // Decompose data into GRTW, S and F
+                var nonRadiation = conjugateWeight(gammaR, GlobalRadiation ?? 0.0);
+                var nonSnow = conjugateWeight(gammaS, SnowDepth ?? 0.0);
+                var nonFog = 1.0 - conjugateWeight(gammaF, GetDewPointDepression());
+
+                var radiation = (1.0 - nonRadiation);
+                var weightRadiation = radiation * nonSnow * nonFog;
+                var weightSnow = radiation * (1.0 - nonSnow);
+                var weightFog = radiation * nonSnow * (1.0 - nonFog);
+                // Residual = 1.0 - weightRadiation - weightSnow - weigtFog = nonRadiation =>  nighttime records 
+
+                return (weightRadiation, weightSnow, weightFog);
+            }
+
+            public double GetDirectPoa(bool hasDirectIrradiance, double sinSunElevation)
+            {
+                if (!hasDirectIrradiance || sinSunElevation <= 0.0)
+                    return 0.0;
+
+                var directHorizontalRadiation = Math.Max(0, GlobalRadiation.Value - DiffuseRadiation.Value);
+
+                return directHorizontalRadiation / sinSunElevation;
+            }
+
+            public double GetDiffusePoa(bool hasDiffuseIrradiance)
+            {
+                return hasDiffuseIrradiance ? DiffuseRadiation.Value : 0.0;
+            }
+
+            public double DewPointFromRH(double temperature, double relativeHumidity)
+            {
+                // Magnus formula for dew point approximation
+                const double a = 17.62;     // 17.27;
+                const double b = 243.12;    // 237.7; // degrees Celsius
+
+                double alpha = a * temperature / (b + temperature) + Math.Log(relativeHumidity / 100.0);
+
+                return (b * alpha) / (a - alpha);
+            }
+            public double RHFromDP(double temperature, double dewPoint)
+            {
+                // Magnus formula for dew point approximation
+                const double a = 17.62;
+                const double b = 243.12;
+
+                return 100.0 * Math.Exp(a * dewPoint / (b + dewPoint) - a * temperature / (b + temperature));
+            }
+            public double GetDewPoint(double defaultT = 15.0, double defaultRH = 60.0)
+            {
+                // Measured value
+                if (DewPoint.HasValue)
+                    return DewPoint.Value;
+
+                // Magnus formula for dew point approximation
+                var temperature = Temperature ?? defaultT;
+                var relativeHumidity = RelativeHumidity ?? defaultRH;
+
+                return DewPointFromRH(temperature, relativeHumidity);
+            }
+
+            public double GetDewPointDepression(double defaultT = 15.0, double defaultRH = 60.0)
+            {
+                var temperature = Temperature ?? defaultT;
+
+                return temperature - GetDewPoint(temperature, defaultRH);
+            }
+
+
+            public ValidMeteoParameters GetValidMeteoParameters()
+            {
+                return new ValidMeteoParameters
+                {
+                    HasValidSunshineDuration = SunshineDuration.HasValue,
+                    HasValidDirectRadiation = DirectRadiation.HasValue,
+                    HasValidDirectNormalIrradiance = DirectNormalIrradiance.HasValue,
+                    HasValidGlobalRadiation = GlobalRadiation.HasValue,
+                    HasValidDiffuseRadiation = DiffuseRadiation.HasValue,
+                    HasValidTemperature = Temperature.HasValue,
+                    HasValidWindSpeed = WindSpeed.HasValue,
+                    HasValidWindDirection = WindDirection.HasValue,
+                    HasValidSnowDepth = SnowDepth.HasValue,
+                    HasValidRelativeHumidity = RelativeHumidity.HasValue,
+                    HasValidDewPoint = DewPoint.HasValue,
+                    HasValidRadiationVariance = RadiationVariance.HasValue
+                };
+            }
         }
-        public (double weightR, double weightS, double weightF) GetWeightsRSW()
-        {
-            const double gammaR = 10.0 / 1000.0;        // [1/(W/m2)] for Global Radiation
-            const double gammaS = 10.0 / 10.0;          // [1/(cm)] for Snow Depth
-            const double gammaF = 10.0 / 2.0;           // [1/(°C)] for Dew Point
-            double conjugateWeight(double gamma, double x) => x <= 0 ? 1.0 : 2.0 / (1.0 + Math.Exp(gamma * x));
-
-            // Decompose data into GRTW, S and F
-            var nonRadiation = conjugateWeight(gammaR, GlobalRadiation ?? 0.0);
-            var nonSnow = conjugateWeight(gammaS, SnowDepth ?? 0.0);
-            var nonFog = 1.0 - conjugateWeight(gammaF, GetDewPointDepression());
-
-            var radiation = (1.0 - nonRadiation);
-            var weightRadiation = radiation * nonSnow * nonFog;
-            var weightSnow = radiation * (1.0 - nonSnow);
-            var weightFog = radiation * nonSnow * (1.0 - nonFog);
-            // Residual = 1.0 - weightRadiation - weightSnow - weigtFog = nonRadiation =>  nighttime records 
-
-            return (weightRadiation, weightSnow, weightFog);
-        }
-
-        public double GetDirectPoa(bool hasDirectIrradiance, double sinSunElevation)
-        {
-            if (!hasDirectIrradiance || sinSunElevation <= 0.0)
-                return 0.0;
-
-            var directHorizontalRadiation = Math.Max(0, GlobalRadiation.Value - DiffuseRadiation.Value);
-
-            return directHorizontalRadiation / sinSunElevation;
-        }
-
-        public double GetDiffusePoa(bool hasDiffuseIrradiance)
-        {
-            return hasDiffuseIrradiance ? DiffuseRadiation.Value : 0.0;
-        }
-
-        public double DewPointFromRH(double temperature, double relativeHumidity)
-        {
-            // Magnus formula for dew point approximation
-            const double a = 17.62;     // 17.27;
-            const double b = 243.12;    // 237.7; // degrees Celsius
-
-            double alpha = a * temperature / (b + temperature) + Math.Log(relativeHumidity / 100.0);
-
-            return (b * alpha) / (a - alpha);
-        }
-        public double GetDewPoint(double defaultT = 15.0, double defaultRH = 60.0)
-        {
-            // Measured value
-            if (DewPoint.HasValue)
-                return DewPoint.Value;
-
-            // Magnus formula for dew point approximation
-            var temperature = Temperature ?? defaultT;
-            var relativeHumidity = RelativeHumidity ?? defaultRH;
-
-            return DewPointFromRH(temperature, relativeHumidity);
-        }
-
-        public double GetDewPointDepression(double defaultT = 15.0, double defaultRH = 60.0)
-        {
-            var temperature = Temperature ?? defaultT;
-
-            return temperature - GetDewPoint(temperature, defaultRH);
-        }
-
-        public ValidMeteoParameters GetValidMeteoParameters = new()
-        {
-            HasValidSunshineDuration = SunshineDuration.HasValue,
-            HasValidDirectRadiation = DirectRadiation.HasValue,
-            HasValidDirectNormalIrradiance = DirectNormalIrradiance.HasValue,
-            HasValidGlobalRadiation = GlobalRadiation.HasValue,
-            HasValidDiffuseRadiation = DiffuseRadiation.HasValue,
-            HasValidTemperature = Temperature.HasValue,
-            HasValidWindSpeed = WindSpeed.HasValue,
-            HasValidWindDirection = WindDirection.HasValue,
-            HasValidSnowDepth = SnowDepth.HasValue,
-            HasValidRelativeHumidity = RelativeHumidity.HasValue,
-            HasValidDewPoint = DewPoint.HasValue,
-            HasValidRadiationVariance = RadiationVariance.HasValue
-        };
     }
 
     public record StationMeteoData(string StationId, List<MeteoParameters> WeatherData);
-
     public record ValidMeteoParameters
     {
         public bool HasValidSunshineDuration { init; get; }

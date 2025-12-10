@@ -1,6 +1,7 @@
 ﻿using LEG.Common;
 using LEG.MeteoSwiss.Abstractions.Models;
 using System.Runtime.CompilerServices;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 [assembly: InternalsVisibleTo("LEG.Tests")]
 

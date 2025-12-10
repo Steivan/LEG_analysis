@@ -1,4 +1,6 @@
-﻿namespace LEG.MeteoSwiss.Abstractions.Models
+﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+
+namespace LEG.MeteoSwiss.Abstractions.Models
 {
     public static class MeteoParameterInfo
     {

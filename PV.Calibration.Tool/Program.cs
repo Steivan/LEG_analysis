@@ -6,6 +6,7 @@ using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 //ProcessSyntheticModelData(
 //    applyRandomNoise: true,

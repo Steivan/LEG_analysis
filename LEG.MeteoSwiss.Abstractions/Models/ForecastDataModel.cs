@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.MeteoSwiss.Abstractions.Models
 {
@@ -38,16 +36,16 @@ namespace LEG.MeteoSwiss.Abstractions.Models
                 Time,
                 TimeSpan.FromHours(1),
                 null, // SunshineDuration not available
-                DirectRadiation: DirectRadiationWm2,
-                DirectNormalIrradiance: DirectNormalIrradianceWm2,
-                GlobalRadiation: GlobalRadiationWm2,
-                DiffuseRadiation: DiffuseRadiationWm2,
-                Temperature: TemperatureC,
-                WindSpeed: WindSpeedKmh,
-                WindDirection: WindDirectionDeg,
-                SnowDepth: SnowDepthM,
-                RelativeHumidity: RelativeHumidity,
-                DewPoint: DewPointC
+                directRadiation: DirectRadiationWm2,
+                directNormalIrradiance: DirectNormalIrradianceWm2,
+                globalRadiation: GlobalRadiationWm2,
+                diffuseRadiation: DiffuseRadiationWm2,
+                temperature: TemperatureC,
+                windSpeed: WindSpeedKmh,
+                windDirection: WindDirectionDeg,
+                snowDepth: SnowDepthM,
+                relativeHumidity: RelativeHumidity,
+                dewPoint: DewPointC
             );
         }
     }
@@ -82,16 +80,16 @@ namespace LEG.MeteoSwiss.Abstractions.Models
                 Time,
                 TimeSpan.FromMinutes(15),
                 null, // SunshineDuration not available
-                DirectRadiation: DirectRadiationWm2,
-                DirectNormalIrradiance: DirectNormalIrradianceWm2,
-                GlobalRadiation: GlobalRadiationWm2,
-                DiffuseRadiation: DiffuseRadiationWm2,
-                Temperature: TemperatureC,
-                WindSpeed: WindSpeedKmh,
-                WindDirection: WindDirectionDeg,
-                SnowDepth: null,
-                RelativeHumidity: RelativeHumidity,
-                DewPoint: DewPointC
+                directRadiation: DirectRadiationWm2,
+                directNormalIrradiance: DirectNormalIrradianceWm2,
+                globalRadiation: GlobalRadiationWm2,
+                diffuseRadiation: DiffuseRadiationWm2,
+                temperature: TemperatureC,
+                windSpeed: WindSpeedKmh,
+                windDirection: WindDirectionDeg,
+                snowDepth: null,
+                relativeHumidity: RelativeHumidity,
+                dewPoint: DewPointC
             );
         }
     }
