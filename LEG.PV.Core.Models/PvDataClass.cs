@@ -46,8 +46,8 @@ namespace LEG.PV.Core.Models
                     // Calibration weight for snow and fog adjustments (implicitly applied to unexplainedFractionalLoss)
                     // f_Snow and f_Fog are relative to PowerGRTW and PowerGRTWS, respectively
                     // UFL is instead evaluated relative to installed power
-                    var weight_S = computedPowerRecord.PowerGRTW / referencePower;
-                    var weight_SF = computedPowerRecord.PowerGRTWS / referencePower;
+                    var scaleUFL_S = computedPowerRecord.PowerGRTW / referencePower;
+                    var scaleUFL_F = computedPowerRecord.PowerGRTWS / referencePower;
 
                     derivatives = new PvModelParams(
                         etha: derivatives.Etha,
@@ -55,10 +55,10 @@ namespace LEG.PV.Core.Models
                         u0: derivatives.U0,
                         u1: derivatives.U1,
                         lDegr: derivatives.LDegr,
-                        lambdaDSnow: derivatives.LambdaDSnow * weight_S,
-                        lambdaAFog: derivatives.LambdaAFog * weight_SF,
-                        bFog: derivatives.BFog * weight_SF,
-                        lambdaKFog: derivatives.LambdaKFog * weight_SF
+                        dSnow: derivatives.DSnow * scaleUFL_S,
+                        lambdaAFog: derivatives.LambdaAFog * scaleUFL_F,
+                        bFog: derivatives.BFog * scaleUFL_F,
+                        lambdaKFog: derivatives.LambdaKFog * scaleUFL_F
                         );
                     unexplainedFractionalLoss = new PvPowerRecord(
                         (computedPowerRecord.PowerG - measuredPower) / referencePower,

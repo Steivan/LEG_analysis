@@ -18,7 +18,7 @@ namespace LEG.Tests
         const double meanLDegr = 0.01;                     // [/year]
         const double cvGRTW = 0.1;
         // Snow and fog priors
-        const double meanLambdaDSnow = 1.0;
+        const double meanDSnow = 25.0;
         const double meanLambdaAFog = 2.0;
         const double meanBFog = 1.0;                       // [/°C]  
         const double meanLambdaKFog = 2.0;
@@ -45,10 +45,10 @@ namespace LEG.Tests
         {
             // Define model parameters and their sigmas
             var modelParams = new PvModelParams(etha: meanEtha, gamma: meanGamma, u0: meanU0, u1: meanU1, lDegr: meanLDegr,
-                lambdaDSnow: meanLambdaDSnow, lambdaAFog: meanLambdaAFog, bFog: meanBFog, lambdaKFog: meanLambdaKFog);
+                dSnow: meanDSnow, lambdaAFog: meanLambdaAFog, bFog: meanBFog, lambdaKFog: meanLambdaKFog);
 
             var modelSigmas = new PvModelParams(etha: cvGRTW * meanEtha, gamma: cvGRTW * meanGamma, u0: cvGRTW * meanU0, u1: cvGRTW * meanU1, lDegr: cvGRTW * meanLDegr,
-                lambdaDSnow: cvSF * meanLambdaDSnow, lambdaAFog: cvSF * meanLambdaAFog, bFog: cvSF * meanBFog, lambdaKFog: cvSF * meanLambdaKFog);
+                dSnow: cvSF * meanDSnow, lambdaAFog: cvSF * meanLambdaAFog, bFog: cvSF * meanBFog, lambdaKFog: cvSF * meanLambdaKFog);
 
             var geometryFactors = new PvSolarGeometry
             (
@@ -85,7 +85,7 @@ namespace LEG.Tests
             var derU1 = DerU1(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             var derLDegr = DerLDegr(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             // Snow: derivative is a delta function and cannot be tested with numerical derivatives
-            var derLambdaDSnow = DerLambdaDSnow(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
+            var derDSnow = DerDSnow(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             // Fog: d (PowerGRTWSF / PowerGRTW) / d param_i 
             var derLambdaAFog = DerLambdaAFog(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
             var derBFog = DerBFog(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams);
@@ -107,7 +107,7 @@ namespace LEG.Tests
             var derLDegrNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
             paramIndex++;
             // Snow: derivative is a delta function and cannot be tested with numerical derivatives
-            var derLambdaDSnowNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
+            var derDSnowNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
             paramIndex++;
             // Fog: d (PowerGRTWS / PowerGRTW) / d param_i
             var derLambdaAFogNum = GetNumericalDerivative(paramIndex, installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams, modelSigmas);
@@ -138,12 +138,12 @@ namespace LEG.Tests
             Assert.AreEqual(derivativesRecord.LDegr / derLDegr, 1, 1e-6);
             Assert.AreEqual(derLDegrNum / derLDegr, 1, 1e-4);
 
-            Assert.AreEqual(derivativesRecord.LambdaDSnow, derLambdaDSnow, 1e-6);
+            Assert.AreEqual(derivativesRecord.DSnow, derDSnow, 1e-6);
             Assert.AreEqual(derivativesRecord.LambdaAFog / derLambdaAFog, 1, 1e-6);
             Assert.AreEqual(derivativesRecord.BFog / derBFog, 1, 1e-6);
             Assert.AreEqual(derivativesRecord.LambdaKFog / derLambdaKFog, 1, 1e-6);
 
-            Assert.AreEqual(derLambdaDSnowNum, derLambdaDSnow, 2e-2);
+            Assert.AreEqual(derDSnowNum, derDSnow, 2e-2);
             Assert.AreEqual(derLambdaAFogNum / derLambdaAFog, 1, 2e-2);
             Assert.AreEqual(derBFogNum / derBFog, 1, 2e-2);
             Assert.AreEqual(derLambdaKFogNum / derLambdaKFog, 1, 2e-2);

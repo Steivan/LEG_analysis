@@ -8,7 +8,7 @@ namespace LEG.PV.Core.Models
 
 
         public PvModelParams(double etha, double gamma, double u0, double u1, double lDegr,
-            double lambdaDSnow = PvPriorConfig.meanLambdaDSnow,
+            double dSnow = PvPriorConfig.meanDSnow,
             double lambdaAFog = PvPriorConfig.meanLambdaAFog, double bFog = PvPriorConfig.meanBFog, double lambdaKFog = PvPriorConfig.meanLambdaKFog)
         {
             Etha = etha;
@@ -17,13 +17,10 @@ namespace LEG.PV.Core.Models
             U1 = u1;
             LDegr = lDegr;
             // Snow and fog parameters with defaults
-            var dSnow = Math.Exp(lambdaDSnow);
             var zAFog = Math.Exp(-lambdaAFog);
             var aFog = 1.0 / (1 + zAFog);
             var kFog = Math.Exp(lambdaKFog);
-            LambdaDSnow = lambdaDSnow;
             DSnow = dSnow;
-            PartialDSnow = dSnow;
             LambdaAFog = lambdaAFog;
             AFog = aFog;
             PartialLambdaAFog = zAFog * aFog * aFog;
@@ -40,9 +37,7 @@ namespace LEG.PV.Core.Models
         public double LDegr { get; init; }
 
         // Snow and fog parameters with partial derivatives d X / d ldaX
-        public double LambdaDSnow { get; init; }
         public double DSnow { get; init; }
-        public double PartialDSnow;
         public double LambdaAFog { get; init; }
         public double AFog { get; init; }
         public double PartialLambdaAFog { get; init; }
@@ -60,7 +55,7 @@ namespace LEG.PV.Core.Models
                 IndexU0 => ($"{U0Name}", U0),
                 IndexU1 => ($"{U1Name}", U1),
                 IndexLDegr => ($"{LDegrName}", LDegr),
-                IndexLambdaDSnow => useLambda ? ($"{LambdaDSnowName}", LambdaDSnow) : ($"{DSnowName}", DSnow),
+                IndexDSnow => ($"{DSnowName}", DSnow),
                 IndexLambdaAFog => useLambda ? ($"{LambdaAFogName}", LambdaAFog) : ($"{AFogName}", AFog),
                 IndexBFog => ($"{BFogName}", BFog),
                 IndexLambdaKFog => useLambda ? ($"{LambdaKFogName}", LambdaKFog) : ($"{KFogName}", KFog),

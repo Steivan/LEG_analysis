@@ -333,26 +333,26 @@ namespace LEG.PV.Data.Processor
                 = [
                 PvPriorConfig.GetAllPriorsMeans(),      // Default priors used for index=0
                 new(
-                    etha: 0.606,
-                    gamma: -0.00503,
-                    u0: 2700,
-                    u1: 0.0,
-                    lDegr: 0.0117,
-                    lambdaDSnow: 2.72,
-                    lambdaAFog: 0.476,
-                    bFog: 1.38,
-                    lambdaKFog: 1.1
+                    etha: 0.571,
+                    gamma: -0.0056,
+                    u0: 200,
+                    u1: 0.001,
+                    lDegr: 0.0119,
+                    dSnow: 18.0,
+                    lambdaAFog: -0.468,
+                    bFog: 0.956,
+                    lambdaKFog: 1.92
                 ),
                 new(             // SennV: elevation 35° 
-                    etha: 0.477,
-                    gamma: -0.0006,
-                    u0: 6.8,
-                    u1: 0.0,
-                    lDegr: 0.00747,
-                    lambdaDSnow: 2.72,
-                    lambdaAFog: 0.433,
-                    bFog: -3.57,
-                    lambdaKFog: 0.018
+                    etha: 0.464,
+                    gamma: -0.0003,
+                    u0: 200,
+                    u1: 0.001,
+                    lDegr: 0.0085,
+                    dSnow: 18.0,
+                    lambdaAFog: -0.108,
+                    bFog: 1.092,
+                    lambdaKFog: 1.98
                 ),
                 new(                                    // initial calibration without Snow/Fog
                     etha: 0.619,
@@ -360,7 +360,7 @@ namespace LEG.PV.Data.Processor
                     u0: 213.7,
                     u1: 0.173,
                     lDegr: 0.0139,
-                    lambdaDSnow: 2.0,
+                    dSnow: 15.0,
                     lambdaAFog: 2.0,
                     bFog: 1.0,
                     lambdaKFog: 2.0
@@ -371,7 +371,7 @@ namespace LEG.PV.Data.Processor
                     u0: 29.0,
                     u1: 0.500,
                     lDegr: 0.00631,
-                    lambdaDSnow: 2.0,
+                    dSnow: 2.0,
                     lambdaAFog: 2.0,
                     bFog: 1.0,
                     lambdaKFog: 2.0

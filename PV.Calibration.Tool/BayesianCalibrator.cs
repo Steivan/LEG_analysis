@@ -11,7 +11,7 @@ namespace PV.Calibration.Tool
     {
         // Define the number of parameters being calibrated
         // - GRTW: etha, gamma, u0, u1, lDegr
-        // -    S: lambdaDSnow
+        // -    S: dSnow
         // -    F: lambdaA, B, lambdaK
         private const int ParameterCount_GRTW = 5;
         private const int ParameterCount_S = 1;
@@ -50,7 +50,7 @@ namespace PV.Calibration.Tool
                 errors_S[i] += delta * delta * weight;
             }
         }
-        private static (double expThetaMin_S, double expThetaMax_S) UpdateExpTheta_S(double[] errors_S, double[] support_S)
+        private static (double thetaMin_S, double thetaMax_S) Updatetheta_S(double[] errors_S, double[] support_S)
         {
             var maxIndex = support_S.Length - 1;
             int loIndex = Array.IndexOf(errors_S, errors_S.Min());
@@ -69,7 +69,7 @@ namespace PV.Calibration.Tool
 
         private static PvModelParams ThetaToPvModelParams(
             Vector<double> theta_GRTW, 
-            double expThetaMin_S, double expThetaMax_S, 
+            double thetaMin_S, double thetaMax_S, 
             Vector<double> theta_F, PvModelParams defaultParams)
         {
             return new PvModelParams(
@@ -78,7 +78,7 @@ namespace PV.Calibration.Tool
                 u0: theta_GRTW[2],
                 u1: theta_GRTW[3],
                 lDegr: theta_GRTW[4],
-                lambdaDSnow: Math.Log((expThetaMin_S + expThetaMax_S) / 2.0),
+                dSnow: (thetaMin_S + thetaMax_S) / 2.0,
                 lambdaAFog: theta_F[0],
                 bFog: theta_F[1],
                 lambdaKFog: theta_F[2]
@@ -149,19 +149,19 @@ namespace PV.Calibration.Tool
             int nrRecords = pvRecords.Count;
             bool applyDataFilter = validRecords != null && validRecords.Count == nrRecords;
             var thetaCalibratedList = new List<PvModelParams>(); 
-            var(minExpTheta_S, maxExpTheta_S) = (minSnowDepth, maxSnowDepth);
+            var(mintheta_S, maxtheta_S) = (minSnowDepth, maxSnowDepth);
             int iterations = 0;
             for (int k = 0; k < maxIterations; k++)
             {
                 // Unpack current parameters
-                modelParams = ThetaToPvModelParams(theta_GRTW, minExpTheta_S, maxExpTheta_S, theta_F, modelParams);
+                modelParams = ThetaToPvModelParams(theta_GRTW, mintheta_S, maxtheta_S, theta_F, modelParams);
 
                 // 3. Build Jacobian (J) and Residual Vector (r = Y - P_eff)
                 Matrix<double> J_GRTW = Matrix<double>.Build.Dense(nrRecords, ParameterCount_GRTW);
                 Vector<double> Y_GRTW = Vector<double>.Build.Dense(nrRecords);
                 Vector<double> Peff_Model_GRTW = Vector<double>.Build.Dense(nrRecords);
 
-                var support_S = GetSnowDepth(minExpTheta_S, maxExpTheta_S);
+                var support_S = GetSnowDepth(mintheta_S, maxtheta_S);
                 var errors_S = support_S.Select(s => 0.0).ToArray();
 
                 Matrix<double> J_F = Matrix<double>.Build.Dense(nrRecords, ParameterCount_F);
@@ -272,7 +272,7 @@ namespace PV.Calibration.Tool
                 // 5. Solve for Delta_theta
                 Vector<double> deltaTheta_GRTW = M_GRTW.Solve(b_GRTW);
 
-                (minExpTheta_S, maxExpTheta_S) = UpdateExpTheta_S(errors_S, support_S);
+                (mintheta_S, maxtheta_S) = Updatetheta_S(errors_S, support_S);
 
                 Vector<double> deltaTheta_F = M_F.Solve(b_F);
 
@@ -291,7 +291,7 @@ namespace PV.Calibration.Tool
                 ClampParameters_F(ref theta_F);
 
                 // Store calibrated parameters for this iteration
-                thetaCalibratedList.Add(ThetaToPvModelParams(theta_GRTW, minExpTheta_S, maxExpTheta_S, theta_F, modelParams));
+                thetaCalibratedList.Add(ThetaToPvModelParams(theta_GRTW, mintheta_S, maxtheta_S, theta_F, modelParams));
 
                 // Check for convergence before update
                 iterations++;

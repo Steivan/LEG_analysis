@@ -84,8 +84,8 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         var lDegr1 = modelParams.LDegr;
         var lDegr2 = modelParams.LDegr;
         // Snow and fog
-        var ldaDSnow1 = modelParams.LambdaDSnow;
-        var ldaDSnow2 = modelParams.LambdaDSnow;
+        var dSnow1 = modelParams.DSnow;
+        var dSnow2 = modelParams.DSnow;
         var ldaAFog1 = modelParams.LambdaAFog;
         var ldaAFog2 = modelParams.LambdaAFog;
         var bFog1 = modelParams.BFog;
@@ -123,10 +123,10 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
                 delta = lDegr1 - lDegr2;
                 break;
             // Snow and Fog parameters
-            case IndexLambdaDSnow:
-                ldaDSnow1 += modelSigmas.LambdaDSnow / 50.0;
-                ldaDSnow2 -= modelSigmas.LambdaDSnow / 50.0;
-                delta = ldaDSnow1 - ldaDSnow2;
+            case IndexDSnow:
+                dSnow1 += modelSigmas.DSnow / 20.0;
+                dSnow2 -= modelSigmas.DSnow / 20.0;
+                delta = dSnow1 - dSnow2;
                 break;
             case IndexLambdaAFog:
                 ldaAFog1 += modelSigmas.LambdaAFog / 20.0;
@@ -146,20 +146,21 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
             default:
                 throw new ArgumentOutOfRangeException(nameof(modelParameterIndex), "Invalid parameter index");
         }
-        var modelParams1 = new PvModelParams(ethaSys1, gamma1, u01, u11, lDegr1, ldaDSnow1, ldaAFog1, bFog1, ldaKFog1);
-        var modelParams2 = new PvModelParams(ethaSys2, gamma2, u02, u12, lDegr2, ldaDSnow2, ldaAFog2, bFog2, ldaKFog2);
+        var modelParams1 = new PvModelParams(ethaSys1, gamma1, u01, u11, lDegr1, dSnow1, ldaAFog1, bFog1, ldaKFog1);
+        var modelParams2 = new PvModelParams(ethaSys2, gamma2, u02, u12, lDegr2, dSnow2, ldaAFog2, bFog2, ldaKFog2);
 
         var effectiveCellPower1 = EffectiveCellPower(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams1);
         var effectiveCellPower2 = EffectiveCellPower(installedPower, periodsPerHour, geometryFactors, meteoParameters, age, modelParams2);
 
+        // Default used for derDSnow
         var f1 = 0.0;
         var f2 = 0.0;
-        if (modelParameterIndex < IndexLambdaDSnow)
+        if (modelParameterIndex < IndexDSnow)
         {
             f1 = effectiveCellPower1.PowerGRTW;
             f2 = effectiveCellPower2.PowerGRTW;
         }
-        else if (modelParameterIndex == IndexLambdaDSnow)
+        else if (modelParameterIndex == IndexDSnow)
         {
             // A Heavyside function is used for snow parameter => Delta function derivative   TODO: improve this
             f1 = 0;
@@ -284,7 +285,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         return derLDegr.Value;
     }
 
-    public static double DerLambdaDSnow(double installedPower, int periodsPerHour,
+    public static double DerDSnow(double installedPower, int periodsPerHour,
         PvSolarGeometry geometryFactors,
         MeteoParameters meteoParameters,
         double age,
@@ -294,9 +295,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         if (!hasValue)
             return 0.0;
 
-        var snowDeriv = 0.0 * modelParams.PartialLambdaKFog;
-
-        return snowDeriv;
+        return 0.0;
     }
 
     public static double DerLambdaAFog(double installedPower, int periodsPerHour,
@@ -401,7 +400,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 
         // Snow and fog
         var snowFactor = meteoParameters.SnowDepth >= modelParams.DSnow ? 0.0 : 1.0;
-        var snowDeriv = 0.0 * modelParams.PartialLambdaKFog;
+        var snowDeriv = 0.0;
 
         var dpd = meteoParameters.GetDewPointDepression();
         var eZ = Math.Exp(modelParams.KFog * (dpd - modelParams.BFog));

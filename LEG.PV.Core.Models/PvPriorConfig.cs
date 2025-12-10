@@ -31,10 +31,10 @@ namespace LEG.PV.Core.Models
 
         // Snow and fog priors
 
-        internal const double meanLambdaDSnow = 1.0;
-        internal const double sigmaLambdaDSnow = 5.0;
-        internal const double minLambdaDSnow = -10.0;
-        internal const double maxLambdaDSnow = 10.0;
+        internal const double meanDSnow = 15.0;
+        internal const double sigmaDSnow = 5.0;
+        internal const double minDSnow = 0.5;
+        internal const double maxDSnow = 100.0;
 
         internal const double meanLambdaAFog = 2.0;
         internal const double sigmaLambdaAFog = 0.85;
@@ -53,11 +53,11 @@ namespace LEG.PV.Core.Models
 
         public static PvModelParams GetAllPriorsMeans()
         {
-            return new PvModelParams(meanEthaSys, meanGamma, meanU0, meanU1, meanLDegr, meanLambdaDSnow, meanLambdaAFog, meanBFog, meanLambdaKFog);
+            return new PvModelParams(meanEthaSys, meanGamma, meanU0, meanU1, meanLDegr, meanDSnow, meanLambdaAFog, meanBFog, meanLambdaKFog);
         }
         public static PvModelParams GetAllPriorsSigmas()
         {
-            return new PvModelParams(sigmaEthaSys, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr, sigmaLambdaDSnow, sigmaLambdaAFog, sigmaBFog, sigmaLambdaKFog);
+            return new PvModelParams(sigmaEthaSys, sigmaGamma, sigmaU0, sigmaU1, sigmaLDegr, sigmaDSnow, sigmaLambdaAFog, sigmaBFog, sigmaLambdaKFog);
         }
         public static (double mean, double sigma, double min, double max) GetPriorsEtha()
         {
@@ -87,7 +87,7 @@ namespace LEG.PV.Core.Models
         // Snow and fog priors
         public static (double mean, double sigma, double min, double max) GetPriorsDSnow()
         {
-            return (meanLambdaDSnow, sigmaLambdaDSnow, minLambdaDSnow, maxLambdaDSnow);
+            return (meanDSnow, sigmaDSnow, minDSnow, maxDSnow);
         }
 
         public static (double mean, double sigma, double min, double max) GetPriorsLambdaAFog()
@@ -114,7 +114,7 @@ namespace LEG.PV.Core.Models
                 IndexU0 => GetPriorsU0(),
                 IndexU1 => GetPriorsU1(),
                 IndexLDegr => GetPriorsLDegr(),
-                IndexLambdaDSnow => GetPriorsDSnow(),
+                IndexDSnow => GetPriorsDSnow(),
                 IndexLambdaAFog => GetPriorsLambdaAFog(),
                 IndexBFog => GetPriorsBFog(),
                 IndexLambdaKFog => GetPriorsKFog(),

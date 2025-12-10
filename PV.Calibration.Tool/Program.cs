@@ -7,14 +7,14 @@ using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
 
-ProcessSyntheticModelData(
-    applyRandomNoise: true,
-    applySnowDays: true,
-    applyFoggyDays: true,
-    applyOutliers: !true);
+//ProcessSyntheticModelData(
+//    applyRandomNoise: true,
+//    applySnowDays: true,
+//    applyFoggyDays: true,
+//    applyOutliers: !true);
 
-//await CalibrateE3DcData(1, "Senn");
-//await CalibrateE3DcData(2, "SennV");
+await CalibrateE3DcData(1, "Senn");
+await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
 
@@ -67,7 +67,7 @@ void ProcessSyntheticModelData(
         u0: 25,
         u1: 0.4,
         lDegr: 0.01,
-        lambdaDSnow: 0.2,
+        dSnow: 15.0,
         lambdaAFog: 0.1,
         bFog: 0.5,
         lambdaKFog: 2.0
@@ -335,25 +335,25 @@ void ProcessPvData(
 
 void PrintCalibrationResults(PvPriors pvPriors, PvModelParams thetaModel, List<PvModelParams> thetaCalibratedList, 
     int iterations, int maxIterations, 
-    double meanSquaredError, double initialMeanSquaredError)
+    double meanSquaredError, double initialMeanSquaredError, bool useLambda = true)
 {
     void PrintModelParameters(int parameterIndex)
     {
         string name;
         double prior, model, firstIt, calibrated;
 
-        (name, prior) = pvPriors.PriorMeans.GetNameAndValue(parameterIndex);
-        (_, model) = thetaModel.GetNameAndValue(parameterIndex);
-        (_, firstIt) = thetaCalibratedList[0].GetNameAndValue(parameterIndex);
-        (_, calibrated) = thetaCalibratedList[^1].GetNameAndValue(parameterIndex);
+        (name, prior) = pvPriors.PriorMeans.GetNameAndValue(parameterIndex, useLambda: useLambda);
+        (_, model) = thetaModel.GetNameAndValue(parameterIndex, useLambda: useLambda);
+        (_, firstIt) = thetaCalibratedList[0].GetNameAndValue(parameterIndex, useLambda: useLambda);
+        (_, calibrated) = thetaCalibratedList[^1].GetNameAndValue(parameterIndex, useLambda: useLambda  );
 
-        Console.WriteLine($"{name,9}{prior,10:F5}{model,10:F5}{firstIt,10:F5} ... {calibrated,10:F5}{(calibrated / model - 1) * 100,10:F3}");
+        Console.WriteLine($"{name,12}{prior,10:F5}{model,10:F5}{firstIt,10:F5} ... {calibrated,10:F5}{(calibrated / model - 1) * 100,10:F3}");
     }
 
     var thetaFirst = thetaCalibratedList[0];
     var thetaCalibrated = thetaCalibratedList[^1];
     Console.WriteLine($"Calibration Results ({iterations} / {maxIterations} iterations):");
-    Console.WriteLine($"Parameter{"prior",10}{"model",10}{"1st it.",10}{"calibrated",15}{"delta %",10}");
+    Console.WriteLine($"Parameter   {"prior",10}{"model",10}{"1st it.",10}{"calibrated",15}{"delta %",10}");
     for (int i = 0; i < PvModelParamsCount; i++)
     {
         PrintModelParameters(i);
