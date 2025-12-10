@@ -1,5 +1,6 @@
 ﻿using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.PV.Core.Models.PvConstants;
+using static LEG.PV.Core.Models.PvModelParamsMetaData;
 
 namespace LEG.PV.Core.Models;
 
@@ -94,50 +95,50 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 
         var delta = 1e-6;
 
-        switch (modelParameterIndex %= PvModelParams.PvModelParamsCount)
+        switch (modelParameterIndex %= PvModelParamsCount)
         {
-            case PvModelParams.IndexEtha:
+            case IndexEtha:
                 ethaSys1 += modelSigmas.Etha / 10.0;
                 ethaSys2 -= modelSigmas.Etha / 10.0;
                 delta = ethaSys1 - ethaSys2;
                 break;
-            case PvModelParams.IndexGamma:
+            case IndexGamma:
                 gamma1 += modelSigmas.Gamma / 10.0;
                 gamma2 -= modelSigmas.Gamma / 10.0;
                 delta = gamma1 - gamma2;
                 break;
-            case PvModelParams.IndexU0:
+            case IndexU0:
                 u01 += modelSigmas.U0 / 10.0;
                 u02 -= modelSigmas.U0 / 10.0;
                 delta = u01 - u02;
                 break;
-            case PvModelParams.IndexU1:
+            case IndexU1:
                 u11 += modelSigmas.U1 / 10.0;
                 u12 -= modelSigmas.U1 / 10.0;
                 delta = u11 - u12;
                 break;
-            case PvModelParams.IndexLDegr:
+            case IndexLDegr:
                 lDegr1 += modelSigmas.LDegr / 10.0;
                 lDegr2 -= modelSigmas.LDegr / 10.0;
                 delta = lDegr1 - lDegr2;
                 break;
             // Snow and Fog parameters
-            case PvModelParams.IndexLambdaDSnow:
+            case IndexLambdaDSnow:
                 ldaDSnow1 += modelSigmas.LambdaDSnow / 50.0;
                 ldaDSnow2 -= modelSigmas.LambdaDSnow / 50.0;
                 delta = ldaDSnow1 - ldaDSnow2;
                 break;
-            case PvModelParams.IndexLambdaAFog:
+            case IndexLambdaAFog:
                 ldaAFog1 += modelSigmas.LambdaAFog / 20.0;
                 ldaAFog2 -= modelSigmas.LambdaAFog / 20.0;
                 delta = ldaAFog1 - ldaAFog2;
                 break;
-            case PvModelParams.IndexBFog:
+            case IndexBFog:
                 bFog1 += modelSigmas.BFog / 50.0;
                 bFog2 -= modelSigmas.BFog / 50.0;
                 delta = bFog1 - bFog2;
                 break;
-            case PvModelParams.IndexLambdaKFog:
+            case IndexLambdaKFog:
                 ldaKFog1 += modelSigmas.LambdaKFog / 50.0;
                 ldaKFog2 -= modelSigmas.LambdaKFog / 50.0;
                 delta = ldaKFog1 - ldaKFog2;
@@ -153,12 +154,12 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 
         var f1 = 0.0;
         var f2 = 0.0;
-        if (modelParameterIndex < PvModelParams.IndexLambdaDSnow)
+        if (modelParameterIndex < IndexLambdaDSnow)
         {
             f1 = effectiveCellPower1.PowerGRTW;
             f2 = effectiveCellPower2.PowerGRTW;
         }
-        else if (modelParameterIndex == PvModelParams.IndexLambdaDSnow)
+        else if (modelParameterIndex == IndexLambdaDSnow)
         {
             // A Heavyside function is used for snow parameter => Delta function derivative   TODO: improve this
             f1 = 0;

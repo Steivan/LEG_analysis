@@ -5,8 +5,13 @@ using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
+using static LEG.PV.Core.Models.PvModelParamsMetaData;
 
-ProcessSyntheticModelData();
+ProcessSyntheticModelData(
+    applyRandomNoise: true,
+    applySnowDays: true,
+    applyFoggyDays: true,
+    applyOutliers: !true);
 
 //await CalibrateE3DcData(1, "Senn");
 //await CalibrateE3DcData(2, "SennV");
@@ -48,7 +53,13 @@ async Task CalibrateE3DcData(int folder, string label)
         );
 }
 
-void ProcessSyntheticModelData(int simulationsPeriod = 5)
+void ProcessSyntheticModelData(
+    int simulationsPeriod = 5,
+    bool applyRandomNoise = true,
+    bool applySnowDays = true,
+    bool applyFoggyDays = true,
+    bool applyOutliers = true
+    )
 {
     var thetaModel = new PvModelParams(
         etha: 0.9,
@@ -72,14 +83,19 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         roofAzimuth: -30,
         roofElevation: 20,
         simulationsPeriod: simulationsPeriod,
-        applyRandomNoise: true,
-        applySnowDays: !true,
-        applyFoggyDays: true,
-        applyOutliers: true
+        applyRandomNoise: applyRandomNoise,
+        applySnowDays: applySnowDays,
+        applyFoggyDays: applyFoggyDays,
+        applyOutliers: applyOutliers
         );
 
     var defaultPriors = new PvPriors();
     var defaultModelParams = defaultPriors.PriorMeans;
+
+    if (defaultModelParams.IsNan())
+    {
+        var DEBUG = 1.0;
+    }
 
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
         pvRecords,
@@ -97,7 +113,7 @@ void ProcessSyntheticModelData(int simulationsPeriod = 5)
         installedPower,
         periodsPerHour,
         pvRecords,
-        modelValidRecords: null,
+        modelValidRecords,
         filteredValidRecors,
         thetaModel,
         defaultPriors,
@@ -205,6 +221,11 @@ void ProcessPvData(
         }
     };
 
+    if (hullPriors.PriorMeans.IsNan())
+    {
+        var DEBUG = 1;
+    }
+
     Console.WriteLine();
     Console.WriteLine($"PV Site: {siteId} with {installedPower / 1000:F2} kWp");
     Console.WriteLine("Bayesian Calibration: default priors / no filter");
@@ -216,6 +237,11 @@ void ProcessPvData(
         periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
+
+    if (thetaCalibratedList[^1].IsNan())
+    {
+        var DEBUG = 1;
+    }
 
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 
@@ -231,6 +257,12 @@ void ProcessPvData(
             periodsPerHour: periodsPerHour,
             tolerance: tolerance,
             maxIterations: maxIterations);
+
+        if (thetaCalibratedList[^1].IsNan())
+        {
+            var DEBUG = 1;
+        }
+
         (minError, maxError, meanError0, binSize, binCenters, binCounts) = PvErrorStatistics.ComputeHistograms(
             pvRecords,
             modelValidRecords,
@@ -238,6 +270,7 @@ void ProcessPvData(
             periodsPerHour,
             thetaCalibratedList[^1],
             countOfBins: 50);
+
         PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
         Console.WriteLine($"Error Statistics: Min {minError:F5}, Max {maxError:F5} , SdtDev {meanError0:F5}  ");
         Console.WriteLine();
@@ -251,6 +284,12 @@ void ProcessPvData(
             periodsPerHour: periodsPerHour,
             tolerance: tolerance,
             maxIterations: maxIterations);
+
+        if (thetaCalibratedList[^1].IsNan())
+        {
+            var DEBUG = 1;
+        }
+
         PrintCalibrationResults(hullPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
     }
 
@@ -263,6 +302,12 @@ void ProcessPvData(
         periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
+
+    if (thetaCalibratedList[^1].IsNan())
+    {
+        var DEBUG = 1;
+    }
+
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 
     (minError, maxError, meanError, binSize, binCenters, binCounts) = PvErrorStatistics.ComputeHistograms(
@@ -309,7 +354,7 @@ void PrintCalibrationResults(PvPriors pvPriors, PvModelParams thetaModel, List<P
     var thetaCalibrated = thetaCalibratedList[^1];
     Console.WriteLine($"Calibration Results ({iterations} / {maxIterations} iterations):");
     Console.WriteLine($"Parameter{"prior",10}{"model",10}{"1st it.",10}{"calibrated",15}{"delta %",10}");
-    for (int i = 0; i < PvModelParams.PvModelParamsCount; i++)
+    for (int i = 0; i < PvModelParamsCount; i++)
     {
         PrintModelParameters(i);
     }

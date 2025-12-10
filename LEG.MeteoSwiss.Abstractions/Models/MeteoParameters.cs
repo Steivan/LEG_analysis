@@ -18,6 +18,27 @@
         IntervalAnchor Anchor = IntervalAnchor.End // Default to End
     )
     {
+        public (double weightR, double weightS, double weightF) GetWeightsRSW()
+        {
+            const double gammaR = 10.0 / 1000.0;        // [1/(W/m2)] for Global Radiation
+            const double gammaS = 10.0 / 10.0;          // [1/(cm)] for Snow Depth
+            const double gammaF = 10.0 / 2.0;           // [1/(°C)] for Dew Point
+            double conjugateWeight(double gamma, double x) => x <= 0 ? 1.0 : 2.0 / (1.0 + Math.Exp(gamma * x));
+
+            // Decompose data into GRTW, S and F
+            var nonRadiation = conjugateWeight(gammaR, GlobalRadiation ?? 0.0);
+            var nonSnow = conjugateWeight(gammaS, SnowDepth ?? 0.0);
+            var nonFog = 1.0 - conjugateWeight(gammaF, GetDewPointDepression());
+
+            var radiation = (1.0 - nonRadiation);
+            var weightRadiation = radiation * nonSnow * nonFog;
+            var weightSnow = radiation * (1.0 - nonSnow);
+            var weightFog = radiation * nonSnow * (1.0 - nonFog);
+            // Residual = 1.0 - weightRadiation - weightSnow - weigtFog = nonRadiation =>  nighttime records 
+
+            return (weightRadiation, weightSnow, weightFog);
+        }
+
         public double GetDirectPoa(bool hasDirectIrradiance, double sinSunElevation)
         {
             if (!hasDirectIrradiance || sinSunElevation <= 0.0)

@@ -1,33 +1,11 @@
-﻿
+﻿using static LEG.PV.Core.Models.PvModelParamsMetaData;
+
 namespace LEG.PV.Core.Models
 {
 
     public record PvModelParams
     {
-        internal const int IndexEtha = 0;
-        internal const int IndexGamma = 1;
-        internal const int IndexU0 = 2;
-        internal const int IndexU1 = 3;
-        internal const int IndexLDegr = 4;
-        internal const int IndexLambdaDSnow = 5;
-        internal const int IndexLambdaAFog = 6;
-        internal const int IndexBFog = 7;
-        internal const int IndexLambdaKFog = 8;
 
-        public const int PvModelParamsCount = 9;
-
-        public const string EthaName = "Etha";
-        public const string GammaName = "Gamma";
-        public const string U0Name = "U0";
-        public const string U1Name = "U1";
-        public const string LDegrName = "LDegr";
-        public const string DSnowName = "DSnow";
-        public const string LambdaDSnowName = "LambdaDSnow";
-        public const string AFogName = "AFog";
-        public const string LambdaAFogName = "LambdaAFog";
-        public const string BFogName = "BFog";
-        public const string KFogName = "KFog";
-        public const string LambdaKFogName = "LambdaKFog";
 
         public PvModelParams(double etha, double gamma, double u0, double u1, double lDegr,
             double lambdaDSnow = PvPriorConfig.meanLambdaDSnow,
@@ -88,6 +66,12 @@ namespace LEG.PV.Core.Models
                 IndexLambdaKFog => useLambda ? ($"{LambdaKFogName}", LambdaKFog) : ($"{KFogName}", KFog),
                 _ => throw new ArgumentOutOfRangeException(nameof(index), "Invalid index")
             };
+        }
+
+        public bool IsNan()
+        {
+            return double.IsNaN(Etha) || double.IsNaN(Gamma) || double.IsNaN(U0) || double.IsNaN(U1) || double.IsNaN(LDegr) ||
+                   double.IsNaN(DSnow) || double.IsNaN(AFog) || double.IsNaN(BFog) || double.IsNaN(KFog);
         }
     }
 }
