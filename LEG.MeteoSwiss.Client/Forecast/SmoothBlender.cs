@@ -88,7 +88,7 @@ internal class SmoothBlender
                         if (quarterForecast_ij.SnowDepth.HasValue) UpdateRowSource(ref sumSnowDepth, ref weightSnowDepth, quarterForecast_ij.SnowDepth.Value, weight);
                         if (quarterForecast_ij.RelativeHumidity.HasValue) UpdateRowSource(ref sumRelativeHumidity, ref weightRelativeHumidity, quarterForecast_ij.RelativeHumidity.Value, weight);
                         if (quarterForecast_ij.DewPoint.HasValue) UpdateRowSource(ref sumDewPoint, ref weightDewPoint, quarterForecast_ij.DewPoint.Value, weight);
-                        if (quarterForecast_ij.DirectRadiationVariance.HasValue) UpdateRowSource(ref sumDirectRadiationVariance, ref weightDirectRadiationVariance, quarterForecast_ij.DirectRadiationVariance.Value, weight);
+                        if (quarterForecast_ij.RadiationVariance.HasValue) UpdateRowSource(ref sumDirectRadiationVariance, ref weightDirectRadiationVariance, quarterForecast_ij.RadiationVariance.Value, weight);
                     }
                 }
                 smoothedQuarterForecast[quarterTime] = new MeteoParameters(

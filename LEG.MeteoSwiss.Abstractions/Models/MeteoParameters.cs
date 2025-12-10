@@ -14,10 +14,28 @@
         double? SnowDepth,
         double? RelativeHumidity,
         double? DewPoint,
-        double? DirectRadiationVariance = null, // Optional for history/forecast
+        double? RadiationVariance = null, // Optional for history/forecast
         IntervalAnchor Anchor = IntervalAnchor.End // Default to End
     )
     {
+        public double? ValueFromType(MeteoParameterType parameterType)
+        {
+            return parameterType switch
+            {
+                MeteoParameterType.SunshineDuration => SunshineDuration ?? null,
+                MeteoParameterType.DirectRadiation => DirectRadiation ?? null,
+                MeteoParameterType.DirectNormalIrradiance => DirectNormalIrradiance ?? null,
+                MeteoParameterType.GlobalRadiation => GlobalRadiation ?? null,
+                MeteoParameterType.DiffuseRadiation => DiffuseRadiation ?? null,
+                MeteoParameterType.Temperature => Temperature ?? null,
+                MeteoParameterType.WindSpeed => WindSpeed ?? null,
+                MeteoParameterType.WindDirection => WindDirection ?? null,
+                MeteoParameterType.SnowDepth => SnowDepth ?? null,
+                MeteoParameterType.RelativeHumidity => RelativeHumidity ?? null,
+                MeteoParameterType.DewPoint => DewPoint ?? null,
+                _ => null,
+            };
+        }
         public (double weightR, double weightS, double weightF) GetWeightsRSW()
         {
             const double gammaR = 10.0 / 1000.0;        // [1/(W/m2)] for Global Radiation
@@ -97,7 +115,7 @@
             HasValidSnowDepth = SnowDepth.HasValue,
             HasValidRelativeHumidity = RelativeHumidity.HasValue,
             HasValidDewPoint = DewPoint.HasValue,
-            HasValidDirectRadiationVariance = DirectRadiationVariance.HasValue
+            HasValidRadiationVariance = RadiationVariance.HasValue
         };
     }
 
@@ -116,7 +134,7 @@
         public bool HasValidSnowDepth { init; get; }
         public bool HasValidRelativeHumidity { init; get; }
         public bool HasValidDewPoint { init; get; }
-        public bool HasValidDirectRadiationVariance { init; get; }
+        public bool HasValidRadiationVariance { init; get; }
     }
     public record WeightMeteoParameters
     {
@@ -131,6 +149,6 @@
         public double WeightSnowDepth { get; init; } = 0.0;
         public double WeightRelativeHumidity { get; init; } = 0.0;
         public double WeightDewPoint { get; init; } = 0.0;
-        public double WeightDirectRadiationVariance { get; init; } = 0.0;
+        public double WeightRadiationVariance { get; init; } = 0.0;
     }
 }

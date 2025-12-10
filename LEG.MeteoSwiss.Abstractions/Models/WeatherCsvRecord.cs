@@ -222,7 +222,7 @@ namespace LEG.MeteoSwiss.Abstractions.Models
                 SnowDepth: SnowDepth,
                 RelativeHumidity: RelativeHumidity2m,
                 DewPoint: DewPoint2m,
-                DirectRadiationVariance: null
+                RadiationVariance: null
             );
         }
     }

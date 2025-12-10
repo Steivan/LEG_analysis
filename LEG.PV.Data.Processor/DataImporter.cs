@@ -40,6 +40,24 @@ namespace LEG.PV.Data.Processor
         const double latSma = 47.378;
         const double lonSma = 8.566;
 
+        public List<MeteoParameterType> MeteoParameterTypeList  { get; set; } = new()
+        {
+            //MeteoParameterType.SunshineDuration,
+            //MeteoParameterType.DirectRadiation,
+            //MeteoParameterType.DirectNormalIrradiance,
+            MeteoParameterType.GlobalRadiation,
+            MeteoParameterType.DiffuseRadiation,
+            MeteoParameterType.Temperature,
+            MeteoParameterType.WindSpeed,
+            //MeteoParameterType.WindDirection,
+            MeteoParameterType.SnowDepth,
+            MeteoParameterType.RelativeHumidity,
+            MeteoParameterType.DewPoint
+        };
+        public Dictionary<MeteoParameterType, double?[]> MeteoValuesArrays { get; set; } = new();
+        public  Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
+        public Dictionary<MeteoParameterType, double[]> WeightedSumMeteoValuesArrays { get; set; } = new();
+
         // Selected stations, available parameters and blending weights
         public static Dictionary<string, WeightMeteoParameters> stationDictionary = new Dictionary<string, WeightMeteoParameters>
         {
@@ -55,7 +73,7 @@ namespace LEG.PV.Data.Processor
                 WeightSnowDepth = 1.0,
                 WeightRelativeHumidity = 1.0,
                 WeightDewPoint = 1.0,
-                WeightDirectRadiationVariance = 1.0
+                WeightRadiationVariance = 1.0
             } },
             { "KLO", new WeightMeteoParameters { 
                 WeightSunshineDuration = 1.0, 
@@ -69,7 +87,7 @@ namespace LEG.PV.Data.Processor
                 WeightSnowDepth = 1.0,
                 WeightRelativeHumidity = 1.0,
                 WeightDewPoint = 1.0,
-                WeightDirectRadiationVariance = 1.0
+                WeightRadiationVariance = 1.0
             } },
             { "HOE", new WeightMeteoParameters { 
                 WeightSunshineDuration = 1.0, 
@@ -83,7 +101,7 @@ namespace LEG.PV.Data.Processor
                 WeightSnowDepth = 0.0,
                 WeightRelativeHumidity = 0.0,
                 WeightDewPoint = 0.0,
-                WeightDirectRadiationVariance = 1.0
+                WeightRadiationVariance = 1.0
             } },
             { "UEB", new WeightMeteoParameters {
                 WeightSunshineDuration = 1.0,
@@ -97,7 +115,7 @@ namespace LEG.PV.Data.Processor
                 WeightSnowDepth = 0.0,
                 WeightRelativeHumidity = 0.0,
                 WeightDewPoint = 0.0,
-                WeightDirectRadiationVariance = 1.0
+                WeightRadiationVariance = 1.0
             } }
         };
         public static List<string> selectedStationsIdList = stationDictionary.Keys.ToList();
@@ -147,7 +165,7 @@ namespace LEG.PV.Data.Processor
             {
                 var recordIndex = i;
                 var meteoParam = blendedWeatherData[i];
-                var weight = 1.0 / (1E-6 + meteoParam.DirectRadiationVariance ?? (double.MaxValue - 1E-6));
+                var weight = 1.0 / (1E-6 + meteoParam.RadiationVariance ?? (double.MaxValue - 1E-6));
                 double? solarProduction = i < countOfE3DcRecords ? pvDataRecords[i].SolarProduction : null;
                 if (!solarProduction.HasValue)
                 {
@@ -509,22 +527,12 @@ namespace LEG.PV.Data.Processor
 
         // Allocate meteo data into support intervals with linear overlap blending
         private void AllocateMeteoDataContainers(int iSupport, int iMeteo, int supportCount, int meteoInterval, int supportInterval,
-            DateTime supportTimeStamp, DateTime meteoTimeStamp, MeteoParameters leftRecord,
-            double?[] supportSunshineDuration,
-            double?[] supportDirectRadiation,
-            double?[] supportDirectNormalIrradiance,
-            double?[] supportGlobalRadiation,
-            double?[] supportDiffuseRadiation,
-            double?[] supportTemperature,
-            double?[] supportWindSpeed,
-            double?[] supportWindDirection,
-            double?[] supportSnowDepth,
-            double?[] supportRelativeHumidity,
-            double?[] supportDewPoint)
+            DateTime supportTimeStamp, DateTime meteoTimeStamp, MeteoParameters leftRecord)
         {
-            void AppendValue(double?[] supportArray, int index, double? value, double overLapRatio)
+            void AppendValue(MeteoParameterType meteoParameter, int index, double? value, double overLapRatio)
             {
-                if (value.HasValue) supportArray[index] = (supportArray[index] ?? 0) + value.Value * overLapRatio;
+                if (value.HasValue)
+                    MeteoValuesArrays[meteoParameter][index] = (MeteoValuesArrays[meteoParameter][index] ?? 0) + value * overLapRatio;
             }
 
             var rightOverlapRatio = 1.0;
@@ -546,70 +554,46 @@ namespace LEG.PV.Data.Processor
                 iRight++;
             }
 
-            var priorSunshineDuration = leftRecord.SunshineDuration;        // TODO: currently not used
-            var priorDirectRadiation = leftRecord.DirectRadiation;
-            var priorDirectNormalIrradiance = leftRecord.DirectNormalIrradiance;
-            var priorGlobalRadiation = leftRecord.GlobalRadiation;
-            var priorDiffuseRadiation = leftRecord.DiffuseRadiation;
-            var priorTemperature = leftRecord.Temperature;
-            var priorWindSpeed = leftRecord.WindSpeed;
-            var priorWindDirection = leftRecord.WindDirection;
-            var priorSnowDepth = leftRecord.SnowDepth;
-            var priorRelativeHumidity = leftRecord.RelativeHumidity;
-            var priorDewPoint = leftRecord.DewPoint;
-
             if (iLeft >= 0 && iLeft < supportCount && leftOverlapRatio > 0)
             {
-                AppendValue(supportSunshineDuration, iLeft, priorSunshineDuration, leftOverlapRatio);
-                AppendValue(supportDirectRadiation, iLeft, priorDirectRadiation, leftOverlapRatio);
-                AppendValue(supportDirectNormalIrradiance, iLeft, priorDirectNormalIrradiance, leftOverlapRatio);
-                AppendValue(supportGlobalRadiation, iLeft, priorGlobalRadiation, leftOverlapRatio);
-                AppendValue(supportDiffuseRadiation, iLeft, priorDiffuseRadiation, leftOverlapRatio);
-                AppendValue(supportTemperature, iLeft, priorTemperature, leftOverlapRatio);
-                AppendValue(supportWindSpeed, iLeft, priorWindSpeed, leftOverlapRatio);
-                AppendValue(supportWindDirection, iLeft, priorWindDirection, leftOverlapRatio);
-                AppendValue(supportSnowDepth, iLeft, priorSnowDepth, leftOverlapRatio);
-                AppendValue(supportRelativeHumidity, iLeft, priorRelativeHumidity, leftOverlapRatio);
-                AppendValue(supportDewPoint, iLeft, priorDewPoint, leftOverlapRatio);
+                foreach (var meteoParameterType in MeteoParameterTypeList)
+                {
+                    AppendValue(meteoParameterType, iLeft, leftRecord.ValueFromType(meteoParameterType), leftOverlapRatio);
+                }
             }
             if (iRight >= 0 && iRight < supportCount && rightOverlapRatio > 0)
             {
-                AppendValue(supportSunshineDuration, iRight, priorSunshineDuration, rightOverlapRatio);
-                AppendValue(supportDirectRadiation, iRight, priorDirectRadiation, rightOverlapRatio);
-                AppendValue(supportDirectNormalIrradiance, iRight, priorDirectNormalIrradiance, rightOverlapRatio);
-                AppendValue(supportGlobalRadiation, iRight, priorGlobalRadiation, rightOverlapRatio);
-                AppendValue(supportDiffuseRadiation, iRight, priorDiffuseRadiation, rightOverlapRatio);
-                AppendValue(supportTemperature, iRight, priorTemperature, rightOverlapRatio);
-                AppendValue(supportWindSpeed, iRight, priorWindSpeed, rightOverlapRatio);
-                AppendValue(supportWindDirection, iRight, priorWindDirection, rightOverlapRatio);
-                AppendValue(supportSnowDepth, iRight, priorSnowDepth, rightOverlapRatio);
-                AppendValue(supportRelativeHumidity, iRight, priorRelativeHumidity, rightOverlapRatio);
-                AppendValue(supportDewPoint, iRight, priorDewPoint, rightOverlapRatio);
+                foreach (var meteoParameterType in MeteoParameterTypeList)
+                {
+                    AppendValue(meteoParameterType, iRight, leftRecord.ValueFromType(meteoParameterType), rightOverlapRatio);
+                }
             }
         }
 
         // Compute normalized weights for blending
-        private double[] GetWeights(List<double> weightList, int count)
+        private void NormalizeMeteoWeightArray(MeteoParameterType parameterType, int count)
         {
-            double[] weights = new double[count];
-            var copyCount = Math.Min(count, weightList.Count);
+            var weights = WeightMeteoArrays[parameterType];
+            var copyCount = Math.Min(count, weights.Length);
+            var normalizedWeights = new double[count];
             for (var i = 0; i < copyCount; i++)
             {
-                weights[i] = weightList[i] > 0 ? weightList[i] : 0.0;
+                normalizedWeights[i] = weights[i] > 0 ? weights[i] : 0.0;
             }
-            var totalWeight = weights.Sum();
+            var totalWeight = normalizedWeights.Sum();
             if (totalWeight > 0)
             {
                 for (var i = 0; i < count; i++)
                 {
-                    weights[i] /= totalWeight;
+                    normalizedWeights[i] /= totalWeight;
                 }
             }
             else
             {
-                weights[0] = 1.0;
+                normalizedWeights[0] = 1.0;
             }
-            return weights;
+
+            WeightMeteoArrays[parameterType] = normalizedWeights;
         }
 
         // Aggregation helper for historical and forecast data: Process data from a single station and accumulate weighted sums
@@ -626,49 +610,19 @@ namespace LEG.PV.Data.Processor
             List<DateTime> supportTimeStamps,
             List<DateTime> alignedMeteoTimeStamps,
             List<MeteoParameters> meteoParametersList,
-
-            double[] weightSunshineDuration,
-            double[] weightDirectRadiation,
-            double[] weightDirectNormalIrradiance,
-            double[] weightGlobalRadiation,
-            double[] weightDiffuseRadiation,
-            double[] weightTemperature,
-            double[] weightWindSpeed,
-            double[] weightWindDirection,
-            double[] weightSnowDepth,
-            double[] weightRelativeHumidity,
-            double[] weightDewPoint,
-
-            double[] weightedSumSupportSunshineDuration,
-            double[] weightedSumSupportDirectRadiation,
-            double[] weightedSumSupportDirectNormalIrradiance,
-            double[] weightedSumSupportGlobalRadiation,
-            double[] weightedSumSupportDiffuseRadiation,
-            double[] weightedSumSupportTemperature,
-            double[] weightedSumSupportWindSpeed,
-            double[] weightedSumSupportWindDirection,
-            double[] weightedSumSupportSnowDepth,
-            double[] weightedSumSupportRelativeHumidity,
-            double[] weightedSumSupportDewPoint,
-
-            double[] sumSupportDirectRadiation,
-            double[] squaredSumSupportDirectRadiation
+            double[] sumSupportGlobalRadiation,
+            double[] squaredSumSupportGlobalRadiation
         )
         {
             var iSupport = 0;
             var iMeteo = 0;
             var leftRecord = meteoParametersList[0];
-            var supportSunshineDuration = new double?[supportCount];
-            var supportDirectRadiation = new double?[supportCount];
-            var supportDirectNormalIrradiance = new double?[supportCount];
-            var supportGlobalRadiation = new double?[supportCount];
-            var supportDiffuseRadiation = new double?[supportCount];
-            var supportTemperature = new double?[supportCount];
-            var supportWindSpeed = new double?[supportCount];
-            var supportWindDirection = new double?[supportCount];
-            var supportSnowDepth = new double?[supportCount];
-            var supportRelativeHumidity = new double?[supportCount];
-            var supportDewPoint = new double?[supportCount];
+
+            foreach (var meteoParameterType in MeteoParameterTypeList)
+            {
+                MeteoValuesArrays[meteoParameterType] = new double?[supportCount];
+            }
+
             while (iMeteo < meteoCount - 1 && alignedMeteoTimeStamps[iMeteo].AddMinutes(meteoInterval) <= firstSupportTimestamp)
             {
                 iMeteo++;
@@ -676,17 +630,13 @@ namespace LEG.PV.Data.Processor
             while (iSupport < supportCount && iMeteo < meteoCount && alignedMeteoTimeStamps[iMeteo] < upperBound)
             {
                 AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval, supportInterval,
-                    supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], meteoParametersList[iMeteo],
-                    supportSunshineDuration, supportDirectRadiation, supportDirectNormalIrradiance, supportGlobalRadiation, supportDiffuseRadiation,
-                    supportTemperature, supportWindSpeed, supportWindDirection, supportSnowDepth, supportRelativeHumidity, supportDewPoint);
+                    supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], meteoParametersList[iMeteo]);
                 iSupport++;
                 while (iSupport < supportCount && iMeteo < meteoCount - 1 && alignedMeteoTimeStamps[iMeteo].AddMinutes(meteoInterval) <= supportTimeStamps[iSupport])
                 {
                     iMeteo++;
                     AllocateMeteoDataContainers(iSupport, iMeteo, supportCount, meteoInterval, supportInterval,
-                        supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], meteoParametersList[iMeteo],
-                        supportSunshineDuration, supportDirectRadiation, supportDirectNormalIrradiance, supportGlobalRadiation, supportDiffuseRadiation,
-                        supportTemperature, supportWindSpeed, supportWindDirection, supportSnowDepth, supportRelativeHumidity, supportDewPoint);
+                        supportTimeStamps[iSupport], alignedMeteoTimeStamps[iMeteo], meteoParametersList[iMeteo]);
                 }
                 iMeteo++;
             }
@@ -698,43 +648,34 @@ namespace LEG.PV.Data.Processor
                 weatherParameters.Add(new MeteoParameters(
                     supportTimeStamps[i],
                     TimeSpan.FromMinutes(supportInterval),
-                    supportSunshineDuration[i],
-                    supportDirectRadiation[i],
-                    supportDirectNormalIrradiance[i],
-                    supportGlobalRadiation[i],
-                    supportDiffuseRadiation[i],
-                    supportTemperature[i],
-                    supportWindSpeed[i],
-                    supportWindDirection[i],
-                    supportSnowDepth[i],
-                    supportRelativeHumidity[i],
-                    supportDewPoint[i]));
+                    MeteoParameterTypeList.Contains(MeteoParameterType.SunshineDuration) ? MeteoValuesArrays[MeteoParameterType.SunshineDuration][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DirectRadiation) ? MeteoValuesArrays[MeteoParameterType.DirectRadiation][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DirectNormalIrradiance) ? MeteoValuesArrays[MeteoParameterType.DirectNormalIrradiance][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.GlobalRadiation) ? MeteoValuesArrays[MeteoParameterType.GlobalRadiation][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DiffuseRadiation) ? MeteoValuesArrays[MeteoParameterType.DiffuseRadiation][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.Temperature) ? MeteoValuesArrays[MeteoParameterType.Temperature][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.WindSpeed) ? MeteoValuesArrays[MeteoParameterType.WindSpeed][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.WindDirection) ? MeteoValuesArrays[MeteoParameterType.WindDirection][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.SnowDepth) ? MeteoValuesArrays[MeteoParameterType.SnowDepth][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.RelativeHumidity) ? MeteoValuesArrays[MeteoParameterType.RelativeHumidity][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DewPoint) ? MeteoValuesArrays[MeteoParameterType.DewPoint][i] : null
+                    )
+                    );
 
-                var sunshineDur = supportSunshineDuration[i] ?? 0.0;
-                var directRad = supportDirectRadiation[i] ?? 0.0;
-                var direNormIrr = supportDirectNormalIrradiance[i] ?? 0.0;
-                var globalRad = supportGlobalRadiation[i] ?? 0.0;
-                var diffuseRad = supportDiffuseRadiation[i] ?? 0.0;
-                var ambTemp = supportTemperature[i] ?? 0.0;
-                var windSpeed = supportWindSpeed[i] ?? 0.0;
-                var windDirection = supportWindDirection[i] ?? 0.0;
-                var snowDepth = supportSnowDepth[i] ?? 0.0;
-                var relativeHumidity = supportRelativeHumidity[i] ?? 0.0;
-                var dewPoint = supportDewPoint[i] ?? 0.0;
-                weightedSumSupportSunshineDuration[i] += sunshineDur * weightSunshineDuration[stationIndex];
-                weightedSumSupportDirectRadiation[i] += directRad * weightDirectRadiation[stationIndex];                     // Historical records
-                weightedSumSupportDirectNormalIrradiance[i] += direNormIrr * weightDirectNormalIrradiance[stationIndex];       // Forecast records
-                weightedSumSupportGlobalRadiation[i] += globalRad * weightGlobalRadiation[stationIndex];                     // Historical records
-                weightedSumSupportDiffuseRadiation[i] += diffuseRad * weightDiffuseRadiation[stationIndex];
-                weightedSumSupportTemperature[i] += ambTemp * weightTemperature[stationIndex];
-                weightedSumSupportWindSpeed[i] += windSpeed * weightWindSpeed[stationIndex];
-                weightedSumSupportWindDirection[i] += windDirection * weightWindSpeed[stationIndex];
-                weightedSumSupportSnowDepth[i] += snowDepth * weightSnowDepth[stationIndex];
-                weightedSumSupportRelativeHumidity[i] += relativeHumidity * weightRelativeHumidity[stationIndex];
-                weightedSumSupportDewPoint[i] += dewPoint * weightDewPoint[stationIndex];
+                foreach (var meteoParameterType in MeteoParameterTypeList)
+                {
+                    //if (double.IsNaN(MeteoValuesArrays[meteoParameterType][i].Value * WeightMeteoArrays[meteoParameterType][stationIndex]))
+                    //{
+                    //    // Handle NaN case if needed
+                    //}
 
-                sumSupportDirectRadiation[i] += globalRad;
-                squaredSumSupportDirectRadiation[i] += globalRad * globalRad;
+                    WeightedSumMeteoValuesArrays[meteoParameterType][i] += 
+                        (MeteoValuesArrays[meteoParameterType][i] ?? 0.0) * WeightMeteoArrays[meteoParameterType][stationIndex];
+                }
+
+                var globalRad = MeteoValuesArrays[MeteoParameterType.GlobalRadiation][i] ?? 0.0;
+                sumSupportGlobalRadiation[i] += globalRad;
+                squaredSumSupportGlobalRadiation[i] += globalRad * globalRad;
             }
 
             return weatherParameters;
@@ -744,19 +685,8 @@ namespace LEG.PV.Data.Processor
             GetBlendedMeteoParameters(
             int supportCount,
             List<DateTime> supportTimeStamps,
-            double[] weightedSumSupportSunshineDuration,
-            double[] weightedSumSupportDirectRadiation,
-            double[] weightedSumSupportDirectNormalIrradiance,
-            double[] weightedSumSupportGlobalRadiation,
-            double[] weightedSumSupportDiffuseRadiation,
-            double[] weightedSumSupportTemperature,
-            double[] weightedSumSupportWindSpeed,
-            double[] weightedSumSupportWindDirection,
-            double[] weightedSumSupportSnowDepth,
-            double[] weightedSumSupportRelativeHumidity,
-            double[] weightedSumSupportDewPoint,
-            double[] sumSupportDirectRadiation,
-            double[] squaredSumSupportDirectRadiation)
+            double[] sumSupportGlobalRadiation,
+            double[] squaredSumSupportGlobalRadiation)
         {
             var blendedWeatherData =
                     new List<MeteoParameters>();
@@ -767,25 +697,25 @@ namespace LEG.PV.Data.Processor
                 var directRadiationVariance = radiationVarianceMaxVariance;
                 if (selectedStationsIdList.Count > 1)
                 {
-                    var E1i = sumSupportDirectRadiation[i] / selectedStationsIdList.Count; ;
-                    var E2i = squaredSumSupportDirectRadiation[i] / selectedStationsIdList.Count;
+                    var E1i = sumSupportGlobalRadiation[i] / selectedStationsIdList.Count; ;
+                    var E2i = squaredSumSupportGlobalRadiation[i] / selectedStationsIdList.Count;
                     directRadiationVariance = radiationBaselineVariance + (E2i - E1i * E1i) * selectedStationsIdList.Count / (selectedStationsIdList.Count - 1);
                 }
 
                 blendedWeatherData.Add(new MeteoParameters(
                     supportTimeStamps[i],
                     TimeSpan.FromMinutes(timeInterval),
-                    weightedSumSupportSunshineDuration[i],
-                    weightedSumSupportDirectRadiation[i],
-                    weightedSumSupportDirectNormalIrradiance[i],
-                    weightedSumSupportGlobalRadiation[i],
-                    weightedSumSupportDiffuseRadiation[i],
-                    weightedSumSupportTemperature[i],
-                    weightedSumSupportWindSpeed[i],
-                    weightedSumSupportWindDirection[i],
-                    weightedSumSupportSnowDepth[i],
-                    weightedSumSupportRelativeHumidity[i],
-                    weightedSumSupportDewPoint[i],
+                    MeteoParameterTypeList.Contains(MeteoParameterType.SunshineDuration) ? WeightedSumMeteoValuesArrays[MeteoParameterType.SunshineDuration][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DirectRadiation) ? WeightedSumMeteoValuesArrays[MeteoParameterType.DirectRadiation][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DirectNormalIrradiance) ? WeightedSumMeteoValuesArrays[MeteoParameterType.DirectNormalIrradiance][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.GlobalRadiation) ? WeightedSumMeteoValuesArrays[MeteoParameterType.GlobalRadiation][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DiffuseRadiation) ? WeightedSumMeteoValuesArrays[MeteoParameterType.DiffuseRadiation][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.Temperature) ? WeightedSumMeteoValuesArrays[MeteoParameterType.Temperature][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.WindSpeed) ? WeightedSumMeteoValuesArrays[MeteoParameterType.WindSpeed][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.WindDirection) ? WeightedSumMeteoValuesArrays[MeteoParameterType.WindDirection][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.SnowDepth) ? WeightedSumMeteoValuesArrays[MeteoParameterType.SnowDepth][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.RelativeHumidity) ? WeightedSumMeteoValuesArrays[MeteoParameterType.RelativeHumidity][i] : null,
+                    MeteoParameterTypeList.Contains(MeteoParameterType.DewPoint) ? WeightedSumMeteoValuesArrays[MeteoParameterType.DewPoint][i] : null,
                     directRadiationVariance));
             }
 
@@ -814,33 +744,16 @@ namespace LEG.PV.Data.Processor
             var firstYear = firstSupportTimestamp.AddMinutes(-shiftMeteoTimeStamps).Year;
             var lastYear = lastSupportTimestamp.AddMinutes(-shiftMeteoTimeStamps).Year;
 
-            var (weightSunshineDuration,
-                weightDirectRadiation,
-                weightDirectNormalIrradiance,
-                weightGlobalRadiation,
-                weightDiffuseRadiation,
-                weightTemperature,
-                weightWindSpeed,
-                weightWindDirection,
-                weightSnowDepth,
-                weightRelativeHumidity,
-                weightDewPoint) = GetStationWeightArrays(stationDictionary);
+            SetStationsWeightArrays(stationDictionary);
 
-            var weightedSumSupportSunshineDuration = new double[supportCount];
-            var weightedSumSupportDirectRadiation = new double[supportCount];
-            var weightedSumSupportDirectNormalIrradiance = new double[supportCount];
-            var weightedSumSupportGlobalRadiation = new double[supportCount];
-            var weightedSumSupportDiffuseRadiation = new double[supportCount];
-            var weightedSumSupportTemperature = new double[supportCount];
-            var weightedSumSupportWindSpeed = new double[supportCount];
-            var weightedSumSupportWindDirection = new double[supportCount];
-            var weightedSumSupportSnowDepth = new double[supportCount];
-            var weightedSumSupportRelativeHumidity = new double[supportCount];
-            var weightedSumSupportDewPoint = new double[supportCount];
+            foreach (var meteoParameterType in MeteoParameterTypeList)
+            {
+                WeightedSumMeteoValuesArrays[meteoParameterType] = new double[supportCount];
+            }
 
             var perStationWeatherParameters = new List<StationMeteoData>();
-            var sumSupportDirectRadiation = new double[supportCount];
-            var squaredSumSupportDirectRadiation = new double[supportCount];
+            var sumSupportGlobalRadiation = new double[supportCount];
+            var squaredSumSupportGlobalRadiation = new double[supportCount];
             var stationIndex = -1;
             foreach (var stationId in selectedStationsIdList)
             {
@@ -881,30 +794,8 @@ namespace LEG.PV.Data.Processor
                     supportTimeStamps,
                     alignedMeteoTimeStamps,
                     meteoParametersList,
-                    weightSunshineDuration,
-                    weightDirectRadiation,
-                    weightDirectNormalIrradiance,
-                    weightGlobalRadiation,
-                    weightDiffuseRadiation,
-                    weightTemperature,
-                    weightWindSpeed,
-                    weightWindDirection,
-                    weightSnowDepth,
-                    weightRelativeHumidity,
-                    weightDewPoint,
-                    weightedSumSupportSunshineDuration,
-                    weightedSumSupportDirectRadiation,
-                    weightedSumSupportDirectNormalIrradiance,
-                    weightedSumSupportGlobalRadiation,
-                    weightedSumSupportDiffuseRadiation,
-                    weightedSumSupportTemperature,
-                    weightedSumSupportWindSpeed,
-                    weightedSumSupportWindDirection,
-                    weightedSumSupportSnowDepth,
-                    weightedSumSupportRelativeHumidity,
-                    weightedSumSupportDewPoint,
-                    sumSupportDirectRadiation,
-                    squaredSumSupportDirectRadiation);
+                    sumSupportGlobalRadiation,
+                    squaredSumSupportGlobalRadiation);
 
                 perStationWeatherParameters.Add(new StationMeteoData(stationId, weatherParameters));
             }
@@ -912,19 +803,8 @@ namespace LEG.PV.Data.Processor
             var blendedWeatherData = GetBlendedMeteoParameters(
                 supportCount,
                 supportTimeStamps,
-                weightedSumSupportSunshineDuration,
-                weightedSumSupportDirectRadiation,
-                weightedSumSupportDirectNormalIrradiance,
-                weightedSumSupportGlobalRadiation,
-                weightedSumSupportDiffuseRadiation,
-                weightedSumSupportTemperature,
-                weightedSumSupportWindSpeed,
-                weightedSumSupportWindDirection,
-                weightedSumSupportSnowDepth,
-                weightedSumSupportRelativeHumidity,
-                weightedSumSupportDewPoint,
-                sumSupportDirectRadiation,
-                squaredSumSupportDirectRadiation);
+                sumSupportGlobalRadiation,
+                squaredSumSupportGlobalRadiation);
 
             return (perStationWeatherParameters, blendedWeatherData);
         }
@@ -954,32 +834,15 @@ namespace LEG.PV.Data.Processor
             var lastYear = lastSupportTimestamp.AddMinutes(-shiftMeteoTimeStamps).Year;
 
             // Compute normalized weights
-            var (weightSunshineDuration,
-                weightDirectRadiation,
-                weightDirectNormalIrradiance,
-                weightGlobalRadiation,
-                weightDiffuseRadiation,
-                weightTemperature,
-                weightWindSpeed,
-                weightWindDirection,
-                weightSnowDepth,
-                weightRelativeHumidity,
-                weightDewPoint) = GetStationWeightArrays(stationDictionary);
+            SetStationsWeightArrays(stationDictionary);
 
-            var weightedSumSupportSunshineDuration = new double[supportCount];
-            var weightedSumSupportDirectRadiation = new double[supportCount];
-            var weightedSumSupportDirectNormalIrradiance = new double[supportCount];
-            var weightedSumSupportGlobalRadiation = new double[supportCount];
-            var weightedSumSupportDiffuseRadiation = new double[supportCount];
-            var weightedSumSupportTemperature = new double[supportCount];
-            var weightedSumSupportWindSpeed = new double[supportCount];
-            var weightedSumSupportWindDirection = new double[supportCount];
-            var weightedSumSupportSnowDepth = new double[supportCount];
-            var weightedSumSupportRelativeHumidity = new double[supportCount];
-            var weightedSumSupportDewPoint = new double[supportCount];
+            foreach (var meteoParameterType in MeteoParameterTypeList)
+            {
+                WeightedSumMeteoValuesArrays[meteoParameterType] = new double[supportCount];
+            }
 
-            var sumSupportDirectRadiation = new double[supportCount];
-            var squaredSumSupportDirectRadiation = new double[supportCount];
+            var sumSupportGlobalRadiation = new double[supportCount];
+            var squaredSumSupportGlobalRadiation = new double[supportCount];
 
             // Fetch forecasts for all stations
             var forecastClient = new WeatherForecastClient();
@@ -1044,34 +907,9 @@ namespace LEG.PV.Data.Processor
                     upperBound,
                     supportTimeStamps,
                     alignedMeteoTimeStamps,
-
                     meteoParametersList,
-                    weightSunshineDuration,
-                    weightDirectRadiation,
-                    weightDirectNormalIrradiance,
-                    weightGlobalRadiation,
-                    weightDiffuseRadiation,
-                    weightTemperature,
-                    weightWindSpeed,
-                    weightWindDirection,
-                    weightSnowDepth,
-                    weightRelativeHumidity,
-                    weightDewPoint,
-
-                    weightedSumSupportSunshineDuration,
-                    weightedSumSupportDirectRadiation,
-                    weightedSumSupportDirectNormalIrradiance,
-                    weightedSumSupportGlobalRadiation,
-                    weightedSumSupportDiffuseRadiation,
-                    weightedSumSupportTemperature,
-                    weightedSumSupportWindSpeed,
-                    weightedSumSupportWindDirection,
-                    weightedSumSupportSnowDepth,
-                    weightedSumSupportRelativeHumidity,
-                    weightedSumSupportDewPoint,
-
-                    sumSupportDirectRadiation,
-                    squaredSumSupportDirectRadiation);
+                    sumSupportGlobalRadiation,
+                    squaredSumSupportGlobalRadiation);
 
                 perStationWeatherParameters.Add(new StationMeteoData(stationId, weatherParameters));
             }
@@ -1079,19 +917,8 @@ namespace LEG.PV.Data.Processor
             var blendedWeatherData = GetBlendedMeteoParameters(
                 supportCount,
                 supportTimeStamps,
-                weightedSumSupportSunshineDuration,
-                weightedSumSupportDirectRadiation,
-                weightedSumSupportDirectNormalIrradiance,
-                weightedSumSupportGlobalRadiation,
-                weightedSumSupportDiffuseRadiation,
-                weightedSumSupportTemperature,
-                weightedSumSupportWindSpeed,
-                weightedSumSupportWindDirection,
-                weightedSumSupportSnowDepth,
-                weightedSumSupportRelativeHumidity,
-                weightedSumSupportDewPoint,
-                sumSupportDirectRadiation,
-                squaredSumSupportDirectRadiation);
+                sumSupportGlobalRadiation,
+                squaredSumSupportGlobalRadiation);
             return (perStationWeatherParameters, blendedWeatherData);
         }
 
@@ -1144,75 +971,32 @@ namespace LEG.PV.Data.Processor
         }
 
         // Helper method to get weight arrays for all selected stations
-        private (
-            double[] weightSunshineDuration,
-            double[] weightDirectRadiation,
-            double[] weightDirectNormalIrradiance,
-            double[] weightGlobalRadiation,
-            double[] weightDiffuseRadiation,
-            double[] weightTemperature,
-            double[] weightWindSpeed,
-            double[] weightWaterSpeed,
-            double[] weightSnowDepth,
-            double[] weightRelativeHumidity,
-            double[] weightDewPoint
-            )
-            GetStationWeightArrays(Dictionary<string, WeightMeteoParameters> stationDictionary)
+        private void SetStationsWeightArrays(Dictionary<string, WeightMeteoParameters> stationDictionary)
         {
-            // Get weight lists
-            var weightSunshineDurationList = new List<double>();
-            var weightDirectRadiationList = new List<double>();
-            var weightDirectNormalIrradianceList = new List<double>();
-            var weightGlobalRadiationList = new List<double>();
-            var weightDiffuseRadiationList = new List<double>();
-            var weightTemperatureList = new List<double>();
-            var weightWindSpeedList = new List<double>();
-            var weightWindDirectionList = new List<double>();
-            var weightSnowDepthList = new List<double>();
-            var weightRelativeHumidityList = new List<double>();
-            var weightDewPointList = new List<double>();
+            var stationsCount = stationDictionary.Count;
+
+            foreach (var meteoParameterType in MeteoParameterTypeList)
+            {
+                WeightMeteoArrays[meteoParameterType] = new double[stationsCount];
+            }
+
+            var stationIndex = 0;
             foreach (var stationId in stationDictionary.Keys)
             {
                 var weights = stationDictionary[stationId];
-                weightSunshineDurationList.Add(weights.WeightSunshineDuration);
-                weightDirectRadiationList.Add(weights.WeightDirectRadiation);
-                weightDirectNormalIrradianceList.Add(weights.WeightDirectNormalIrradiance);
-                weightGlobalRadiationList.Add(weights.WeightGlobalRadiation);
-                weightDiffuseRadiationList.Add(weights.WeightDiffuseRadiation);
-                weightTemperatureList.Add(weights.WeightTemperature);
-                weightWindSpeedList.Add(weights.WeightWindSpeed);
-                weightWindDirectionList.Add(weights.WeightWindDirection);
-                weightSnowDepthList.Add(weights.WeightSnowDepth);
-                weightRelativeHumidityList.Add(weights.WeightRelativeHumidity);
-                weightDewPointList.Add(weights.WeightDewPoint);
+                foreach (var meteoParameterType in MeteoParameterTypeList)
+                {
+                    WeightMeteoArrays[meteoParameterType][stationIndex] = weights.WeightSunshineDuration;
+                }
+
+                stationIndex++;
             }
 
             // Compute normalized weights
-            var countStations = stationDictionary.Count;
-            var weightSunshineDuration = GetWeights(weightSunshineDurationList, countStations);
-            var weightDirectRadiation = GetWeights(weightDirectRadiationList, countStations);
-            var weightDirectNormalIrradiance = GetWeights(weightDirectNormalIrradianceList, countStations);
-            var weightGlobalRadiation = GetWeights(weightGlobalRadiationList, countStations);
-            var weightDiffuseRadiation = GetWeights(weightDiffuseRadiationList, countStations);
-            var weightTemperature = GetWeights(weightTemperatureList, countStations);
-            var weightWindSpeed = GetWeights(weightWindSpeedList, countStations);
-            var weightWindDirection = GetWeights(weightWindDirectionList, countStations);
-            var weightSnowDepth = GetWeights(weightSnowDepthList, countStations);
-            var weightRelativeHumidity = GetWeights(weightRelativeHumidityList, countStations);
-            var weightDewPoint = GetWeights(weightDewPointList, countStations);
-
-            return (weightSunshineDuration,
-                    weightDirectRadiation,
-                    weightDirectNormalIrradiance,
-                    weightGlobalRadiation,
-                    weightDiffuseRadiation,
-                    weightTemperature,
-                    weightWindSpeed,
-                    weightWindDirection,
-                    weightSnowDepth,
-                    weightRelativeHumidity,
-                    weightDewPoint
-                    );
+            foreach (var meteoParameterType in MeteoParameterTypeList)
+            {
+                NormalizeMeteoWeightArray(meteoParameterType, stationsCount);
+            }
         }
     }
 }

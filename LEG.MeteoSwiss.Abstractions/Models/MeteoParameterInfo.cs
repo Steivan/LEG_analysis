@@ -15,7 +15,7 @@
             { nameof(MeteoParameters.SnowDepth), "cm" },
             { nameof(MeteoParameters.RelativeHumidity), "%" },
             { nameof(MeteoParameters.DewPoint), "°C" },
-            { nameof(MeteoParameters.DirectRadiationVariance), "(W/m²)²" }
+            { nameof(MeteoParameters.RadiationVariance), "(W/m²)²" }
         };
     }
 }

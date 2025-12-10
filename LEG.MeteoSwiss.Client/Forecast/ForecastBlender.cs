@@ -112,7 +112,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
                 SnowDepth = baseRecord.SnowDepth,     // No snow depth in nowcast
                 RelativeHumidity = newRecord.RelativeHumidity ?? baseRecord.RelativeHumidity,
                 DewPoint = newRecord.DewPoint ?? baseRecord.DewPoint,
-                DirectRadiationVariance = newRecord.DirectRadiationVariance ?? baseRecord.DirectRadiationVariance
+                RadiationVariance = newRecord.RadiationVariance ?? baseRecord.RadiationVariance
             };
         }
     }

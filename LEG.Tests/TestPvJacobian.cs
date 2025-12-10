@@ -72,7 +72,7 @@ namespace LEG.Tests
                 SnowDepth: snowDepth,
                 RelativeHumidity: RelativeHumidity,
                 DewPoint: DewPoint,
-                DirectRadiationVariance: shortWaveRadiation * shortWaveRadiation * 0.01
+                RadiationVariance: shortWaveRadiation * shortWaveRadiation * 0.01
             );
 
             // Calculate effective power

@@ -101,7 +101,7 @@ namespace LEG.PV.Data.Processor
                 SnowDepth: snowDepth,
                 RelativeHumidity: relativeHumidity,
                 DewPoint: dewPoint,
-                DirectRadiationVariance: directRadiation * directRadiationCV
+                RadiationVariance: directRadiation * directRadiationCV
             );
 
             return (updatedMeteoParameters, weight);
