@@ -85,7 +85,7 @@ namespace LEG.PV.Data.Processor
                 fogHighRH - fogDeltaRH * (hour - fogDissolveStartHour) / (fogDissolveEndHour - fogDissolveStartHour);
             var dewPoint =
                 initialize ? temperature - 0.1 * (100.0 - relativeHumidity) :
-                priortMeteoParameters.DewPointFromRH(temperature, relativeHumidity);                             // Convert T and RH into DP
+                priortMeteoParameters.DPFromTAndRH(temperature, relativeHumidity);                             // Convert T and RH into DP
             dewPoint = temperature - (temperature - dewPoint) * (1.0 + (2.0 * random.NextDouble() - 1.0) * deltaDewPoint) ;
 
             var updatedMeteoParameters = new MeteoParameters(

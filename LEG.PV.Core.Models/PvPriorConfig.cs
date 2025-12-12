@@ -33,7 +33,7 @@ namespace LEG.PV.Core.Models
 
         internal const double meanDSnow = 15.0;
         internal const double sigmaDSnow = 5.0;
-        internal const double minDSnow = 0.5;
+        internal const double minDSnow = 1.0;
         internal const double maxDSnow = 100.0;
 
         internal const double meanLambdaAFog = 2.0;

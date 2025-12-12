@@ -352,26 +352,26 @@ namespace LEG.PV.Data.Processor
                 = [
                 PvPriorConfig.GetAllPriorsMeans(),      // Default priors used for index=0
                 new(
-                    etha: 0.571,
-                    gamma: -0.0056,
-                    u0: 200,
+                    etha: 0.525,
+                    gamma: -0.00761,
+                    u0: 200.0,
                     u1: 0.001,
-                    lDegr: 0.0119,
-                    dSnow: 18.0,
-                    lambdaAFog: -0.468,
-                    bFog: 0.956,
-                    lambdaKFog: 1.92
+                    lDegr: 0.0126,
+                    dSnow: 2.73 * 0.0,
+                    lambdaAFog: 1.90,
+                    bFog: 0.217,
+                    lambdaKFog: 1.91
                 ),
                 new(             // SennV: elevation 35° 
-                    etha: 0.464,
-                    gamma: -0.0003,
-                    u0: 200,
+                    etha: 0.457,
+                    gamma: -0.0,
+                    u0: 5.0,
                     u1: 0.001,
-                    lDegr: 0.0085,
-                    dSnow: 18.0,
-                    lambdaAFog: -0.108,
-                    bFog: 1.092,
-                    lambdaKFog: 1.98
+                    lDegr: 0.00898,
+                    dSnow: 2.48 * 0.0,
+                    lambdaAFog: 1.86,
+                    bFog: 0.259,
+                    lambdaKFog: 1.44
                 ),
                 new(                                    // initial calibration without Snow/Fog
                     etha: 0.619,

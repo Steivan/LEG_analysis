@@ -6,7 +6,6 @@ using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
-using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 //ProcessSyntheticModelData(
 //    applyRandomNoise: true,
@@ -186,7 +185,6 @@ void ProcessSyntheticModelData(
 
     return (filteredValidRecors, initialMeanSquaredError0);
 }
-
 void ProcessPvData(
     string siteId,
     double installedPower,
@@ -333,7 +331,6 @@ void ProcessPvData(
 }
 
 // Helper functions for printing results
-
 void PrintCalibrationResults(PvPriors pvPriors, PvModelParams thetaModel, List<PvModelParams> thetaCalibratedList, 
     int iterations, int maxIterations, 
     double meanSquaredError, double initialMeanSquaredError, bool useLambda = true)
@@ -363,7 +360,6 @@ void PrintCalibrationResults(PvPriors pvPriors, PvModelParams thetaModel, List<P
     Console.WriteLine($"Mean Squared Error: {meanSquaredError:F6} (initial: {initialMeanSquaredError:F6})");
     Console.WriteLine();
 }
-
 void PrintStatistics(double minError, double maxError, double meanError, double binSize, double[] binCenters, int[] binCounts)
 {
     Console.WriteLine("Error Histogram");

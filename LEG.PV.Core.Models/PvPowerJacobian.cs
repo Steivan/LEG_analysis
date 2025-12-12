@@ -1,12 +1,28 @@
-﻿using LEG.MeteoSwiss.Abstractions.Models;
+﻿using System;
+using System.Xml.Schema;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvConstants;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
-using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Core.Models;
 
 public class PvPowerJacobian                  // Base model: Radiation (direc, diffuse), Temperature, Windspeed, Age
 {
+    public static double PositiveLogitComplement(double x, double a, double aMin = 1.0, double aMax = 100.0)
+    {
+        const double nominator = 1.0 + 1.0 / Math.E;
+
+        x = Math.Max(0.0, Math.Min(aMax * 100.0, x));
+        a = Math.Max(aMin, Math.Min(aMax, a));
+
+        return nominator / (1.0 + Math.Exp(x / a - 1.0));
+    }
+
+    public static double PositiveLogit(double x, double a, double aMin = 1.0, double aMax = 100.0)
+    {
+        return 1.0 - PositiveLogitComplement(x, a, aMin: aMin, aMax: aMax);
+    }
+
     private static (double gDirectPoa, double gDiffusePoa, 
         double directGeometryFactor, double diffuseGeometryFactor, double sinSunElevation,
         bool hasValue) 
@@ -20,6 +36,16 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         var gDiffusePoa = meteoParameters.GetDiffusePoa(geometryFactors.HasDiffuseIrradiance);
 
         return (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, sinSunElevation, geometryFactors.HasIrradiance);
+    }
+
+    public static double GetSnowFactor(double? snowDepth, double dSnow)
+    {
+        return PositiveLogitComplement(snowDepth.Value, dSnow, aMin: 1.0, aMax: 100.0);
+    }
+
+    private static double GetFogFactor(double? dpd, double aFog, double bFog, double kFog)
+    {
+        return 1.0 - aFog / (1.0 + Math.Exp(kFog * ((dpd?? 2.0) - bFog)));
     }
     // Effective Power
     public static PvPowerRecord EffectiveCellPower(
@@ -49,10 +75,10 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         var cellTempTW = meteoParameters.Temperature + gPoa / (modelParams.U0 + modelParams.U1 * meteoParameters.WindSpeed);
         var tempFactorTW = (1 + modelParams.Gamma * (cellTempTW - meanTempStc));
 
-        var snowFactor = meteoParameters.SnowDepth >= modelParams.DSnow ? 0.0 : 1.0;
+        var snowFactor = GetSnowFactor(meteoParameters.SnowDepth, modelParams.DSnow);
 
         var dpd = meteoParameters.GetDewPointDepression();
-        var fogFactor = 1.0 - modelParams.AFog / (1.0 + Math.Exp(modelParams.KFog * (dpd - modelParams.BFog)));
+        var fogFactor = GetFogFactor(dpd, modelParams.AFog, modelParams.BFog, modelParams.KFog);
 
         var geometryFactor = Math.Max(directGeometryFactor, sinSunElevation * diffuseRatio);
         var pG = effectivePower * geometryFactor * solarConstantRatio;              // Reference: Geometry and direct irradiance
@@ -400,7 +426,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         var lDegrDeriv = irradianceRatio * degradedPowerDeriv * modelParams.Etha * tempFactorTW;
 
         // Snow and fog
-        var snowFactor = meteoParameters.SnowDepth >= modelParams.DSnow ? 0.0 : 1.0;
+        var snowFactor = GetSnowFactor(meteoParameters.SnowDepth, modelParams.DSnow);
         var snowDeriv = 0.0;
 
         var dpd = meteoParameters.GetDewPointDepression();
@@ -423,5 +449,4 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 
         return (powerRecord, derivativesRecord);
     }
-
 }
