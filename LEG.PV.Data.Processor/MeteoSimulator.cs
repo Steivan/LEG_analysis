@@ -22,7 +22,7 @@ namespace LEG.PV.Data.Processor
         const double windVariationProbability = 0.1;
         const double weightPreviousWindSpeed = 0.95;
 
-        const double snowDegradationFactor = 0.8;
+        const double snowDegradationFactorPerDay = 0.8;
 
         const double meanRH = 60.0;
         const double fogHighRH = 100.0;
@@ -30,16 +30,19 @@ namespace LEG.PV.Data.Processor
         const double fogDeltaRH = fogHighRH - fogLoRH;
         const Double deltaDewPoint = 0.1;
 
-        public static (MeteoParameters meteoParam, double weight) UpdatedMeteoParameters(
+        public static (MeteoParameters meteoParam, double snowDepth, double weight) UpdatedMeteoParameters(
             DateTime timeStamp, int minutesPerPeriod, 
             MeteoParameters? priortMeteoParameters, 
             PvSolarGeometry sunGeometry, double cosOmegaYear, double cosOmegaDay,
-            bool isSnowyDay, double newSnow,
+            bool isSnowyDay, double priorSnowDepth, double newSnowPerDay,
             bool isFoggyDay, double fogDissolveStartHour, double fogDissolveEndHour,
             bool initialize =false)
         {
             var hour = timeStamp.Hour;
+            var periodsPerDay = (24 * 60) / minutesPerPeriod;
             var random = new Random();
+            var newSnowPerPeriod = newSnowPerDay / periodsPerDay;
+            var snowDegradationFactorPerPeriod = Math.Exp(Math.Log(snowDegradationFactorPerDay) / periodsPerDay);
 
             // Update radiation with some randomness
             var sunshineDuration = 0.0;
@@ -67,15 +70,14 @@ namespace LEG.PV.Data.Processor
             // Update wind velocity with some randomness
             var deltaWindSpeed = random.NextDouble() * maxNewWindVariation;
             var newWindGustVelocity = (random.NextDouble() < windVariationProbability) ? deltaWindSpeed : 0.0;
-            var windSpeed = initialize ? deltaWindSpeed :
-                (priortMeteoParameters.WindSpeed * weightPreviousWindSpeed + newWindGustVelocity) ?? 0.0;
+            var windSpeed = initialize ? deltaWindSpeed : (priortMeteoParameters.WindSpeed * weightPreviousWindSpeed + newWindGustVelocity) ?? 0.0;
             windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, windSpeed));
 
             // Snow
-            var snowDepth =
-                !isSnowyDay ? 0.0 :
-                initialize ? newSnow:
-                priortMeteoParameters.SnowDepth * snowDegradationFactor + newSnow; 
+            var newSnowDepth =
+                !isSnowyDay ? priorSnowDepth * snowDegradationFactorPerPeriod :
+                initialize ? newSnowPerDay:
+                priorSnowDepth * snowDegradationFactorPerPeriod + newSnowPerPeriod; 
 
             // Fog
             var relativeHumidity = 
@@ -83,29 +85,27 @@ namespace LEG.PV.Data.Processor
                 hour <= fogDissolveStartHour ? fogHighRH :
                 hour >= fogDissolveEndHour ? fogLoRH :
                 fogHighRH - fogDeltaRH * (hour - fogDissolveStartHour) / (fogDissolveEndHour - fogDissolveStartHour);
-            var dewPoint =
-                initialize ? temperature - 0.1 * (100.0 - relativeHumidity) :
-                priortMeteoParameters.DPFromTAndRH(temperature, relativeHumidity);                             // Convert T and RH into DP
+            var dewPoint = MeteoParameterTypes.DPFromTAndRH(temperature, relativeHumidity);                             // Convert T and RH into DP
             dewPoint = temperature - (temperature - dewPoint) * (1.0 + (2.0 * random.NextDouble() - 1.0) * deltaDewPoint) ;
 
             var updatedMeteoParameters = new MeteoParameters(
                 time:  timeStamp,
                 interval: TimeSpan.FromMinutes(minutesPerPeriod),
-                sunshineDuration: Math.Max(0,Math.Min(minutesPerPeriod, (int)sunshineDuration)),
-                directRadiation: directRadiation,
-                directNormalIrradiance: direcNormaltIrradiance,
-                diffuseRadiation: diffuseRadiation,
-                globalRadiation: directRadiation + diffuseRadiation,
-                temperature: temperature,
-                windSpeed: windSpeed,
+                sunshineDuration: Math.Max(0, Math.Min(minutesPerPeriod, (int)sunshineDuration)),
+                directRadiation: Math.Round(directRadiation, 0),
+                directNormalIrradiance: Math.Round(direcNormaltIrradiance, 0),
+                diffuseRadiation: Math.Round(diffuseRadiation, 0),
+                globalRadiation: Math.Round(directRadiation + diffuseRadiation, 0),
+                temperature: Math.Round(temperature, 1),
+                windSpeed: Math.Round(windSpeed, 2),
                 windDirection: null,
-                snowDepth: snowDepth,
-                relativeHumidity: relativeHumidity,
-                dewPoint: dewPoint,
-                radiationVariance: directRadiation * directRadiationCV
+                snowDepth: Math.Round(newSnowDepth, 1),
+                relativeHumidity: Math.Round(relativeHumidity, 1),
+                dewPoint: Math.Round(dewPoint, 1),
+                radiationVariance: Math.Round(directRadiation * directRadiationCV, 0)
             );
 
-            return (updatedMeteoParameters, weight);
+            return (updatedMeteoParameters, newSnowDepth, weight);
         }
     }
 }

@@ -4,6 +4,36 @@ namespace LEG.MeteoSwiss.Abstractions.Models
 {
     public class MeteoParameterTypes
     {
+        public static double DPFromTAndRH(double temperature, double relativeHumidity)
+        {
+            // Magnus formula for dew point approximation
+            const double a = 17.62;     // 17.27;
+            const double b = 243.12;    // 237.7; // degrees Celsius
+            relativeHumidity = Math.Max(Math.Min(relativeHumidity, 100.0), 1.0); // Clamp RH to avoid log(0)
+            double alpha = a * temperature / (b + temperature) + Math.Log(relativeHumidity / 100.0);
+
+            return alpha * b / (a - alpha);
+        }
+        public static double RHFromTAndDP(double temperature, double dewPoint)
+        {
+            // Magnus formula for dew point approximation
+            const double a = 17.62;
+            const double b = 243.12;
+            dewPoint = Math.Min(temperature, dewPoint);
+            double beta = a * dewPoint / (b + dewPoint) - a * temperature / (b + temperature);
+
+            return 100.0 * Math.Exp(beta);
+        }
+        public static double TFromRHAndDP(double relativeHumidity, double dewPoint)
+        {
+            // Rearranged Magnus formula to get T from DP and RH
+            const double a = 17.62;
+            const double b = 243.12;
+            relativeHumidity = Math.Max(Math.Min(relativeHumidity, 100.0), 1.0); // Clamp RH to avoid log(0)
+            double gamma = a * dewPoint / (b + dewPoint) - Math.Log(relativeHumidity / 100.0);
+
+            return gamma * b / (a - gamma);
+        }
         public record MeteoParameters
         {
             public MeteoParameters
@@ -165,36 +195,6 @@ namespace LEG.MeteoSwiss.Abstractions.Models
             public double GetDiffusePoa(bool hasDiffuseIrradiance)
             {
                 return hasDiffuseIrradiance ? DiffuseRadiation.Value : 0.0;
-            }
-            public double DPFromTAndRH(double temperature, double relativeHumidity)
-            {
-                // Magnus formula for dew point approximation
-                const double a = 17.62;     // 17.27;
-                const double b = 243.12;    // 237.7; // degrees Celsius
-                relativeHumidity = Math.Max(Math.Min(relativeHumidity, 100.0), 1.0); // Clamp RH to avoid log(0)
-                double alpha = a * temperature / (b + temperature) + Math.Log(relativeHumidity / 100.0);
-
-                return alpha * b / (a - alpha);
-            }
-            public double RHFromTAndDP(double temperature, double dewPoint)
-            {
-                // Magnus formula for dew point approximation
-                const double a = 17.62;
-                const double b = 243.12;
-                dewPoint = Math.Min(temperature, dewPoint); 
-                double beta = a * dewPoint / (b + dewPoint) - a * temperature / (b + temperature);
-
-                return 100.0 * Math.Exp(beta);
-            }
-            public double TFromRHAndDP(double relativeHumidity, double dewPoint)
-            {
-                // Rearranged Magnus formula to get T from DP and RH
-                const double a = 17.62;
-                const double b = 243.12;
-                relativeHumidity = Math.Max(Math.Min(relativeHumidity, 100.0), 1.0); // Clamp RH to avoid log(0)
-                double gamma = a * dewPoint / (b + dewPoint) - Math.Log(relativeHumidity / 100.0);
-
-                return gamma * b / (a - gamma);
             }
             public double GetDewPoint(double defaultT = 15.0, double defaultRH = 60.0)
             {

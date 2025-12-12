@@ -1,5 +1,4 @@
 ﻿
-using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPowerJacobian;
@@ -78,14 +77,17 @@ public class DataSimulator
 
         // Initial values
         var random = new Random();
-        var pvRecords = new List<PvRecord>();
+        var roundedPvRecords = new List<PvRecord>();
         var validRecords = new List<bool>();
-        PvSolarGeometry? solarGeometry = null;
+        PvSolarGeometry? roundedSolarGeometry = null;
         double cosOmegaYear, cosOmegaDay;
-        MeteoParameters? meteoParameters = null;
+        MeteoParameters? roundedMeteoParameters = null;
         double weight;
         var firstSnowDay = -1;
         var lastSnowDay = -1;
+        var priorSnowDepth = 0.0;
+        var newSnowDepth = 0.0;
+        var newSnowPerDay = 0.0;
 
         var initialize = true;
         for (int day = 0; day < simulationDays; day++)
@@ -94,20 +96,22 @@ public class DataSimulator
             var monthIndex = currentDate.Month - 1;
 
             // Random snow period
+            var isSnowyMonth = averageSnowyowDaysPerMonth[monthIndex] > 0;
+            var randomBaselineSnowDepth = random.NextDouble() * 1.0;
             var dayOfMonth = currentDate.Day;
             if (dayOfMonth == 1)
             {
-                firstSnowDay = -1;
+                firstSnowDay = 32;
                 lastSnowDay = -1;
-                if (averageSnowyowDaysPerMonth[monthIndex] > 0)
+                if (isSnowyMonth)
                 {
                     var durationSnowDays = random.Next(0, 2 * averageSnowyowDaysPerMonth[monthIndex] + 1);
                     firstSnowDay = random.Next(1, daysPerMonth[monthIndex] - durationSnowDays + 2);
                     lastSnowDay = firstSnowDay + durationSnowDays - 1;
                 }
             }
-            var isSnowyDay = (firstSnowDay <= dayOfMonth && dayOfMonth <= lastSnowDay);
-            var newSnow = applySnowDays ? (isSnowyDay ? minNewSnow + random.NextInt64(maxNewSnowRandom) : 0) : 0; // [cm]
+            var isSnowyDay = isSnowyMonth && (firstSnowDay <= dayOfMonth && dayOfMonth <= lastSnowDay);
+            newSnowPerDay = applySnowDays ? (isSnowyDay ? minNewSnow + random.NextDouble() * maxNewSnowRandom : randomBaselineSnowDepth) : 0.0; // [cm]
 
             // Random foggy day
             var randomDayOfMonth = random.Next(1, daysPerMonth[monthIndex] + 1);
@@ -140,54 +144,63 @@ public class DataSimulator
                         if (initialize)
                         {
                             var priorPeriodDateTime = timeStamp - TimeSpan.FromMinutes(minutesPerPeriod);
-                            (solarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(
+                            (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(
                                 startYear, priorPeriodDateTime,
                                 siteLatitude, siteLongitude,
                                 roofAzimuth, sinRoofElevation, cosRoofElevation);
-                            (meteoParameters, weight) = MeteoSimulator.UpdatedMeteoParameters(  // meteo parameters for prior interval
+                            (roundedMeteoParameters, newSnowDepth, weight) = MeteoSimulator.UpdatedMeteoParameters(  // meteo parameters for prior interval
                                 priorPeriodDateTime, minutesPerPeriod,
-                                meteoParameters,
-                                solarGeometry, cosOmegaYear, cosOmegaDay,
-                                false, 0,
+                                roundedMeteoParameters,
+                                roundedSolarGeometry, cosOmegaYear, cosOmegaDay,
+                                false, priorSnowDepth, newSnowPerDay,
                                 false, 0, 24,
                                 initialize: true);
 
                             initialize = false;
+                            priorSnowDepth = newSnowDepth;
                         }
 
+
                         // Solar position
-                        (solarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
-                        var sinSunElevation = solarGeometry.SinSunElevation;
+                        (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
+                        var sinSunElevation = roundedSolarGeometry.SinSunElevation;
 
-                        (meteoParameters, weight) = MeteoSimulator.UpdatedMeteoParameters(
+                        (roundedMeteoParameters, newSnowDepth, weight) = MeteoSimulator.UpdatedMeteoParameters(
                             timeStamp, minutesPerPeriod, 
-                            meteoParameters,
-                            solarGeometry, cosOmegaYear, cosOmegaDay,
-                            applySnowDays && isSnowyDay, newSnow,
+                            roundedMeteoParameters,
+                            roundedSolarGeometry, cosOmegaYear, cosOmegaDay,
+                            applySnowDays && isSnowyDay, priorSnowDepth, newSnowPerDay,
                             applyFoggyDays && isFoggyDay, fogDissolveStartHour, fogDissolveEndHour);
+                        priorSnowDepth = newSnowDepth;
 
-                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, solarGeometry, meteoParameters, age, pvParams);
+                        var calculatedPower = EffectiveCellPower(installedPower, periodsPerHour, roundedSolarGeometry, roundedMeteoParameters, age, pvParams);
 
                         // If applcable, add some noise to the measured power and apply outlier factor
                         var noiseFactor = 1.0 + (applyRandomNoise ? randomNoiseVariation * (random.NextDouble() - 0.5) : 0.0);
                         var outlierFactor = (applyOutliers && isOutlier) ? 1.5 : 1.0;
                         var measuredPower = (calculatedPower.PowerGRTWSF > 0 ? calculatedPower.PowerGRTWSF : 0.0) * noiseFactor * outlierFactor;
 
-                        if (!isSnowyDay || outlierFactor > 1)
+                        if (newSnowDepth > 0 && measuredPower > 0)
                         {
                             var DEBUG = 1;
                         }
 
-                        pvRecords.Add(
+                        if (newSnowDepth > 14.9 && newSnowDepth < 15.1 && measuredPower > 10)
+                        {
+                            var DEBUG = 1;
+                        }
+
+                        roundedPvRecords.Add(
                             new PvRecord(
                                 timeStamp, 
-                                pvRecords.Count,
-                                solarGeometry,
-                                meteoParameters,
+                                roundedPvRecords.Count,
+                                roundedSolarGeometry,
+                                roundedMeteoParameters,
                                 weight: weight,  
-                                age, measuredPower)
+                                Math.Round(age, 2),
+                                Math.Round(measuredPower, 1))
                             );
-                        var checkedComputedPower = pvRecords.Last().ComputedPower(pvParams, installedPower, periodsPerHour);
+                        var checkedComputedPower = roundedPvRecords.Last().ComputedPower(pvParams, installedPower, periodsPerHour);
 
                         var isValidRecord = (weight > 0) &&(!applySnowDays || !isSnowyDay) && (!applyFoggyDays || !isFoggyDay) && (!applyOutliers || !isOutlier);
                         validRecords.Add(isValidRecord);
@@ -199,10 +212,10 @@ public class DataSimulator
             startBlock = 0; // after first day, start at midnight
         }
         // Check period start date and period end date
-        var firstRecordDate = pvRecords.First().Timestamp;
-        var lastRecordDate = pvRecords.Last().Timestamp;
+        var firstRecordDate = roundedPvRecords.First().Timestamp;
+        var lastRecordDate = roundedPvRecords.Last().Timestamp;
 
         var countFalse = validRecords.Count(v => v!=true);
-        return (pvRecords, validRecords, periodsPerHour);
+        return (roundedPvRecords, validRecords, periodsPerHour);
     }
 }

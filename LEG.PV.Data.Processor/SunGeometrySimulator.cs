@@ -1,10 +1,4 @@
 ﻿using LEG.PV.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static LEG.PV.Core.Models.PvDataClass;
 
 namespace LEG.PV.Data.Processor
 {
@@ -45,7 +39,12 @@ namespace LEG.PV.Data.Processor
                 + Math.Sin(sunElevation * Math.PI / 180.0) * sinRoofElevation;
             var diffuseGeometryFactor = (1.0 + cosRoofElevation) / 2;
 
-            return (new PvSolarGeometry(directGeometryFactor, diffuseGeometryFactor, sinSunElevation), cosOmegaYear, cosOmegaDay);
+            return (new PvSolarGeometry(
+                Math.Round(directGeometryFactor, 4),
+                Math.Round(diffuseGeometryFactor, 4),
+                Math.Round(sinSunElevation, 4)), 
+                Math.Round(cosOmegaYear, 4), 
+                Math.Round(cosOmegaDay, 4));
         }
 
     }

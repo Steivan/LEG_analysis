@@ -4,6 +4,7 @@ using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPriorConfig;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PV.Calibration.Tool
 {
@@ -26,14 +27,6 @@ namespace PV.Calibration.Tool
         private const double maxSnowDepth = 100.0;
         private const int snowDepthSteps = 10;
 
-        //// Delegate matching the required Jacobian function signature
-        //public delegate (PvPowerRecord powerRecord, PvModelParams paramDerivatives) JacobianFunc(
-        //    double installedPower, int periodsPerHour, 
-        //    PvSolarGeometry geometryFactors,
-        //    MeteoParameters meteoParameters,
-        //    double age,
-        //    PvModelParams modelParams);
-
         private static double[] GetSnowDepth(double minSnowDepth, double maxSnowDepth)
         {
             var logMin = Math.Log(minSnowDepth);
@@ -42,37 +35,23 @@ namespace PV.Calibration.Tool
             return Enumerable.Range(0, snowDepthSteps).Select(i => Math.Exp(logMin + i * delta)).ToArray();
         }
 
-        private static void UpdateErrors_S(double[] errors_S, double[] support_S, double snowDepth, double measuredPower, double weight)
+        private static void UpdateErrors_S(double[] support, double[] errors, double snowDepth, double baselinePower, double measuredPower, double weight)
         {
-            var Y = PvPowerJacobian.PositiveLogit(measuredPower, 100.0, aMin: 10.0, aMax: 1000.0);
-            for (int index_S = 0; index_S < support_S.Length; index_S++)
+            for (int index = 0; index < support.Length; index++)
             {
-                var f_S = PvPowerJacobian.GetSnowFactor(snowDepth, support_S[index_S]);
-                var delta = f_S - Y;
-                errors_S[index_S] += delta * delta * weight;
-
-                if (snowDepth > 0 && delta != 0.0 && weight > 0.2)
-                {
-                    // Apply additional error weighting or adjustments here if needed
-                }
+                var pS = baselinePower * PvPowerJacobian.GetSnowFactor(snowDepth, support[index]);
+                var delta = pS - measuredPower;
+                errors[index] += delta * delta * weight;
             }
         }
-        private static (double thetaMin_S, double thetaMax_S) Updatetheta_S(double[] errors_S, double[] support_S)
+        private static (double thetaMin_S, double thetaMax_S) Updatetheta_S(double[] support, double[] errors)
         {
-            var logSupport_S = support_S.Select(s => Math.Log(s)).ToArray();
-            var minIndex = Array.IndexOf(errors_S, errors_S.Min());
-            var vertex = logSupport_S[minIndex];
-            //double[] p = Fit.Polynomial(logSupport_S, errors_S, 2);  // quadratic fit with: a = p[0], b = p[1], c = p[2]
-            //if (p[2] > 1E-6)
-            //{
-            //    vertex = -p[1] / (2.0 * p[2]);
-            //}
-            //vertex = Math.Max(logSupport_S[0], Math.Min(logSupport_S[^1], vertex));
-            var halfWidth = (logSupport_S[1] - logSupport_S[0]); // Define a small range around the vertex
-            var loIndex = Array.IndexOf(logSupport_S, logSupport_S.Where(s => s <= vertex - halfWidth).DefaultIfEmpty(logSupport_S[0]).Max());
-            var hiIndex = Array.IndexOf(logSupport_S, logSupport_S.Where(s => s >= vertex + halfWidth).DefaultIfEmpty(logSupport_S[^1]).Min());
+            var minError = errors.Min();
+            var minIndex = Array.IndexOf(errors, minError);
+            var vertex = Math.Log(support[minIndex]);
+            var halfWidth = Math.Log(support[1]) - Math.Log(support[0]); // Define range around the vertex
 
-            return (support_S[loIndex], support_S[hiIndex]);
+            return (Math.Exp(vertex - halfWidth), Math.Exp(vertex + halfWidth));
         }
 
         public record PvPriors
@@ -101,15 +80,18 @@ namespace PV.Calibration.Tool
 
         private static (Vector<double> theta_GRTW, Vector<double> theta_F) PvModelParamsToTheta(PvModelParams modelParams)
         {
-            return ( 
+            return 
+                (
                 Vector<double>.Build.DenseOfArray(new double[]
                 {
                     modelParams.Etha, modelParams.Gamma, modelParams.U0, modelParams.U1, modelParams.LDegr
-                }),
+                }
+                ),
                 Vector<double>.Build.DenseOfArray(new double[]
                 {
                     modelParams.LambdaAFog, modelParams.BFog, modelParams.LambdaKFog
-                })
+                }
+                )
                 );
         }
 
@@ -165,8 +147,6 @@ namespace PV.Calibration.Tool
             var thetaCalibratedList = new List<PvModelParams>(); 
             var(mintheta_S, maxtheta_S) = (minSnowDepth, maxSnowDepth);
             int iterations = 0;
-            var maxSnow = double.MinValue;
-            var minSnow = double.MaxValue;
             for (int k = 0; k < maxIterations; k++)
             {
                 // Unpack current parameters
@@ -198,8 +178,6 @@ namespace PV.Calibration.Tool
                 var DEBUG_minB = double.MaxValue;
                 var DEBUG_maxK = double.MinValue;
                 var DEBUG_minK = double.MaxValue;
-
-                var DEBUGList = new List<(int index, double weight, double snowDepth, double P, double Y, double[] dSnow, double[] error)>();
 
                 for (int i = 0; i < nrRecords; i++)
                 { 
@@ -235,21 +213,7 @@ namespace PV.Calibration.Tool
                     var snowDepth = pvRecord.MeteoDataRecord.SnowDepth.Value;
                     if (weight_S > 0.0 && snowDepth > 0.0)
                     {
-                        maxSnow = Math.Max(maxSnow, snowDepth);
-                        minSnow = Math.Min(minSnow, snowDepth);
-                        UpdateErrors_S(errors_S, support_S, snowDepth, pvRecord.MeasuredPower.Value, weight_S);
-
-                        // DEBUGGING
-                        var error_S = new double[snowDepthSteps];
-                        var P = pvRecord.MeasuredPower.Value;
-                        var Y = PvPowerJacobian.PositiveLogit(P, 100.0, aMin: 1.0, aMax: 100.0);
-                        for (int index_S = 0; index_S < support_S.Length; index_S++)
-                        {
-                            var f_S = PvPowerJacobian.GetSnowFactor(snowDepth, support_S[index_S]);
-                            var delta = f_S - Y;
-                            error_S[index_S] = delta * delta * weight_S;
-                        }
-                        DEBUGList.Add((i, weight_S, snowDepth, P, Y, support_S, error_S));
+                        UpdateErrors_S(support_S, errors_S, snowDepth, powerRecord.PowerGRTW, pvRecord.MeasuredPower.Value, weight_S);
                     }
 
                     Y_F[i] = 0.0 * weight_F;   // Target is zero unexplained loss 
@@ -305,9 +269,9 @@ namespace PV.Calibration.Tool
                 // 5. Solve for Delta_theta
                 Vector<double> deltaTheta_GRTW = M_GRTW.Solve(b_GRTW);
 
-                (mintheta_S, maxtheta_S) = Updatetheta_S(errors_S, support_S);
-                mintheta_S = Math.Max(minSnowDepth, Math.Min(maxSnowDepth, mintheta_S));
-                maxtheta_S = Math.Max(minSnowDepth, Math.Min(maxSnowDepth, maxtheta_S));
+                (mintheta_S, maxtheta_S) = Updatetheta_S(support_S, errors_S);
+                //mintheta_S = Math.Max(minSnowDepth, Math.Min(maxSnowDepth, mintheta_S));
+                //maxtheta_S = Math.Max(minSnowDepth, Math.Min(maxSnowDepth, maxtheta_S));
 
                 Vector<double> deltaTheta_F = M_F.Solve(b_F);
 

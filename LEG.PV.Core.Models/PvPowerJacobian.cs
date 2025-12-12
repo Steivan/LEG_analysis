@@ -1,6 +1,4 @@
-﻿using System;
-using System.Xml.Schema;
-using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvConstants;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
 
@@ -10,12 +8,13 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
 {
     public static double PositiveLogitComplement(double x, double a, double aMin = 1.0, double aMax = 100.0)
     {
-        const double nominator = 1.0 + 1.0 / Math.E;
+        const double nominator = 1.0 + 1.0 / Math.E;        // => enforce f(x=0) = 1
+        const double alpha = 1.551445;                      // alpha = ln(2+e) => enforce f(x=a) = 1/2
 
         x = Math.Max(0.0, Math.Min(aMax * 100.0, x));
         a = Math.Max(aMin, Math.Min(aMax, a));
 
-        return nominator / (1.0 + Math.Exp(x / a - 1.0));
+        return nominator / (1.0 + Math.Exp(alpha * x / a - 1.0));
     }
 
     public static double PositiveLogit(double x, double a, double aMin = 1.0, double aMax = 100.0)
