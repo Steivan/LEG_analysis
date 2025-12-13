@@ -42,7 +42,7 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         return PositiveLogitComplement(snowDepth.Value, dSnow, aMin: 1.0, aMax: 100.0);
     }
 
-    private static double GetFogFactor(double? dpd, double aFog, double bFog, double kFog)
+    public static double GetFogFactor(double? dpd, double aFog, double bFog, double kFog)
     {
         return 1.0 - aFog / (1.0 + Math.Exp(kFog * ((dpd?? 2.0) - bFog)));
     }

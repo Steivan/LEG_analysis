@@ -180,12 +180,12 @@ public class DataSimulator
                         var outlierFactor = (applyOutliers && isOutlier) ? 1.5 : 1.0;
                         var measuredPower = (calculatedPower.PowerGRTWSF > 0 ? calculatedPower.PowerGRTWSF : 0.0) * noiseFactor * outlierFactor;
 
-                        if (newSnowDepth > 0 && measuredPower > 0)
+                        if (roundedMeteoParameters.GetDewPointDepression() < 1.0  && measuredPower > 0)
                         {
                             var DEBUG = 1;
                         }
 
-                        if (newSnowDepth > 14.9 && newSnowDepth < 15.1 && measuredPower > 10)
+                        if (roundedMeteoParameters.RelativeHumidity > 90)
                         {
                             var DEBUG = 1;
                         }
