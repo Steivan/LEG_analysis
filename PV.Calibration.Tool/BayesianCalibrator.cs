@@ -1,10 +1,8 @@
 ﻿using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor;
-using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPriorConfig;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PV.Calibration.Tool
 {

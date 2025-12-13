@@ -53,14 +53,15 @@ namespace LEG.PV.Data.Processor
 
             if (sunGeometry.SinSunElevation > 0.0)
             {
+                var sinSunElevation = sunGeometry.SinSunElevation > 0.0 ? sunGeometry.SinSunElevation : 0.0;
                 var r = random.NextDouble();
                 var randomDNI = initialize ? maxDirectIrratiance * r :
                     priortMeteoParameters.DirectNormalIrradiance * weightPreviousIrradiance +
                     (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * r;                     // hypothetical irradiance as a function of cloudiness
                 direcNormaltIrradiance = randomDNI ?? 0.0;
                 sunshineDuration = direcNormaltIrradiance * minutesPerPeriod / maxDirectIrratiance;
-                directRadiation = direcNormaltIrradiance * sunGeometry.SinSunElevation;
-                diffuseRadiation = averagediffuseRadiation + (maxDirectIrratiance - direcNormaltIrradiance) * 0.1;
+                directRadiation = direcNormaltIrradiance * sinSunElevation;
+                diffuseRadiation = direcNormaltIrradiance / 4 * Math.Sqrt(sinSunElevation) * (1.0 + random.NextDouble()) / 2.0;
                 weight = sunGeometry.SinSunElevation > 0 ? 1E-3 + Math.Pow(direcNormaltIrradiance / maxDirectIrratiance, 3) : 0.0;
             }
 

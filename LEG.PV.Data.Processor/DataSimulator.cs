@@ -160,7 +160,6 @@ public class DataSimulator
                             priorSnowDepth = newSnowDepth;
                         }
 
-
                         // Solar position
                         (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
                         var sinSunElevation = roundedSolarGeometry.SinSunElevation;

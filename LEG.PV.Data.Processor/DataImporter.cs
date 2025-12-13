@@ -121,6 +121,38 @@ namespace LEG.PV.Data.Processor
         };
         public static List<string> selectedStationsIdList = stationDictionary.Keys.ToList();
 
+        // Import synthetic meteo and PV production data
+        public static MeteoImportResult GenerateSyntheticData(
+            PvModelParams modelParameters,
+            double installedPower = 10000.0,    // [W]
+            double simulationsPeriod = 5.0)
+        {
+            bool applyRandomNoise = true;
+            bool applySnowDays = true;
+            bool applyFoggyDays = true;
+            bool applyOutliers = true;
+   
+            var siteId = "SyntheticSite";
+
+            var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
+                modelParameters,
+                installedPower: installedPower,
+                siteLatitude: 46,
+                roofAzimuth: -30,
+                roofElevation: 20,
+                simulationsPeriod: simulationsPeriod,
+                applyRandomNoise: applyRandomNoise,
+                applySnowDays: applySnowDays,
+                applyFoggyDays: applyFoggyDays,
+                applyOutliers: applyOutliers
+                );
+
+            var blendedWeatherData = pvRecords.Select(record => record.MeteoDataRecord).ToList();
+            var perStationWeatherData = new List<StationMeteoData>() { new StationMeteoData("MC", blendedWeatherData) };
+
+            return new MeteoImportResult(perStationWeatherData, blendedWeatherData, siteId, pvRecords, modelValidRecords, installedPower, periodsPerHour);
+        }
+
         // Import meteo history and merge with actual and calculated pvProduction data
         public async Task<MeteoImportResult> ImportE3DcAndMeteoHistory(int folder, bool meteoTillNow = false)
         {
@@ -350,28 +382,38 @@ namespace LEG.PV.Data.Processor
         {
             List<PvModelParams> pvModelParamsList
                 = [
-                PvPriorConfig.GetAllPriorsMeans(),      // Default priors used for index=0
-                new(
+                new(                                    // Model parameters fo synthetic data
+                    etha: 0.9,
+                    gamma: -0.005,
+                    u0: 25,
+                    u1: 0.4,
+                    lDegr: 0.01,
+                    dSnow: 15.0,
+                    lambdaAFog: 0.1,
+                    bFog: 0.5,
+                    lambdaKFog: 2.0
+                ),
+                new(                                    // Senn
                     etha: 0.525,
-                    gamma: -0.00761,
+                    gamma: -0.00757,
                     u0: 200.0,
                     u1: 0.001,
                     lDegr: 0.0126,
-                    dSnow: 2.73 * 0.0,
-                    lambdaAFog: 1.90,
+                    dSnow: 35.3,
+                    lambdaAFog: 1.91,
                     bFog: 0.217,
                     lambdaKFog: 1.91
                 ),
-                new(             // SennV: elevation 35° 
+                new(                                    // SennV: elevation 35° 
                     etha: 0.457,
                     gamma: -0.0,
                     u0: 5.0,
                     u1: 0.001,
-                    lDegr: 0.00898,
-                    dSnow: 2.48 * 0.0,
-                    lambdaAFog: 1.86,
-                    bFog: 0.259,
-                    lambdaKFog: 1.44
+                    lDegr: 0.00896,
+                    dSnow: 6.66,
+                    lambdaAFog: 1.87,
+                    bFog: 0.257,
+                    lambdaKFog: 1.43
                 ),
                 new(                                    // initial calibration without Snow/Fog
                     etha: 0.619,
@@ -398,14 +440,27 @@ namespace LEG.PV.Data.Processor
             ];
             var pvModelParams = pvModelParamsList[folder];
 
-            // Fetch pvProduction and meteo data
+            MeteoImportResult meteoImportResult = null;
+
+            if (folder == 0)
+            {
+                meteoImportResult = GenerateSyntheticData(pvModelParamsList[folder],  simulationsPeriod: 5);
+                displayPeriod = 0;   // No forecast for synthetic data
+            }
+            else
+            {
+                // Fetch pvProduction and meteo data
+                meteoImportResult = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
+            }
+
+            // Extract pvProduction and meteo data
             var (perStationWeatherHistory, 
                 blendedWeatherHistory, 
                 siteId, 
                 dataRecordsHistory, 
                 validRecordsHistory, 
                 installedPower, 
-                periodsPerHour) = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
+                periodsPerHour) = meteoImportResult;
 
             var (filteredRadiationHistorySeries, filteredRadiationLabels,
                 filteredTemperatureHistorySeries, filteredTemperatureLabels,
