@@ -55,6 +55,22 @@ namespace LEG.PV.Data.Processor
             MeteoParameterType.RelativeHumidity,
             MeteoParameterType.DewPoint
         };
+
+        public static readonly Dictionary<MeteoParameterType, bool> ParameterIsAdditive = new()
+        {
+            { MeteoParameterType.SunshineDuration, true },
+            { MeteoParameterType.DirectRadiation, true },
+            { MeteoParameterType.DirectNormalIrradiance, true },
+            { MeteoParameterType.GlobalRadiation, true },
+            { MeteoParameterType.DiffuseRadiation, true },
+            { MeteoParameterType.Temperature, false },
+            { MeteoParameterType.WindSpeed, false },
+            { MeteoParameterType.WindDirection, false },
+            { MeteoParameterType.SnowDepth, false },
+            { MeteoParameterType.RelativeHumidity, false },
+            { MeteoParameterType.DewPoint, false },
+        };
+        
         public Dictionary<MeteoParameterType, double?[]> MeteoValuesArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightedSumMeteoValuesArrays { get; set; } = new();
@@ -299,6 +315,8 @@ namespace LEG.PV.Data.Processor
             List<List<double?>> filteredRadiationSeries,
             List<List<double?>> filteredTemperatureSeries,
             List<List<double?>> filteredWindSpeedSeries,
+            List<List<double?>> filteredSnowDepthSeries,
+            List<List<double?>> filteredRelativeHumiditySeries,
             List<PvRecordLists> listsDataRecords,
             List<bool> validListsDataRecords
             )
@@ -349,10 +367,14 @@ namespace LEG.PV.Data.Processor
                 List<double?> residualsList = [];
                 List<double?> temperatureList = [];
                 List<double?> windSpeedList = [];
+                List<double?> snowDepthList = [];
+                List<double?> relativeHumidityList = [];
                 radiationList.AddRange(filteredRadiationSeries.Select(series => series[index]));
                 residualsList.AddRange(filteredRadiationSeries.Select(series => series[index]));
                 temperatureList.AddRange(filteredTemperatureSeries.Select(series => series[index]));
                 windSpeedList.AddRange(filteredWindSpeedSeries.Select(series => series[index]));
+                snowDepthList.AddRange(filteredSnowDepthSeries.Select(series => series[index]));
+                relativeHumidityList.AddRange(filteredRelativeHumiditySeries.Select(series => series[index]));
 
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
@@ -361,7 +383,9 @@ namespace LEG.PV.Data.Processor
                     [referenceResidual, residualsRecord.PowerGR, residualsRecord.PowerGRTW, residualsRecord.PowerGRTWSF],
                     radiationList,
                     temperatureList,
-                    windSpeedList
+                    windSpeedList,
+                    snowDepthList, 
+                    relativeHumidityList
                 );
 
                 listsDataRecords.Add(listsDataRecord);
@@ -394,26 +418,26 @@ namespace LEG.PV.Data.Processor
                     lambdaKFog: 2.0
                 ),
                 new(                                    // Senn
-                    etha: 0.525,
-                    gamma: -0.00757,
+                    etha: 0.474,
+                    gamma: -0.0125,
                     u0: 200.0,
                     u1: 0.001,
-                    lDegr: 0.0126,
-                    dSnow: 35.3,
-                    lambdaAFog: 1.91,
-                    bFog: 0.217,
-                    lambdaKFog: 1.91
+                    lDegr: 0.0125,
+                    dSnow: 31.1,
+                    lambdaAFog: 1.94,
+                    bFog: 0.0914,
+                    lambdaKFog: 2.06
                 ),
                 new(                                    // SennV: elevation 35° 
-                    etha: 0.457,
+                    etha: 0.468,
                     gamma: -0.0,
                     u0: 5.0,
                     u1: 0.001,
-                    lDegr: 0.00896,
-                    dSnow: 6.66,
-                    lambdaAFog: 1.87,
-                    bFog: 0.257,
-                    lambdaKFog: 1.43
+                    lDegr: 0.00888,
+                    dSnow: 4.05,
+                    lambdaAFog: 0.275,
+                    bFog: -0.0328,
+                    lambdaKFog: 0.278
                 ),
                 new(                                    // initial calibration without Snow/Fog
                     etha: 0.619,
@@ -464,7 +488,10 @@ namespace LEG.PV.Data.Processor
 
             var (filteredRadiationHistorySeries, filteredRadiationLabels,
                 filteredTemperatureHistorySeries, filteredTemperatureLabels,
-                filteredWindSpeedHistorySeries, filteredWindSpeedLabels) = FilterAndLabelSeries(perStationWeatherHistory);
+                filteredWindSpeedHistorySeries, filteredWindSpeedLabels,
+                filteredSnowDepthSeries, filteredSnowDepthLabels,
+                filteredRelativeHumiditySeries, filteredRelativeHumidityLabels
+                ) = FilterAndLabelSeries(perStationWeatherHistory);
 
             var listsDataRecords = new List<PvRecordLists>();
             var validListsDataRecords = new List<bool>();
@@ -477,6 +504,8 @@ namespace LEG.PV.Data.Processor
                 filteredRadiationHistorySeries,
                 filteredTemperatureHistorySeries,
                 filteredWindSpeedHistorySeries,
+                filteredSnowDepthSeries,
+                filteredRelativeHumiditySeries,
                 listsDataRecords,
                 validListsDataRecords
                 );
@@ -490,7 +519,9 @@ namespace LEG.PV.Data.Processor
 
                 var (filteredRadiationForecastSeries, _,
                     filteredTemperatureForecastSeries, _,
-                    filteredWindSpeedForecastSeries, _) = FilterAndLabelSeries(perStationWeatherForecast);
+                    filteredWindSpeedForecastSeries, _,
+                    filteredSnowDepthForecastSeries, _,
+                    filteredRelativeHumidityForecastSeries, _) = FilterAndLabelSeries(perStationWeatherForecast);
 
                 InjectDataRecords(
                     pvModelParams,
@@ -501,6 +532,8 @@ namespace LEG.PV.Data.Processor
                     filteredRadiationForecastSeries,
                     filteredTemperatureForecastSeries,
                     filteredWindSpeedForecastSeries,
+                    filteredSnowDepthForecastSeries,
+                    filteredRelativeHumidityForecastSeries,
                     listsDataRecords,
                     validListsDataRecords
                     );
@@ -511,7 +544,9 @@ namespace LEG.PV.Data.Processor
                 ["Reference", "UflGR", "UflGRTW", "UflGRTWSF"],
                 filteredRadiationLabels,
                 filteredTemperatureLabels,
-                filteredWindSpeedLabels);
+                filteredWindSpeedLabels,
+                filteredSnowDepthLabels,
+                filteredRelativeHumidityLabels);
 
             return (siteId, listsDataRecords, dataRecordLabels, validListsDataRecords, installedPower, periodsPerHour);
         }
@@ -587,8 +622,9 @@ namespace LEG.PV.Data.Processor
         {
             void AppendValue(MeteoParameterType meteoParameter, int index, double? value, double overLapRatio)
             {
+                var adjustmentFactor = ParameterIsAdditive[meteoParameter] ? 1.0 : (double)meteoInterval / supportInterval;
                 if (value.HasValue)
-                    MeteoValuesArrays[meteoParameter][index] = (MeteoValuesArrays[meteoParameter][index] ?? 0) + value * overLapRatio;
+                    MeteoValuesArrays[meteoParameter][index] = (MeteoValuesArrays[meteoParameter][index] ?? 0) + value * overLapRatio * adjustmentFactor;
             }
 
             var rightOverlapRatio = 1.0;
@@ -979,28 +1015,34 @@ namespace LEG.PV.Data.Processor
         }
 
         public static (
-            List<List<double?>> RadiationSeries,
-            List<string> RadiationLabels,
-            List<List<double?>> TemperatureSeries,
-            List<string> TemperatureLabels,
-            List<List<double?>> WindSpeedSeries,
-            List<string> WindSpeedLabels
-        ) FilterAndLabelSeries(
-            List<StationMeteoData> perStationWeatherData)
+            List<List<double?>> RadiationSeries, List<string> RadiationLabels,
+            List<List<double?>> TemperatureSeries, List<string> TemperatureLabels,
+            List<List<double?>> WindSpeedSeries, List<string> WindSpeedLabels,
+            List<List<double?>> SnowDepthSeries, List<string> SnowDepthLabels,
+            List<List<double?>> RelativeHumiditySeries, List<string> RelativeHumidityLabels
+        ) FilterAndLabelSeries(List<StationMeteoData> perStationWeatherData)
         {
             var radiationSeries = new List<List<double?>>();
             var radiationLabels = new List<string>();
+
             var temperatureSeries = new List<List<double?>>();
             var temperatureLabels = new List<string>();
+
             var windSpeedSeries = new List<List<double?>>();
             var windSpeedLabels = new List<string>();
+
+            var snowDepthSeries = new List<List<double?>>();
+            var snowDepthLabels = new List<string>();
+
+            var relativeHumiditySeries = new List<List<double?>>();
+            var relativeHumidityLabels = new List<string>();
 
             foreach (var stationData in perStationWeatherData)
             {
                 var stationId = stationData.StationId;
                 var stationDataRecords = stationData.WeatherData;
                 var validParameters = stationDataRecords[0].GetValidMeteoParameters();  // Use first record to check valid parameters
-
+                // Radiation
                 if (validParameters.HasValidGlobalRadiation)
                 {
                     radiationSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.GlobalRadiation)).ToList());
@@ -1011,19 +1053,44 @@ namespace LEG.PV.Data.Processor
                     radiationSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DiffuseRadiation)).ToList());
                     radiationLabels.Add($"Diffuse_{stationId}");
                 }
+                // Temperature and DewPoint
                 if (validParameters.HasValidTemperature)
                 {
                     temperatureSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.Temperature)).ToList());
                     temperatureLabels.Add($"Temperature_{stationId}");
                 }
+                if (validParameters.HasValidDewPoint)
+                {
+                    temperatureSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DewPoint)).ToList());
+                    temperatureLabels.Add($"DewPoint_{stationId}");
+                }
+                // WindSpeed
                 if (validParameters.HasValidWindSpeed)
                 {
                     windSpeedSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.WindSpeed)).ToList());
                     windSpeedLabels.Add($"WindSpeed_{stationId}");
                 }
+                // SnowDepth
+                if (validParameters.HasValidSnowDepth)
+                {
+                    snowDepthSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.SnowDepth)).ToList());
+                    snowDepthLabels.Add($"SnowDepth_{stationId}");
+                }
+                // RelativeHumidity
+                if (validParameters.HasValidRelativeHumidity)
+                {
+                    relativeHumiditySeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.RelativeHumidity)).ToList());
+                    relativeHumidityLabels.Add($"Humidity_{stationId}");
+                }
             }
 
-            return (radiationSeries, radiationLabels, temperatureSeries, temperatureLabels, windSpeedSeries, windSpeedLabels);
+            return (
+                radiationSeries, radiationLabels, 
+                temperatureSeries, temperatureLabels, 
+                windSpeedSeries, windSpeedLabels,
+                snowDepthSeries, snowDepthLabels,
+                relativeHumiditySeries, relativeHumidityLabels
+                );
         }
 
         // Helper method to get weight arrays for all selected stations

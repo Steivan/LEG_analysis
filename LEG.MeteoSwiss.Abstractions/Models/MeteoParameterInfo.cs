@@ -19,5 +19,6 @@ namespace LEG.MeteoSwiss.Abstractions.Models
             { nameof(MeteoParameters.DewPoint), "°C" },
             { nameof(MeteoParameters.RadiationVariance), "(W/m²)²" }
         };
+
     }
 }

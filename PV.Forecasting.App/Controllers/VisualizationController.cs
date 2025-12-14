@@ -28,7 +28,7 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(0, displayPeriod: 2);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(2, displayPeriod: 2);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)
@@ -37,9 +37,11 @@ namespace PV.Forecasting.App.Controllers
                     {
                         { "Power", pvRecordLabels.PowerLabels },
                         { "Residuals", pvRecordLabels.ResidualsLabels },
-                        { "Irradiance", pvRecordLabels.RadiationLabels },
-                        { "Ambient Temperature", pvRecordLabels.TemperatureLabels },
-                        { "Wind Velocity", pvRecordLabels.WindSpeedLabels }
+                        { "Radiation", pvRecordLabels.RadiationLabels },
+                        { "Temperature", pvRecordLabels.TemperatureLabels },
+                        { "Wind Speed", pvRecordLabels.WindSpeedLabels },
+                        { "Snow Depth", pvRecordLabels.SnowDepthLabels },
+                        { "Relative Humidity", pvRecordLabels.RelativeHumidityLabels }
                     };
                 }
             }
@@ -80,12 +82,14 @@ namespace PV.Forecasting.App.Controllers
             }
 
             // 2. Set up default checked groups, variables, and locations (step 2)
-            var defaultCheckedGroups = new HashSet<string> { "Power", "Residuals", "Radiation", "Temperature", "Wind" };
+            var defaultCheckedGroups = new HashSet<string> { "Power", "Residuals", "Radiation", "Temperature", "Wind", "Snow", "Humidity" };
             var defaultCheckedVariables = new Dictionary<string, HashSet<string>>
             {
-                { "Temperature", new HashSet<string> { "Temperature" } }, // DewPoint unchecked
                 { "Radiation", new HashSet<string> { "GlobalRadiation", "DiffuseRadiation" } }, // others unchecked
+                { "Temperature", new HashSet<string> { "Temperature", "DewPoint" } }, // others unchecked
                 { "Wind", new HashSet<string> { "WindSpeed" } }, // others unchecked
+                { "Snow", new HashSet<string> { "SnowDepth" } }, // others unchecked
+                { "Humidity", new HashSet<string> { "RelativeHumidity" } }, // others unchecked
                 // Add more as needed
             };
 
@@ -366,9 +370,11 @@ namespace PV.Forecasting.App.Controllers
             {
                 "Power" => record.Power,
                 "Residuals" => record.Residuals,
-                "Irradiance" => record.Radiation,
-                "Ambient Temperature" => record.Temperature,
-                "Wind Velocity" => record.WindSpeed,
+                "Radiation" => record.Radiation,
+                "Temperature" => record.Temperature,
+                "Wind Speed" => record.WindSpeed,
+                "Snow Depth" => record.SnowDepth,
+                "Relative Humidity" => record.RelativeHumidity,
                 _ => null
             };
 
