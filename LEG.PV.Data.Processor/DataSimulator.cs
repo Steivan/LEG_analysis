@@ -35,12 +35,14 @@ public class DataSimulator
         const int startHour = 12;
         const int startMinute = 0;
         const double randomNoiseVariation = 0.1;
-        var daysPerMonth = new List<int> { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-        var averageSnowyowDaysPerMonth = new List<int> { 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 5, 10 };
+        var daysPerMonth               = new List<int> { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+        var averageClearDaysPerMonth   = new List<int> {  5,  5,  5,  0,  5,  5, 10, 10,  5,  5 , 0,  0 };
+        var averageCoveredDaysPerMonth = new List<int> {  5,  5,  5, 10,  5,  5,  5,  5,  5,  5, 10,  5 };
+        var averageSnowyowDaysPerMonth = new List<int> { 10, 10,  0,  0,  0,  0,  0,  0,  0,  0,  5, 10 };
+        var averageFoggyDaysPerMonth   = new List<int> { 10,  5,  0,  0,  0,  0,  0,  0,  0 , 5, 10, 10 };
         var minNewSnow = 1;
         var maxNewSnow = 20;
         var maxNewSnowRandom = 1 + maxNewSnow - minNewSnow;
-        var averageFoggyDaysPerMonth = new List<int> { 10, 5, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10 };
         var fogDissolveStartLo = 6;
         var fogDissolveStartHi = 8;
         var fogDissolveEndLo = 10;
@@ -83,6 +85,7 @@ public class DataSimulator
         double cosOmegaYear, cosOmegaDay;
         MeteoParameters? roundedMeteoParameters = null;
         double weight;
+        var meteoTypePerDay = new int[32];
         var firstSnowDay = -1;
         var lastSnowDay = -1;
         var priorSnowDepth = 0.0;
@@ -94,20 +97,34 @@ public class DataSimulator
         {
             var currentDate = startDate.AddDays(day);
             var monthIndex = currentDate.Month - 1;
-
             // Random snow period
             var isSnowyMonth = averageSnowyowDaysPerMonth[monthIndex] > 0;
             var randomBaselineSnowDepth = random.NextDouble() * 1.0;
             var dayOfMonth = currentDate.Day;
             if (dayOfMonth == 1)
             {
+                var daysOfMonth = daysPerMonth[monthIndex];
                 firstSnowDay = 32;
                 lastSnowDay = -1;
                 if (isSnowyMonth)
                 {
                     var durationSnowDays = random.Next(0, 2 * averageSnowyowDaysPerMonth[monthIndex] + 1);
-                    firstSnowDay = random.Next(1, daysPerMonth[monthIndex] - durationSnowDays + 2);
+                    firstSnowDay = random.Next(1, daysOfMonth - durationSnowDays + 2);
                     lastSnowDay = firstSnowDay + durationSnowDays - 1;
+                }
+                var pClear = (double)averageClearDaysPerMonth[monthIndex] / daysOfMonth;
+                var pCovered = (double)averageCoveredDaysPerMonth[monthIndex] / daysOfMonth;
+                var pNonMixed = pClear + pCovered;
+                if (pClear >= 0.0 && pCovered >= 0.0 && pNonMixed > 0.0)
+                {
+                    var adjustment = pNonMixed > 1.0 ? 1.0 / pNonMixed : 1.0;
+                    pClear *= adjustment;
+                    pNonMixed *= adjustment;
+                    for (int d = 1; d <= daysOfMonth; d++)
+                    {
+                        var r = random.NextDouble();
+                        meteoTypePerDay[d] = r <= pClear ? 1 : r <= pNonMixed ? 2 : 0;
+                    }
                 }
             }
             var isSnowyDay = isSnowyMonth && (firstSnowDay <= dayOfMonth && dayOfMonth <= lastSnowDay);
@@ -152,6 +169,7 @@ public class DataSimulator
                                 priorPeriodDateTime, minutesPerPeriod,
                                 roundedMeteoParameters,
                                 roundedSolarGeometry, cosOmegaYear, cosOmegaDay,
+                                meteoTypePerDay[dayOfMonth],
                                 false, priorSnowDepth, newSnowPerDay,
                                 false, 0, 24,
                                 initialize: true);
@@ -168,6 +186,7 @@ public class DataSimulator
                             timeStamp, minutesPerPeriod, 
                             roundedMeteoParameters,
                             roundedSolarGeometry, cosOmegaYear, cosOmegaDay,
+                            meteoTypePerDay[dayOfMonth],
                             applySnowDays && isSnowyDay, priorSnowDepth, newSnowPerDay,
                             applyFoggyDays && isFoggyDay, fogDissolveStartHour, fogDissolveEndHour);
                         priorSnowDepth = newSnowDepth;

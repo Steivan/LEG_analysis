@@ -6,19 +6,36 @@ namespace LEG.PV.Data.Processor
 {
     internal class MeteoSimulator
     {
-        const double maxIrradiance = 1361;              // [W/m^2] Solar constant
+        // Physical constants
+        const double maxIrradiance = 1361;                                              // [W/m^2] Solar constant
+        const double KelvinZeroC = 273.15;                                              // [K]
+        const double StefanBoltzmannConstant = 5.670E-8;                                // [Nm/sm^2K^4]
+        const double specificHeatAir = 1005;                                            // [Nm/kgK]
+        const double airDensity = 1.225;                                                // [kg/m^3]
+        const double airPressure = 101325;                                              // [N/m^2]
+        const double EarthtGravity = 9.81;                                              // [m/s^2]
+
+        // Model parameters
         const double diffuseRadiationRatio = 0.3;
         const Double averagediffuseRadiation = maxIrradiance * diffuseRadiationRatio;
         const double maxDirectIrratiance = maxIrradiance - averagediffuseRadiation;
         const double weightPreviousIrradiance = 0.7;
         const double directRadiationCV = 0.1;
+        const double minAlbedo = 0.2;
+        const double maxAlbedo = 0.8;
 
-        const double averageTemp = 15;                  // [°C]
-        const double annualTempAmplitude = 15;          // [°C]
-        const double diurnalTempAmplitude = 5;          // [°C]
+        const double averageTemp = 5;                                                   // [°C]
+        const double annualTempAmplitude = 10;                                          // [°C]
+        const double diurnalTempAmplitude = 5;                                          // [°C]
 
-        const double maxWindSpeed = 150;                // [km/h]
-        const double maxNewWindVariation = 20;          // [km/h]
+        const double heightOfSurfaceLayer = 200.0;                                      // [m]
+        const double greenHouseShift = 10.0;                                            // [K]
+        const double diffusionTimeConstant = 3600;                                      // [s]
+        const double airMassPerArea = airPressure / EarthtGravity;                      // [[N/m^2 / (m/s^2)] = [kg/m^2] 
+        const double airMassSurfaceLayerPerArea = airDensity * heightOfSurfaceLayer;    // [kg/m^3 * m] = [kg/m^2]
+
+        const double maxWindSpeed = 150;                                                // [km/h]
+        const double maxNewWindVariation = 20;                                          // [km/h]
         const double windVariationProbability = 0.1;
         const double weightPreviousWindSpeed = 0.95;
 
@@ -34,6 +51,7 @@ namespace LEG.PV.Data.Processor
             DateTime timeStamp, int minutesPerPeriod, 
             MeteoParameters? priortMeteoParameters, 
             PvSolarGeometry sunGeometry, double cosOmegaYear, double cosOmegaDay,
+            int meteoType,
             bool isSnowyDay, double priorSnowDepth, double newSnowPerDay,
             bool isFoggyDay, double fogDissolveStartHour, double fogDissolveEndHour,
             bool initialize =false)
@@ -51,34 +69,38 @@ namespace LEG.PV.Data.Processor
             var diffuseRadiation = 0.0;
             var weight = 0.0;
 
-            if (sunGeometry.SinSunElevation > 0.0)
+            var sinSunElevation = sunGeometry.SinSunElevation > 0.0 ? sunGeometry.SinSunElevation : 0.0;
+            if (sinSunElevation > 0.0)
             {
-                var sinSunElevation = sunGeometry.SinSunElevation > 0.0 ? sunGeometry.SinSunElevation : 0.0;
-                var r = random.NextDouble();
-                var randomDNI = initialize ? maxDirectIrratiance * r :
+                var clearSkyRatio = meteoType == 1 ? 0.95 : meteoType == 2 ? 0.05 : 0.05 + 0.9 * random.NextDouble();
+                var randomDNI = initialize ? maxDirectIrratiance * clearSkyRatio :
                     priortMeteoParameters.DirectNormalIrradiance * weightPreviousIrradiance +
-                    (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * r;                     // hypothetical irradiance as a function of cloudiness
+                    (1.0 - weightPreviousIrradiance) * maxDirectIrratiance * clearSkyRatio;                     // hypothetical irradiance as a function of cloudiness
                 direcNormaltIrradiance = randomDNI ?? 0.0;
                 sunshineDuration = direcNormaltIrradiance * minutesPerPeriod / maxDirectIrratiance;
+                
                 directRadiation = direcNormaltIrradiance * sinSunElevation;
-                diffuseRadiation = direcNormaltIrradiance / 4 * Math.Sqrt(sinSunElevation) * (1.0 + random.NextDouble()) / 2.0;
-                weight = sunGeometry.SinSunElevation > 0 ? 1E-3 + Math.Pow(direcNormaltIrradiance / maxDirectIrratiance, 3) : 0.0;
+                diffuseRadiation = averagediffuseRadiation * Math.Sqrt(sinSunElevation) * (clearSkyRatio + (1.0 - clearSkyRatio) * (1.0 + random.NextDouble()) / 2);
+                weight = 1E-3 + Math.Pow(direcNormaltIrradiance / maxDirectIrratiance, 3);
             }
+            var globalRadiation = directRadiation + diffuseRadiation;
+
+            // Snow
+            var newSnowDepth =
+                !isSnowyDay ? priorSnowDepth * snowDegradationFactorPerPeriod :
+                initialize ? newSnowPerDay :
+                priorSnowDepth * snowDegradationFactorPerPeriod + newSnowPerPeriod;
 
             // Calculate ambient temperature
-            var temperature = averageTemp - annualTempAmplitude * cosOmegaYear - diurnalTempAmplitude * cosOmegaDay; // [°C]
+            var meanTemperature = averageTemp - annualTempAmplitude * cosOmegaYear - diurnalTempAmplitude * cosOmegaDay;
+            var priorTemperature = initialize ? meanTemperature : priortMeteoParameters.Temperature.Value; // [°C]
+            var temperature = GetNewTemperature(meanTemperature, priorTemperature, globalRadiation, meteoType, newSnowDepth > 1.0, minutesPerPeriod, random);
 
             // Update wind velocity with some randomness
             var deltaWindSpeed = random.NextDouble() * maxNewWindVariation;
             var newWindGustVelocity = (random.NextDouble() < windVariationProbability) ? deltaWindSpeed : 0.0;
             var windSpeed = initialize ? deltaWindSpeed : (priortMeteoParameters.WindSpeed * weightPreviousWindSpeed + newWindGustVelocity) ?? 0.0;
             windSpeed = Math.Max(0.0, Math.Min(maxWindSpeed, windSpeed));
-
-            // Snow
-            var newSnowDepth =
-                !isSnowyDay ? priorSnowDepth * snowDegradationFactorPerPeriod :
-                initialize ? newSnowPerDay:
-                priorSnowDepth * snowDegradationFactorPerPeriod + newSnowPerPeriod; 
 
             // Fog
             var relativeHumidity = 
@@ -96,8 +118,8 @@ namespace LEG.PV.Data.Processor
                 directRadiation: Math.Round(directRadiation, 0),
                 directNormalIrradiance: Math.Round(direcNormaltIrradiance, 0),
                 diffuseRadiation: Math.Round(diffuseRadiation, 0),
-                globalRadiation: Math.Round(directRadiation + diffuseRadiation, 0),
-                temperature: Math.Round(temperature, 1),
+                globalRadiation: Math.Round(globalRadiation, 0),
+                temperature: Math.Round(temperature, 3),
                 windSpeed: Math.Round(windSpeed, 2),
                 windDirection: null,
                 snowDepth: Math.Round(newSnowDepth, 1),
@@ -107,6 +129,31 @@ namespace LEG.PV.Data.Processor
             );
 
             return (updatedMeteoParameters, newSnowDepth, weight);
+        }
+
+        private static double GetNewTemperature(
+            double meanTemperature, double priorTemperature, 
+            double globalRadiation, int meteoType, bool hasSnow, 
+            double minutesPerPeriod, Random random)
+        {
+
+            var albedo = hasSnow ? maxAlbedo : minAlbedo;
+            var timeSpan = minutesPerPeriod * 60;
+            var localHeatGainPerArea = (1.0 - albedo) * globalRadiation * timeSpan;
+
+            var blackbodyAsIfTemperature = KelvinZeroC + priorTemperature - greenHouseShift;                            // [K]
+            var blackbodyRadiation = StefanBoltzmannConstant * Math.Pow(blackbodyAsIfTemperature, 4);                   // [Nm/sm^2K^4 * K^4] = [W/m^2]
+            var localHeatLossPerArea = blackbodyRadiation * timeSpan;
+            var blackbodyEffectiveAirMass = 
+                meteoType == 1 ? airMassSurfaceLayerPerArea : 
+                meteoType == 2 ? airMassPerArea : 
+                Math.Sqrt(airMassSurfaceLayerPerArea * airMassPerArea);
+
+            var localTemperatureGain = localHeatGainPerArea / (specificHeatAir * airMassSurfaceLayerPerArea);
+            var localTemperatureLoss = localHeatLossPerArea / (specificHeatAir * blackbodyEffectiveAirMass);
+            var temperatureDiffusion = (priorTemperature - meanTemperature) / diffusionTimeConstant * timeSpan;
+
+            return priorTemperature + localTemperatureGain - localTemperatureLoss - temperatureDiffusion + (1.0 - random.NextDouble());
         }
     }
 }

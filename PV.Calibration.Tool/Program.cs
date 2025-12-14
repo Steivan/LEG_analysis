@@ -7,14 +7,14 @@ using static LEG.PV.Core.Models.PvDataClass;
 using static PV.Calibration.Tool.BayesianCalibrator;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
 
-//ProcessSyntheticModelData(
-//    applyRandomNoise: true,
-//    applySnowDays: true,
-//    applyFoggyDays: true,
-//    applyOutliers: !true);
+ProcessSyntheticModelData(
+    applyRandomNoise: true,
+    applySnowDays: true,
+    applyFoggyDays: true,
+    applyOutliers: !true);
 
-await CalibrateE3DcData(1, "Senn");
-await CalibrateE3DcData(2, "SennV");
+//await CalibrateE3DcData(1, "Senn");
+//await CalibrateE3DcData(2, "SennV");
 
 //ProcessSyntheticModelData();
 
