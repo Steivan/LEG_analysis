@@ -1,12 +1,11 @@
 ﻿
-using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.MeteoSwiss.Client.Forecast
 {
     public class ForecastBlender
     {
-        public static List<MeteoParameters> CreateBlendedForecast(
+        public async Task<List<MeteoParameters>> CreateBlendedForecast(
             DateTime now, // <-- Reference time
             List<MeteoParameters> longTermData,
             List<MeteoParameters> midTermData,

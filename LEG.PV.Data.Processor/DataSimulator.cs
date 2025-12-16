@@ -198,16 +198,6 @@ public class DataSimulator
                         var outlierFactor = (applyOutliers && isOutlier) ? 1.5 : 1.0;
                         var measuredPower = (calculatedPower.PowerGRTWSF > 0 ? calculatedPower.PowerGRTWSF : 0.0) * noiseFactor * outlierFactor;
 
-                        if (roundedMeteoParameters.GetDewPointDepression() < 1.0  && measuredPower > 0)
-                        {
-                            var DEBUG = 1;
-                        }
-
-                        if (roundedMeteoParameters.RelativeHumidity > 90)
-                        {
-                            var DEBUG = 1;
-                        }
-
                         roundedPvRecords.Add(
                             new PvRecord(
                                 timeStamp, 

@@ -18,5 +18,18 @@
         {
             return vmpS / mpSPerKmh;
         }
+
+        // Power keys
+        public const string MeasuredPower = "MeasuredPower";
+        public const string PowerGR = "PowerGR";
+        public const string PowerGRTW = "PowerGRTW";
+        public const string PowerGRTWSF = "PowerGRTWSF";
+
+        // Residuals keys
+        public const string Reference = "Reference";
+        public const string UflGR = "UflGR";
+        public const string UflGRTW = "UflGRTW";
+        public const string UflGRTWSF = "UflGRTWSF";
+       
     }
 }

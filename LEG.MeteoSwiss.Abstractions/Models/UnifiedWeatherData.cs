@@ -31,7 +31,8 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         WindDirection,
         SnowDepth,
         RelativeHumidity,
-        DewPoint
+        DewPoint,
+        RadiationVariance
         // Add more as needed
     }
 }

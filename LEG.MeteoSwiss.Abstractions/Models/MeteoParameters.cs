@@ -265,5 +265,10 @@ namespace LEG.MeteoSwiss.Abstractions.Models
         public double WeightRelativeHumidity { get; init; } = 0.0;
         public double WeightDewPoint { get; init; } = 0.0;
         public double WeightRadiationVariance { get; init; } = 0.0;
+
+        public Dictionary<MeteoParameterType, double> Weights { get; init; } = new();
+
+        public double GetWeight(MeteoParameterType type)
+            => Weights.TryGetValue(type, out var value) ? value : 0.0;
     }
 }

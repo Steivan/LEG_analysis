@@ -6,12 +6,13 @@ namespace LEG.PV.Core.Models
         public record PvRecordLists
         {
             public PvRecordLists(DateTime timestamp, int index,
-                List<double?> power, List<double?> residuals,
-                List<double?> radiation, 
-                List<double?> temperature, 
-                List<double?> windSpeed,
-                List<double?> snowDepth,
-                List<double?> relativeHumidity)
+                Dictionary<string, double?> power,
+                Dictionary<string, double?> residuals,
+                Dictionary<string, double?> radiation,
+                Dictionary<string, double?> temperature,
+                Dictionary<string, double?> windSpeed,
+                Dictionary<string, double?> snowDepth,
+                Dictionary<string, double?> relativeHumidity)
             {
                 Timestamp = timestamp;
                 Index = index;
@@ -24,22 +25,22 @@ namespace LEG.PV.Core.Models
                 RelativeHumidity = relativeHumidity;
             }
 
-            public DateTime Timestamp { get; init; }                // Timestamp [YYYY-MM-DD HH:MM:SS]
-            public int Index { get; init; }                         // Index [unitless]
-            public List<double?> Power { get; init; }               // P [W]
-            public List<double?> Residuals { get; init; }
-            public List<double?> Radiation { get; init; }           // G_POA [W/m²]
-            public List<double?> Temperature { get; init; }         // T [°C]
-            public List<double?> WindSpeed { get; init; }           // v_wind [m/s]
-            public List<double?> SnowDepth { get; init; }         // T [°C]
-            public List<double?> RelativeHumidity { get; init; }           // v_wind [m/s]
+            public DateTime Timestamp { get; init; }                        // Timestamp [YYYY-MM-DD HH:MM:SS]
+            public int Index { get; init; }                                 // Index [unitless]
+            public Dictionary<string, double?> Power { get; }               // P [W]
+            public Dictionary<string, double?> Residuals { get; }
+            public Dictionary<string, double?> Radiation { get;}            // G_POA [W/m²]
+            public Dictionary<string, double?> Temperature { get;}          // T [°C]
+            public Dictionary<string, double?> WindSpeed { get; }           // v_wind [m/s]
+            public Dictionary<string, double?> SnowDepth { get; }           // T [°C]
+            public Dictionary<string, double?> RelativeHumidity { get; }    // v_wind [m/s]
             public bool HasMeteoData()
             {
-                if (Radiation.All(x => !x.HasValue)) return false;
-                if (Temperature.All(x => !x.HasValue)) return false;
-                if (WindSpeed.All(x => !x.HasValue)) return false;
-                if (SnowDepth.All(x => !x.HasValue)) return false;
-                if (RelativeHumidity.All(x => !x.HasValue)) return false;
+                if (Radiation == null || !Radiation.Values.Any(v => v.HasValue)) return false;
+                if (Temperature == null || !Temperature.Values.Any(v => v.HasValue)) return false;
+                if (WindSpeed == null || !WindSpeed.Values.Any(v => v.HasValue)) return false;
+                if (SnowDepth == null || !SnowDepth.Values.Any(v => v.HasValue)) return false;
+                if (RelativeHumidity == null || !RelativeHumidity.Values.Any(v => v.HasValue)) return false;
                 return true;
             }
 

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static LEG.PV.Core.Models.PvDataClass;
+using LEG.PV.Core.Models;
 
 namespace PV.Forecasting.App.Controllers
 {
@@ -65,8 +66,8 @@ namespace PV.Forecasting.App.Controllers
                 .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Key).ToList());
             
             parameterGroups = new Dictionary<string, List<string>> {
-                { "Power", new List<string> { "MeasuredPower", "PowerGR", "PowerGRTW", "PowerGRTWSF" } },
-                { "Residuals", new List<string> { "Reference", "UflGR", "UflGRTW", "UflGRTWSF" } }
+                { "Power", new List<string> { PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF } },
+                { "Residuals", new List<string> { PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF } }
             }.Concat(parameterGroups).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             var groupVariables = parameterGroups; // Already maps group → variables
@@ -78,14 +79,14 @@ namespace PV.Forecasting.App.Controllers
                 if (group == "Power" || group == "Residuals")
                     groupLocations[group] = new List<string> { "PV Site" };
                 else
-                    groupLocations[group] = DataImporter.selectedStationsIdList; // or filter as needed
+                    groupLocations[group] = DataImporter.SelectedStationsIdList; // or filter as needed
             }
 
             // 2. Set up default checked groups, variables, and locations (step 2)
             var defaultCheckedGroups = new HashSet<string> { "Power", "Residuals", "Radiation", "Temperature", "Wind", "Snow", "Humidity" };
             var defaultCheckedVariables = new Dictionary<string, HashSet<string>>
             {
-                { "Radiation", new HashSet<string> { "GlobalRadiation", "DiffuseRadiation" } }, // others unchecked
+                { "Radiation", new HashSet<string> { "Global", "Diffuse" } }, // others unchecked
                 { "Temperature", new HashSet<string> { "Temperature", "DewPoint" } }, // others unchecked
                 { "Wind", new HashSet<string> { "WindSpeed" } }, // others unchecked
                 { "Snow", new HashSet<string> { "SnowDepth" } }, // others unchecked
@@ -237,9 +238,9 @@ namespace PV.Forecasting.App.Controllers
                     var timeSeriesName = timeSeriesInGroup[j];
                     if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
-                    bool isSum = groupName is "Power" or "Irradiance";
+                    bool isSum = groupName is "Power" or "Radiation";
                     Func<IEnumerable<double?>, double?> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
-                    var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, j), aggregationFunc);
+                    var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, timeSeriesName), aggregationFunc);
                     var plotColor = GetColorForTimeSeries(timeSeriesName, groupName, j);
 
                     var dates = data.Select(d => d.Timestamp.ToOADate()).ToArray();
@@ -296,10 +297,10 @@ namespace PV.Forecasting.App.Controllers
             {
                 return timeSeriesName switch
                 {
-                    "MeasuredPower" => Colors.Red,
-                    "PowerGR" => Colors.Purple,
-                    "PowerGRTW" => Colors.Blue,
-                    "PowerGRTWSF" => Colors.Green,
+                    PvConstants.MeasuredPower => Colors.Red,
+                    PvConstants.PowerGR => Colors.Purple,
+                    PvConstants.PowerGRTW => Colors.Blue,
+                    PvConstants.PowerGRTWSF => Colors.Green,
                     _ => Colors.Gray
                 };
             }
@@ -307,10 +308,10 @@ namespace PV.Forecasting.App.Controllers
             {
                 return timeSeriesName switch
                 {
-                    "Reference" => Colors.Red,
-                    "UflGR" => Colors.Purple,
-                    "UflGRTW" => Colors.Blue,
-                    "UflGRTWSF" => Colors.Green,
+                    PvConstants.Reference => Colors.Red,
+                    PvConstants.UflGR => Colors.Purple,
+                    PvConstants.UflGRTW => Colors.Blue,
+                    PvConstants.UflGRTWSF => Colors.Green,
                     _ => Colors.Gray
                 };
             }
@@ -364,25 +365,19 @@ namespace PV.Forecasting.App.Controllers
             }
         }
 
-        private double? GetValueFromRecord(PvRecordLists record, string groupName, int index)
+        private double? GetValueFromRecord(PvRecordLists record, string groupName, string label)
         {
-            var list = groupName switch
+            return groupName switch
             {
-                "Power" => record.Power,
-                "Residuals" => record.Residuals,
-                "Radiation" => record.Radiation,
-                "Temperature" => record.Temperature,
-                "Wind Speed" => record.WindSpeed,
-                "Snow Depth" => record.SnowDepth,
-                "Relative Humidity" => record.RelativeHumidity,
+                "Power" => record.Power.TryGetValue(label, out var value) ? value : null,
+                "Residuals" => record.Residuals.TryGetValue(label, out var value) ? value : null,
+                "Radiation" => record.Radiation.TryGetValue(label, out var value) ? value : null,
+                "Temperature" => record.Temperature.TryGetValue(label, out var value) ? value : null,
+                "Wind Speed" => record.WindSpeed.TryGetValue(label, out var value) ? value : null,
+                "Snow Depth" => record.SnowDepth.TryGetValue(label, out var value) ? value : null,
+                "Relative Humidity" => record.RelativeHumidity.TryGetValue(label, out var value) ? value : null,
                 _ => null
             };
-
-            if (list is null || index < 0 || index >= list.Count)
-            {
-                return null;
-            }
-            return list[index];
         }
 
         private List<SelectListItem> GetViewOptions() =>

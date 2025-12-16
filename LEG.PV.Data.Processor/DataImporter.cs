@@ -7,7 +7,6 @@ using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
-using static LEG.MeteoSwiss.Client.Forecast.ForecastBlender;
 using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
@@ -43,14 +42,14 @@ namespace LEG.PV.Data.Processor
 
         public List<MeteoParameterType> MeteoParameterTypeList  { get; set; } = new()
         {
-            //MeteoParameterType.SunshineDuration,
-            //MeteoParameterType.DirectRadiation,
-            //MeteoParameterType.DirectNormalIrradiance,
+            MeteoParameterType.SunshineDuration,
+            MeteoParameterType.DirectRadiation,
+            MeteoParameterType.DirectNormalIrradiance,
             MeteoParameterType.GlobalRadiation,
             MeteoParameterType.DiffuseRadiation,
             MeteoParameterType.Temperature,
             MeteoParameterType.WindSpeed,
-            //MeteoParameterType.WindDirection,
+            MeteoParameterType.WindDirection,
             MeteoParameterType.SnowDepth,
             MeteoParameterType.RelativeHumidity,
             MeteoParameterType.DewPoint
@@ -75,67 +74,150 @@ namespace LEG.PV.Data.Processor
         public Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightedSumMeteoValuesArrays { get; set; } = new();
 
+
         // Selected stations, available parameters and blending weights
-        public static Dictionary<string, WeightMeteoParameters> stationDictionary = new Dictionary<string, WeightMeteoParameters>
+        public static Dictionary<string, WeightMeteoParameters> StationDictionary = new()
         {
-            { "SMA", new WeightMeteoParameters { 
-                WeightSunshineDuration = 3.0, 
-                WeightDirectRadiation = 3.0, 
-                WeightDirectNormalIrradiance = 3.0, 
-                WeightGlobalRadiation = 3.0,
-                WeightDiffuseRadiation = 0.0, // SMA station has no diffuse radiation data
-                WeightTemperature = 1.0,
-                WeightWindSpeed = 1.0,
-                WeightWindDirection = 1.0,
-                WeightSnowDepth = 1.0,
-                WeightRelativeHumidity = 1.0,
-                WeightDewPoint = 1.0,
-                WeightRadiationVariance = 1.0
-            } },
-            { "KLO", new WeightMeteoParameters { 
-                WeightSunshineDuration = 1.0, 
-                WeightDirectRadiation = 1.0, 
-                WeightDirectNormalIrradiance = 1.0,
-                WeightGlobalRadiation = 1.0,
-                WeightDiffuseRadiation = 1.0,
-                WeightTemperature = 1.0,
-                WeightWindSpeed = 1.0,
-                WeightWindDirection = 1.0,
-                WeightSnowDepth = 1.0,
-                WeightRelativeHumidity = 1.0,
-                WeightDewPoint = 1.0,
-                WeightRadiationVariance = 1.0
-            } },
-            { "HOE", new WeightMeteoParameters { 
-                WeightSunshineDuration = 1.0, 
-                WeightDirectRadiation = 1.0, 
-                WeightDirectNormalIrradiance = 1.0, 
-                WeightGlobalRadiation = 1.0, 
-                WeightDiffuseRadiation = 0.0, // HOE station has no diffuse radiation data
-                WeightTemperature = 0.0,
-                WeightWindSpeed = 0.0,
-                WeightWindDirection = 0.0,
-                WeightSnowDepth = 0.0,
-                WeightRelativeHumidity = 0.0,
-                WeightDewPoint = 0.0,
-                WeightRadiationVariance = 1.0
-            } },
-            { "UEB", new WeightMeteoParameters {
-                WeightSunshineDuration = 1.0,
-                WeightDirectRadiation = 1.0,
-                WeightDirectNormalIrradiance = 1.0,
-                WeightGlobalRadiation = 1.0,
-                WeightDiffuseRadiation = 1.0,
-                WeightTemperature = 0.0,
-                WeightWindSpeed = 0.0,
-                WeightWindDirection = 0.0,
-                WeightSnowDepth = 0.0,
-                WeightRelativeHumidity = 0.0,
-                WeightDewPoint = 0.0,
-                WeightRadiationVariance = 1.0
-            } }
+            { "SMA", new WeightMeteoParameters
+                {
+                    Weights = new Dictionary<MeteoParameterType, double>
+                    {
+                        { MeteoParameterType.SunshineDuration, 3.0 },
+                        { MeteoParameterType.DirectRadiation, 3.0 },
+                        { MeteoParameterType.DirectNormalIrradiance, 3.0 },
+                        { MeteoParameterType.GlobalRadiation, 3.0 },
+                        { MeteoParameterType.DiffuseRadiation, 3.0 },
+                        { MeteoParameterType.Temperature, 1.0 },
+                        { MeteoParameterType.WindSpeed, 1.0 },
+                        { MeteoParameterType.WindDirection, 1.0 },
+                        { MeteoParameterType.SnowDepth, 1.0 },
+                        { MeteoParameterType.RelativeHumidity, 1.0 },
+                        { MeteoParameterType.DewPoint, 1.0 },
+                        { MeteoParameterType.RadiationVariance, 1.0 }
+                    }
+                }
+            },
+            { "KLO", new WeightMeteoParameters
+                {
+                    Weights = new Dictionary<MeteoParameterType, double>
+                    {
+                        { MeteoParameterType.SunshineDuration, 1.0 },
+                        { MeteoParameterType.DirectRadiation, 1.0 },
+                        { MeteoParameterType.DirectNormalIrradiance, 1.0 },
+                        { MeteoParameterType.GlobalRadiation, 1.0 },
+                        { MeteoParameterType.DiffuseRadiation, 1.0 },
+                        { MeteoParameterType.Temperature, 1.0 },
+                        { MeteoParameterType.WindSpeed, 1.0 },
+                        { MeteoParameterType.WindDirection, 1.0 },
+                        { MeteoParameterType.SnowDepth, 1.0 },
+                        { MeteoParameterType.RelativeHumidity, 1.0 },
+                        { MeteoParameterType.DewPoint, 1.0 },
+                        { MeteoParameterType.RadiationVariance, 1.0 }
+                    }
+                }
+            },
+            { "HOE", new WeightMeteoParameters
+                {
+                    Weights = new Dictionary<MeteoParameterType, double>
+                    {
+                        { MeteoParameterType.SunshineDuration, 1.0 },
+                        { MeteoParameterType.DirectRadiation, 1.0 },
+                        { MeteoParameterType.DirectNormalIrradiance, 1.0 },
+                        { MeteoParameterType.GlobalRadiation, 1.0 },
+                        { MeteoParameterType.DiffuseRadiation, 1.0 },
+                        { MeteoParameterType.Temperature, 0.0 },
+                        { MeteoParameterType.WindSpeed, 0.0 },
+                        { MeteoParameterType.WindDirection, 0.0 },
+                        { MeteoParameterType.SnowDepth, 0.0 },
+                        { MeteoParameterType.RelativeHumidity, 0.0 },
+                        { MeteoParameterType.DewPoint, 0.0 },
+                        { MeteoParameterType.RadiationVariance, 1.0 }
+                    }
+                }
+            },
+            { "UEB", new WeightMeteoParameters
+                {
+                    Weights = new Dictionary<MeteoParameterType, double>
+                    {
+                        { MeteoParameterType.SunshineDuration, 1.0 },
+                        { MeteoParameterType.DirectRadiation, 1.0 },
+                        { MeteoParameterType.DirectNormalIrradiance, 1.0 },
+                        { MeteoParameterType.GlobalRadiation, 1.0 },
+                        { MeteoParameterType.DiffuseRadiation, 1.0 },
+                        { MeteoParameterType.Temperature, 0.0 },
+                        { MeteoParameterType.WindSpeed, 0.0 },
+                        { MeteoParameterType.WindDirection, 0.0 },
+                        { MeteoParameterType.SnowDepth, 0.0 },
+                        { MeteoParameterType.RelativeHumidity, 0.0 },
+                        { MeteoParameterType.DewPoint, 0.0 },
+                        { MeteoParameterType.RadiationVariance, 1.0 }
+                    }
+                }
+            }
         };
-        public static List<string> selectedStationsIdList = stationDictionary.Keys.ToList();
+
+        public static List<string> SelectedStationsIdList = StationDictionary.Keys.ToList();
+
+        public static Dictionary<string, PvModelParams> PvModelParamsDictionary = new ()
+            {
+                { "Synthetic", new(                                    // Model parameters fo synthetic data
+                    etha: 0.9,
+                    gamma: -0.005,
+                    u0: 25,
+                    u1: 0.4,
+                    lDegr: 0.01,
+                    dSnow: 15.0,
+                    lambdaAFog: 0.1,
+                    bFog: 0.5,
+                    lambdaKFog: 2.0
+                ) },
+                { "Senn", new(
+                    etha: 0.525,
+                    gamma: -0.00665,
+                    u0: 200.0,
+                    u1: 20.0,
+                    lDegr: 0.0127,
+                    dSnow: 1.27,
+                    lambdaAFog: -0.248,
+                    bFog: 0.913,
+                    lambdaKFog: 1.03
+                ) },
+                { "SennV", new(                                    // SennV: elevation 35° 
+                    etha: 0.467,
+                    gamma: -0.0,
+                    u0: 5.0,
+                    u1: 0.001,
+                    lDegr: 0.00797,
+                    dSnow: 1.09,
+                    lambdaAFog: 0.139,
+                    bFog: 1.19,
+                    lambdaKFog: 0.924
+                ) },
+                { "Senn_Initial", new(                          // initial calibration without Snow/Fog
+                    etha: 0.619,
+                    gamma: -0.00461,
+                    u0: 213.7,
+                    u1: 0.173,
+                    lDegr: 0.0139,
+                    dSnow: 15.0,
+                    lambdaAFog: 2.0,
+                    bFog: 1.0,
+                    lambdaKFog: 2.0
+                ) },
+            { "SennV_Initial", new( 
+                    etha: 0.478,
+                    gamma: -0.00096,
+                    u0: 29.0,
+                    u1: 0.500,
+                    lDegr: 0.00631,
+                    dSnow: 2.0,
+                    lambdaAFog: 2.0,
+                    bFog: 1.0,
+                    lambdaKFog: 2.0
+                ) },    
+        };
+
+        public static List<string> AvailableSitesIdList = PvModelParamsDictionary.Keys.ToList();
 
         // Import synthetic meteo and PV production data
         public static MeteoImportResult GenerateSyntheticData(
@@ -197,11 +279,10 @@ namespace LEG.PV.Data.Processor
             // Update historic weather data for selected stations
             MeteoSwissHelper.ValidGroundStations = MeteoSwissHelper.GetAllGroundStations();
             var updateClient = new MeteoSwissUpdater();
-            await updateClient.UpdateDataForGroundStations(selectedStationsIdList, granularity: "t");
+            await updateClient.UpdateDataForGroundStations(SelectedStationsIdList, granularity: "t");
 
             meteoDataLagHistory = 5 * (int)Math.Round((double)meteoDataLagHistory / 5);             // Lag to be applied to historical data
             var (perStationWeatherData, blendedWeatherData) = LoadBlendedWeatherHistory(
-                stationDictionary,
                 timeStamps,
                 shiftMeteoTimeStamps: meteoDataOffset + meteoDataLagHistory);
 
@@ -235,6 +316,8 @@ namespace LEG.PV.Data.Processor
                 validRecords.Add(pvRecord.SolarGeometry.HasIrradiance || validE3Dc);
             }
 
+            perStationWeatherData.Add(new StationMeteoData("Blended", blendedWeatherData));
+
             return new MeteoImportResult(perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
 
@@ -263,7 +346,6 @@ namespace LEG.PV.Data.Processor
             // Fetch meteo data
             meteoDataLagForecast = 5 * (int)Math.Round((double)meteoDataLagForecast / 5);               // Lag to be applied to forecast data
             var (perStationWeatherData, blendedWeatherData) = await LoadBlendedWeatherForecast(
-                stationDictionary,
                 timeStamps,
                 shiftMeteoTimeStamps: meteoDataOffset + meteoDataLagForecast);
 
@@ -274,7 +356,6 @@ namespace LEG.PV.Data.Processor
             for (var i = 0; i < countOfMeteoRecords; i++)
             {
                 var recordIndex = i;
-                //var meteoParam = blendedWeatherData[i];
                 var age = (timeStamps[i] - firstE3DcTimestamp).TotalMinutes / minutesPerYear;
                 var pvRecord = new PvRecord(
                     timeStamps[i],
@@ -289,6 +370,8 @@ namespace LEG.PV.Data.Processor
                 dataRecords.Add(pvRecord);
                 validRecords.Add(false);
             }
+
+            perStationWeatherData.Add(new StationMeteoData("Blended", blendedWeatherData));
 
             return new MeteoImportResult(perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
@@ -312,11 +395,11 @@ namespace LEG.PV.Data.Processor
             int periodsPerHour,
             List<PvRecord> dataRecords,
             List<bool> validDataRecord,
-            List<List<double?>> filteredRadiationSeries,
-            List<List<double?>> filteredTemperatureSeries,
-            List<List<double?>> filteredWindSpeedSeries,
-            List<List<double?>> filteredSnowDepthSeries,
-            List<List<double?>> filteredRelativeHumiditySeries,
+            Dictionary<string, List<double?>> filteredRadiationSeries,
+            Dictionary<string, List<double?>> filteredTemperatureSeries,
+            Dictionary<string, List<double?>> filteredWindSpeedSeries,
+            Dictionary<string, List<double?>> filteredSnowDepthSeries,
+            Dictionary<string, List<double?>> filteredRelativeHumiditySeries,
             List<PvRecordLists> listsDataRecords,
             List<bool> validListsDataRecords
             )
@@ -349,12 +432,6 @@ namespace LEG.PV.Data.Processor
 
             for (var index = indexFirstDataRecord; index < dataRecords.Count; index++)
             {
-
-                if (indexFirstDataRecord > 0 && index > 368)
-                {
-                    var debug = 0;
-                }
-
                 var record = dataRecords[index];
                 var pvDataRecord = record.GetPvResidualsRecord(pvModelParams, installedPower, periodsPerHour: periodsPerHour);
                 var computedPower = pvDataRecord.ComputedPower;
@@ -362,30 +439,59 @@ namespace LEG.PV.Data.Processor
                 var referenceResidual = computedPower.PowerG / (installedPower / periodsPerHour);
                 var hasCalculated = pvDataRecord.HasCalculated;
 
-                // Build lists for the current record, including the base series and the valid reference series
-                List<double?> radiationList = [];
-                List<double?> residualsList = [];
-                List<double?> temperatureList = [];
-                List<double?> windSpeedList = [];
-                List<double?> snowDepthList = [];
-                List<double?> relativeHumidityList = [];
-                radiationList.AddRange(filteredRadiationSeries.Select(series => series[index]));
-                residualsList.AddRange(filteredRadiationSeries.Select(series => series[index]));
-                temperatureList.AddRange(filteredTemperatureSeries.Select(series => series[index]));
-                windSpeedList.AddRange(filteredWindSpeedSeries.Select(series => series[index]));
-                snowDepthList.AddRange(filteredSnowDepthSeries.Select(series => series[index]));
-                relativeHumidityList.AddRange(filteredRelativeHumiditySeries.Select(series => series[index]));
+                // Build dictionaries for the current record, including the base series and the valid reference series
+                var powerDict = new Dictionary<string, double?>
+                {
+                    { PvConstants.MeasuredPower, record.MeasuredPower },
+                    { PvConstants.PowerGR, computedPower.PowerGR },
+                    { PvConstants.PowerGRTW, computedPower.PowerGRTW },
+                    { PvConstants.PowerGRTWSF, computedPower.PowerGRTWSF }
+                };
+
+                var residualsDict = new Dictionary<string, double?>
+                {
+                    { PvConstants.Reference, referenceResidual },
+                    { PvConstants.UflGR, residualsRecord.PowerGR },
+                    { PvConstants.UflGRTW, residualsRecord.PowerGRTW },
+                    { PvConstants.UflGRTWSF, residualsRecord.PowerGRTWSF }
+                };
+
+                var radiationDict = new Dictionary<string, double?>();
+                foreach (var label in filteredRadiationSeries.Keys)
+                {
+                    radiationDict[label] = filteredRadiationSeries[label][index];
+                }
+                var temperatureDict = new Dictionary<string, double?>();
+                foreach (var label in filteredTemperatureSeries.Keys)
+                {
+                    temperatureDict[label] = filteredTemperatureSeries[label][index];
+                }
+                var windSpeedDict = new Dictionary<string, double?>();
+                foreach (var label in filteredWindSpeedSeries.Keys)
+                {
+                    windSpeedDict[label] = filteredWindSpeedSeries[label][index];
+                }
+                var snowDepthDict = new Dictionary<string, double?>();
+                foreach (var label in filteredSnowDepthSeries.Keys)
+                {
+                    snowDepthDict[label] = filteredSnowDepthSeries[label][index];
+                }
+                var relativeHumidityDict = new Dictionary<string, double?>();
+                foreach (var label in filteredRelativeHumiditySeries.Keys)
+                {
+                    relativeHumidityDict[label] = filteredRelativeHumiditySeries[label][index];
+                }
 
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
                     record.Index,
-                    [record.MeasuredPower, computedPower.PowerGR, computedPower.PowerGRTW, computedPower.PowerGRTWSF],
-                    [referenceResidual, residualsRecord.PowerGR, residualsRecord.PowerGRTW, residualsRecord.PowerGRTWSF],
-                    radiationList,
-                    temperatureList,
-                    windSpeedList,
-                    snowDepthList, 
-                    relativeHumidityList
+                    powerDict,
+                    residualsDict,
+                    radiationDict,
+                    temperatureDict,
+                    windSpeedDict,
+                    snowDepthDict,
+                    relativeHumidityDict
                 );
 
                 listsDataRecords.Add(listsDataRecord);
@@ -404,77 +510,25 @@ namespace LEG.PV.Data.Processor
             int periodsPerHour)>
             ImportE3DcHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded E3Dc history, 1: meteo history till now, 2: including meteo forecast
         {
-            List<PvModelParams> pvModelParamsList
-                = [
-                new(                                    // Model parameters fo synthetic data
-                    etha: 0.9,
-                    gamma: -0.005,
-                    u0: 25,
-                    u1: 0.4,
-                    lDegr: 0.01,
-                    dSnow: 15.0,
-                    lambdaAFog: 0.1,
-                    bFog: 0.5,
-                    lambdaKFog: 2.0
-                ),
-                new(                                    // Senn
-                    etha: 0.474,
-                    gamma: -0.0125,
-                    u0: 200.0,
-                    u1: 0.001,
-                    lDegr: 0.0125,
-                    dSnow: 31.1,
-                    lambdaAFog: 1.94,
-                    bFog: 0.0914,
-                    lambdaKFog: 2.06
-                ),
-                new(                                    // SennV: elevation 35° 
-                    etha: 0.468,
-                    gamma: -0.0,
-                    u0: 5.0,
-                    u1: 0.001,
-                    lDegr: 0.00888,
-                    dSnow: 4.05,
-                    lambdaAFog: 0.275,
-                    bFog: -0.0328,
-                    lambdaKFog: 0.278
-                ),
-                new(                                    // initial calibration without Snow/Fog
-                    etha: 0.619,
-                    gamma: -0.00461,
-                    u0: 213.7,
-                    u1: 0.173,
-                    lDegr: 0.0139,
-                    dSnow: 15.0,
-                    lambdaAFog: 2.0,
-                    bFog: 1.0,
-                    lambdaKFog: 2.0
-                ),
-                new(             // SennV: elevation 35° 
-                    etha: 0.478,
-                    gamma: -0.00096,
-                    u0: 29.0,
-                    u1: 0.500,
-                    lDegr: 0.00631,
-                    dSnow: 2.0,
-                    lambdaAFog: 2.0,
-                    bFog: 1.0,
-                    lambdaKFog: 2.0
-                )
-            ];
-            var pvModelParams = pvModelParamsList[folder];
+            var siteModelId = AvailableSitesIdList[folder];
+            var pvModelParams = PvModelParamsDictionary[siteModelId];
 
             MeteoImportResult meteoImportResult = null;
-
-            if (folder == 0)
+            switch (folder)
             {
-                meteoImportResult = GenerateSyntheticData(pvModelParamsList[folder],  simulationsPeriod: 5);
-                displayPeriod = 0;   // No forecast for synthetic data
-            }
-            else
-            {
-                // Fetch pvProduction and meteo data
-                meteoImportResult = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
+                case 0:
+                    meteoImportResult = GenerateSyntheticData(pvModelParams, simulationsPeriod: 5);
+                    displayPeriod = 0;   // No forecast for synthetic data
+                    break;
+                case 1:
+                case 2:
+                    // Compute normalized weights
+                    SetSelectedStationsWeightArrays(); // StationDictionary);
+                    // Fetch pvProduction and meteo data
+                    meteoImportResult = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(folder), "Folder index out of range");
             }
 
             // Extract pvProduction and meteo data
@@ -490,8 +544,7 @@ namespace LEG.PV.Data.Processor
                 filteredTemperatureHistorySeries, filteredTemperatureLabels,
                 filteredWindSpeedHistorySeries, filteredWindSpeedLabels,
                 filteredSnowDepthSeries, filteredSnowDepthLabels,
-                filteredRelativeHumiditySeries, filteredRelativeHumidityLabels
-                ) = FilterAndLabelSeries(perStationWeatherHistory);
+                filteredRelativeHumiditySeries, filteredRelativeHumidityLabels) = FilterAndLabelSeries(perStationWeatherHistory);
 
             var listsDataRecords = new List<PvRecordLists>();
             var validListsDataRecords = new List<bool>();
@@ -515,7 +568,13 @@ namespace LEG.PV.Data.Processor
             {
                 var firstE3DcTimestamp = dataRecordsHistory[0].Timestamp;
                 var lHistoryTimestamp = dataRecordsHistory[^3].Timestamp;
-                var (perStationWeatherForecast, blendedWeatherForecasty, _, dataRecordsForecast, validRecordsForecast, _, _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstE3DcTimestamp, lHistoryTimestamp);
+                var (perStationWeatherForecast, 
+                    blendedWeatherForecasty, 
+                    _, 
+                    dataRecordsForecast, 
+                    validRecordsForecast, 
+                    _, 
+                    _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstE3DcTimestamp, lHistoryTimestamp);
 
                 var (filteredRadiationForecastSeries, _,
                     filteredTemperatureForecastSeries, _,
@@ -540,13 +599,13 @@ namespace LEG.PV.Data.Processor
             }
 
             var dataRecordLabels = new PvRecordLabels(
-                ["MeasuredPower", "PowerGR", "PowerGRTW", "PowerGRTWSF"],
-                ["Reference", "UflGR", "UflGRTW", "UflGRTWSF"],
-                filteredRadiationLabels,
-                filteredTemperatureLabels,
-                filteredWindSpeedLabels,
-                filteredSnowDepthLabels,
-                filteredRelativeHumidityLabels);
+                [PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF],
+                [PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF],
+                filteredRadiationLabels.Select(kv => kv.Key).ToList(),
+                filteredTemperatureLabels.Select(kv => kv.Key).ToList(),
+                filteredWindSpeedLabels.Select(kv => kv.Key).ToList(),
+                filteredSnowDepthLabels.Select(kv => kv.Key).ToList(),
+                filteredRelativeHumidityLabels.Select(kv => kv.Key).ToList());
 
             return (siteId, listsDataRecords, dataRecordLabels, validListsDataRecords, installedPower, periodsPerHour);
         }
@@ -663,36 +722,18 @@ namespace LEG.PV.Data.Processor
         }
 
         // Compute normalized weights for blending
-        private void NormalizeMeteoWeightArray(MeteoParameterType parameterType, int count)
+        private void NormalizeMeteoWeightArray(MeteoParameterType parameterType)
         {
-            var weights = WeightMeteoArrays[parameterType];
-            var copyCount = Math.Min(count, weights.Length);
-            var normalizedWeights = new double[count];
-            for (var i = 0; i < copyCount; i++)
-            {
-                normalizedWeights[i] = weights[i] > 0 ? weights[i] : 0.0;
-            }
-            var totalWeight = normalizedWeights.Sum();
-            if (totalWeight > 0)
-            {
-                for (var i = 0; i < count; i++)
-                {
-                    normalizedWeights[i] /= totalWeight;
-                }
-            }
-            else
-            {
-                normalizedWeights[0] = 1.0;
-            }
-
-            WeightMeteoArrays[parameterType] = normalizedWeights;
+            var weights = WeightMeteoArrays[parameterType].Select(w => w > 0.0 ? w : 0.0).ToArray();
+            var totalWeight = weights.Sum();
+            totalWeight = totalWeight > 0 ? totalWeight : 1.0;
+            WeightMeteoArrays[parameterType] = weights.Select(w => w / totalWeight).ToArray();
         }
 
         // Aggregation helper for historical and forecast data: Process data from a single station and accumulate weighted sums
-        private new List<MeteoParameters>
+        private List<MeteoParameters>
             ProcessStationData(
             int stationIndex,
-            int countStations,
             int supportCount,
             int supportInterval,
             int meteoCount,
@@ -756,11 +797,6 @@ namespace LEG.PV.Data.Processor
 
                 foreach (var meteoParameterType in MeteoParameterTypeList)
                 {
-                    //if (double.IsNaN(MeteoValuesArrays[meteoParameterType][i].Value * WeightMeteoArrays[meteoParameterType][stationIndex]))
-                    //{
-                    //    // Handle NaN case if needed
-                    //}
-
                     WeightedSumMeteoValuesArrays[meteoParameterType][i] += 
                         (MeteoValuesArrays[meteoParameterType][i] ?? 0.0) * WeightMeteoArrays[meteoParameterType][stationIndex];
                 }
@@ -780,18 +816,17 @@ namespace LEG.PV.Data.Processor
             double[] sumSupportGlobalRadiation,
             double[] squaredSumSupportGlobalRadiation)
         {
-            var blendedWeatherData =
-                    new List<MeteoParameters>();
+            var blendedWeatherData = new List<MeteoParameters>();
             var timeInterval = (supportTimeStamps[1] - supportTimeStamps[0]).Minutes;
 
             for (var i = 0; i < supportCount; i++)
             {
                 var directRadiationVariance = radiationVarianceMaxVariance;
-                if (selectedStationsIdList.Count > 1)
+                if (SelectedStationsIdList.Count > 1)
                 {
-                    var E1i = sumSupportGlobalRadiation[i] / selectedStationsIdList.Count; ;
-                    var E2i = squaredSumSupportGlobalRadiation[i] / selectedStationsIdList.Count;
-                    directRadiationVariance = radiationBaselineVariance + (E2i - E1i * E1i) * selectedStationsIdList.Count / (selectedStationsIdList.Count - 1);
+                    var E1i = sumSupportGlobalRadiation[i] / SelectedStationsIdList.Count; ;
+                    var E2i = squaredSumSupportGlobalRadiation[i] / SelectedStationsIdList.Count;
+                    directRadiationVariance = radiationBaselineVariance + (E2i - E1i * E1i) * SelectedStationsIdList.Count / (SelectedStationsIdList.Count - 1);
                 }
 
                 blendedWeatherData.Add(new MeteoParameters(
@@ -816,7 +851,6 @@ namespace LEG.PV.Data.Processor
 
         // Load meteo history and blend data from selected stations
         private (List<StationMeteoData> stationsWeatherdata, List<MeteoParameters> blendedWeatherData) LoadBlendedWeatherHistory(
-            Dictionary<string, WeightMeteoParameters> stationDictionary,
             List<DateTime> supportTimeStamps,
             int shiftMeteoTimeStamps = 60)                 // shift in minutes UTC -> local time
         {
@@ -836,7 +870,7 @@ namespace LEG.PV.Data.Processor
             var firstYear = firstSupportTimestamp.AddMinutes(-shiftMeteoTimeStamps).Year;
             var lastYear = lastSupportTimestamp.AddMinutes(-shiftMeteoTimeStamps).Year;
 
-            SetStationsWeightArrays(stationDictionary);
+            //SetStationsWeightArrays(StationDictionary);
 
             foreach (var meteoParameterType in MeteoParameterTypeList)
             {
@@ -847,7 +881,7 @@ namespace LEG.PV.Data.Processor
             var sumSupportGlobalRadiation = new double[supportCount];
             var squaredSumSupportGlobalRadiation = new double[supportCount];
             var stationIndex = -1;
-            foreach (var stationId in selectedStationsIdList)
+            foreach (var stationId in SelectedStationsIdList)
             {
                 stationIndex++;
 
@@ -876,7 +910,6 @@ namespace LEG.PV.Data.Processor
 
                 var weatherParameters = ProcessStationData(
                     stationIndex,
-                    stationDictionary.Count,
                     supportCount,
                     supportInterval,
                     meteoCount,
@@ -905,10 +938,11 @@ namespace LEG.PV.Data.Processor
             List<StationMeteoData> stationsWeatherdata,
             List<MeteoParameters> blendedWeatherData)>
             LoadBlendedWeatherForecast(
-            Dictionary<string, WeightMeteoParameters> stationDictionary,
             List<DateTime> supportTimeStamps,
             int shiftMeteoTimeStamps = 60)                 // shift in minutes UTC -> local time
         {
+            SetSelectedStationsWeightArrays();
+
             var now = DateTime.Now;
             var supportCount = supportTimeStamps.Count;
             var firstSupportTimestamp = supportTimeStamps[0];
@@ -926,7 +960,7 @@ namespace LEG.PV.Data.Processor
             var lastYear = lastSupportTimestamp.AddMinutes(-shiftMeteoTimeStamps).Year;
 
             // Compute normalized weights
-            SetStationsWeightArrays(stationDictionary);
+            //SetStationsWeightArrays(StationDictionary);
 
             foreach (var meteoParameterType in MeteoParameterTypeList)
             {
@@ -938,13 +972,15 @@ namespace LEG.PV.Data.Processor
 
             // Fetch forecasts for all stations
             var forecastClient = new WeatherForecastClient();
+            var blender = new ForecastBlender();
             var blendedForecastPerStation = new List<List<MeteoParameters>>();
-            foreach (var stationId in selectedStationsIdList)
+            foreach (var stationId in SelectedStationsIdList)
             {
                 var longCast = await forecastClient.Get16DayMeteoParametersByStationIdAsync(stationId);
                 var midCast = await forecastClient.Get7DayMeteoParametersByStationIdAsync(stationId);
                 var nowCast = await forecastClient.GetNowcast15MinuteMeteoParametersByStationIdAsync(stationId);
-                blendedForecastPerStation.Add(CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast));
+                var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+                blendedForecastPerStation.Add(blendedForecast);
             }
 
             // Identify overlapping forecast periods
@@ -961,7 +997,7 @@ namespace LEG.PV.Data.Processor
             // Blend data from all stations using the algorithm for historical data
             var perStationWeatherParameters = new List<StationMeteoData>();
             var stationIndex = -1;
-            foreach (var stationId in selectedStationsIdList)
+            foreach (var stationId in SelectedStationsIdList)
             {
                 stationIndex++;
                 var blendedForecast = blendedForecastPerStation[stationIndex];
@@ -990,7 +1026,6 @@ namespace LEG.PV.Data.Processor
 
                 var weatherParameters = ProcessStationData(
                     stationIndex,
-                    stationDictionary.Count,
                     supportCount,
                     supportInterval,
                     meteoCount,
@@ -1011,82 +1046,91 @@ namespace LEG.PV.Data.Processor
                 supportTimeStamps,
                 sumSupportGlobalRadiation,
                 squaredSumSupportGlobalRadiation);
+
             return (perStationWeatherParameters, blendedWeatherData);
         }
 
         public static (
-            List<List<double?>> RadiationSeries, List<string> RadiationLabels,
-            List<List<double?>> TemperatureSeries, List<string> TemperatureLabels,
-            List<List<double?>> WindSpeedSeries, List<string> WindSpeedLabels,
-            List<List<double?>> SnowDepthSeries, List<string> SnowDepthLabels,
-            List<List<double?>> RelativeHumiditySeries, List<string> RelativeHumidityLabels
+            Dictionary<string, List<double?>> RadiationSeries, Dictionary<string, string> RadiationLabels,
+            Dictionary<string, List<double?>> TemperatureSeries, Dictionary<string, string> TemperatureLabels,
+            Dictionary<string, List<double?>> WindSpeedSeries, Dictionary<string, string> WindSpeedLabels,
+            Dictionary<string, List<double?>> SnowDepthSeries, Dictionary<string, string> SnowDepthLabels,
+            Dictionary<string, List<double?>> RelativeHumiditySeries, Dictionary<string, string> RelativeHumidityLabels
         ) FilterAndLabelSeries(List<StationMeteoData> perStationWeatherData)
         {
-            var radiationSeries = new List<List<double?>>();
-            var radiationLabels = new List<string>();
+            var radiationSeries = new Dictionary<string, List<double?>>();
+            var radiationLabels = new Dictionary<string, string>();
 
-            var temperatureSeries = new List<List<double?>>();
-            var temperatureLabels = new List<string>();
+            var temperatureSeries = new Dictionary<string, List<double?>>();
+            var temperatureLabels = new Dictionary<string, string>();
 
-            var windSpeedSeries = new List<List<double?>>();
-            var windSpeedLabels = new List<string>();
+            var windSpeedSeries = new Dictionary<string, List<double?>>();
+            var windSpeedLabels = new Dictionary<string, string>();
 
-            var snowDepthSeries = new List<List<double?>>();
-            var snowDepthLabels = new List<string>();
+            var snowDepthSeries = new Dictionary<string, List<double?>>();
+            var snowDepthLabels = new Dictionary<string, string>();
 
-            var relativeHumiditySeries = new List<List<double?>>();
-            var relativeHumidityLabels = new List<string>();
+            var relativeHumiditySeries = new Dictionary<string, List<double?>>();
+            var relativeHumidityLabels = new Dictionary<string, string>();
 
             foreach (var stationData in perStationWeatherData)
             {
                 var stationId = stationData.StationId;
                 var stationDataRecords = stationData.WeatherData;
-                var validParameters = stationDataRecords[0].GetValidMeteoParameters();  // Use first record to check valid parameters
+                var validParameters = stationDataRecords[0].GetValidMeteoParameters();
+
                 // Radiation
                 if (validParameters.HasValidGlobalRadiation)
                 {
-                    radiationSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.GlobalRadiation)).ToList());
-                    radiationLabels.Add($"Global_{stationId}");
+                    var label = $"Global_{stationId}";
+                    windSpeedSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.GlobalRadiation)).ToList();
+                    radiationLabels[label] = label;
                 }
-                if (validParameters.HasValidDiffuseRadiation)
+                if (validParameters.HasValidGlobalRadiation)
                 {
-                    radiationSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DiffuseRadiation)).ToList());
-                    radiationLabels.Add($"Diffuse_{stationId}");
+                    var label = $"Diffuse_{stationId}";
+                    windSpeedSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DiffuseRadiation)).ToList();
+                    radiationLabels[label] = label;
                 }
-                // Temperature and DewPoint
+                // Temperature
                 if (validParameters.HasValidTemperature)
                 {
-                    temperatureSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.Temperature)).ToList());
-                    temperatureLabels.Add($"Temperature_{stationId}");
+                    var label = $"Temperature_{stationId}";
+                    temperatureSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.Temperature)).ToList();
+                    temperatureLabels[label] = label;
                 }
                 if (validParameters.HasValidDewPoint)
                 {
-                    temperatureSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DewPoint)).ToList());
-                    temperatureLabels.Add($"DewPoint_{stationId}");
+                    var label = $"DewPoint_{stationId}";
+                    temperatureSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DewPoint)).ToList();
+                    temperatureLabels[label] = label;
                 }
-                // WindSpeed
+                //WindSpeed
                 if (validParameters.HasValidWindSpeed)
                 {
-                    windSpeedSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.WindSpeed)).ToList());
-                    windSpeedLabels.Add($"WindSpeed_{stationId}");
+                    var label = $"WindSpeed_{stationId}";
+                    windSpeedSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.WindSpeed)).ToList();
+                    windSpeedLabels[label] = label;
                 }
                 // SnowDepth
                 if (validParameters.HasValidSnowDepth)
                 {
-                    snowDepthSeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.SnowDepth)).ToList());
-                    snowDepthLabels.Add($"SnowDepth_{stationId}");
+                    var label = $"SnowDepth_{stationId}";
+                    snowDepthSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.SnowDepth)).ToList();
+                    snowDepthLabels[label] = label;
                 }
                 // RelativeHumidity
                 if (validParameters.HasValidRelativeHumidity)
                 {
-                    relativeHumiditySeries.Add(stationDataRecords.Select(d => d.GetValue(MeteoParameterType.RelativeHumidity)).ToList());
-                    relativeHumidityLabels.Add($"Humidity_{stationId}");
+                    var label = $"Humidity_{stationId}";
+                    relativeHumiditySeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.RelativeHumidity)).ToList();
+                    relativeHumidityLabels[label] = label;
                 }
             }
 
             return (
-                radiationSeries, radiationLabels, 
-                temperatureSeries, temperatureLabels, 
+                radiationSeries, radiationLabels,
+                temperatureSeries, temperatureLabels,
                 windSpeedSeries, windSpeedLabels,
                 snowDepthSeries, snowDepthLabels,
                 relativeHumiditySeries, relativeHumidityLabels
@@ -1094,9 +1138,9 @@ namespace LEG.PV.Data.Processor
         }
 
         // Helper method to get weight arrays for all selected stations
-        private void SetStationsWeightArrays(Dictionary<string, WeightMeteoParameters> stationDictionary)
+        private void SetSelectedStationsWeightArrays() //Dictionary<string, WeightMeteoParameters> stationDictionary)
         {
-            var stationsCount = stationDictionary.Count;
+            var stationsCount = SelectedStationsIdList.Count;
 
             foreach (var meteoParameterType in MeteoParameterTypeList)
             {
@@ -1104,12 +1148,12 @@ namespace LEG.PV.Data.Processor
             }
 
             var stationIndex = 0;
-            foreach (var stationId in stationDictionary.Keys)
+            foreach (var stationId in SelectedStationsIdList)
             {
-                var weights = stationDictionary[stationId];
+                var weights = StationDictionary[stationId];
                 foreach (var meteoParameterType in MeteoParameterTypeList)
                 {
-                    WeightMeteoArrays[meteoParameterType][stationIndex] = weights.WeightSunshineDuration;
+                    WeightMeteoArrays[meteoParameterType][stationIndex] = weights.GetWeight(meteoParameterType);
                 }
 
                 stationIndex++;
@@ -1118,7 +1162,7 @@ namespace LEG.PV.Data.Processor
             // Compute normalized weights
             foreach (var meteoParameterType in MeteoParameterTypeList)
             {
-                NormalizeMeteoWeightArray(meteoParameterType, stationsCount);
+                NormalizeMeteoWeightArray(meteoParameterType);
             }
         }
     }
