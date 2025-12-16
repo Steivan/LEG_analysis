@@ -508,7 +508,7 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportE3DcHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded E3Dc history, 1: meteo history till now, 2: including meteo forecast
+            ImportE3DcHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded meteo for PV history, 1: meteo PV history till now, 2: including meteo forecast
         {
             var siteModelId = AvailableSitesIdList[folder];
             var pvModelParams = PvModelParamsDictionary[siteModelId];
@@ -518,7 +518,7 @@ namespace LEG.PV.Data.Processor
             {
                 case 0:
                     meteoImportResult = GenerateSyntheticData(pvModelParams, simulationsPeriod: 5);
-                    displayPeriod = 0;   // No forecast for synthetic data
+                    displayPeriod = 0;   // synthetic meteo data is only available for the simulated period
                     break;
                 case 1:
                 case 2:
@@ -1083,13 +1083,13 @@ namespace LEG.PV.Data.Processor
                 if (validParameters.HasValidGlobalRadiation)
                 {
                     var label = $"Global_{stationId}";
-                    windSpeedSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.GlobalRadiation)).ToList();
+                    radiationSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.GlobalRadiation)).ToList();
                     radiationLabels[label] = label;
                 }
                 if (validParameters.HasValidGlobalRadiation)
                 {
                     var label = $"Diffuse_{stationId}";
-                    windSpeedSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DiffuseRadiation)).ToList();
+                    radiationSeries[label] = stationDataRecords.Select(d => d.GetValue(MeteoParameterType.DiffuseRadiation)).ToList();
                     radiationLabels[label] = label;
                 }
                 // Temperature

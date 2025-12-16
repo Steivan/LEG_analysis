@@ -47,5 +47,6 @@ namespace PV.Forecasting.App.Models
 
         // Maps group name to a set of checked locations (per group)
         public Dictionary<string, HashSet<string>> CheckedLocations { get; set; } = new();
+
     }
 }

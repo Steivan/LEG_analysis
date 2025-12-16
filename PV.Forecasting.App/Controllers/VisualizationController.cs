@@ -1,5 +1,4 @@
-﻿using LEG.MeteoSwiss.Abstractions.Models;
-using LEG.PV.Data.Processor;
+﻿using LEG.PV.Data.Processor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using PV.Forecasting.App.Models;
@@ -9,40 +8,84 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static LEG.PV.Core.Models.PvDataClass;
-using LEG.PV.Core.Models;
+using static LEG.PV.Core.Models.PvConstants;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoConstants;
 
 namespace PV.Forecasting.App.Controllers
 {
     public class VisualizationController : Controller
     {
+        const string PowerGroup = "Power";
+        const string ResidualsGroup = "Residuals";
+        const string RadiationGroup = "Radiation";
+        const string TemperatureGroup = "Temperature";
+        const string WindspeedGroup = "Wind Speed";
+        const string SnowDepthGroup = "Snow Depth";
+        const string HumidityGroup = "Relative Humidity";
+
+        const string PeriodDay = "Day";
+        const string PeriodWeek = "Week";
+        const string PeriodMonth = "Month";
+        const string PeriodYear = "Year";
+        const string PeriodAll = "All";
+
+        const string PeriodDayName = "Day";
+        const string PeriodWeekName = "Week";
+        const string PeriodMonthName = "Month";
+        const string PeriodYearName = "Year";
+        const string PeriodAllName = "All";
+
+        const string Interval15Min = "15-min";
+        const string IntervalHourly = "Hourly";
+        const string Interval3Hourly = "3-hourly";
+        const string IntervalDaily = "Daily";
+        const string IntervalWeekly = "Weekly";
+        const string IntervalMonthly = "Monthly";
+        const string IntervalYearly = "Yearly";
+
+        const string Interval15MinName = "15-min";
+        const string IntervalHourlyName = "Hourly";
+        const string Interval3HourlyName = "3-hourly";
+        const string IntervalDailyName = "Daily";
+        const string IntervalWeeklyName = "Weekly";
+        const string IntervalMonthlyName = "Monthly";
+        const string IntervalYearlyName = "Yearly";
+
         private static List<PvRecordLists>? _pvRecords;
         private static Dictionary<string, List<string>>? _pvRecordLabels;
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Index(
             List<string> SelectedTimeSeries,
-            string SelectedPeriod = "All",
+            List<string> SelectedGroups, 
+            string SelectedPeriod = PeriodAll,
             DateTime? SelectedDate = null,
-            string SelectedView = "Weekly",
-            bool reset = false)
+            string SelectedView = IntervalWeeklyName,
+            bool reset = false,
+            string groupChanged = null)
         {
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] groupChanged: {groupChanged}");
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] SelectedGroups: {string.Join(", ", SelectedGroups ?? new List<string>())}");
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] SelectedTimeSeries: {string.Join(", ", SelectedTimeSeries ?? new List<string>())}");
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Request.Query: {string.Join(", ", Request.Query.Select(q => q.Key + "=" + q.Value))}");
+            
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(2, displayPeriod: 2);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(0, displayPeriod: 2);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)
                 {
                     _pvRecordLabels = new Dictionary<string, List<string>>
                     {
-                        { "Power", pvRecordLabels.PowerLabels },
-                        { "Residuals", pvRecordLabels.ResidualsLabels },
-                        { "Radiation", pvRecordLabels.RadiationLabels },
-                        { "Temperature", pvRecordLabels.TemperatureLabels },
-                        { "Wind Speed", pvRecordLabels.WindSpeedLabels },
-                        { "Snow Depth", pvRecordLabels.SnowDepthLabels },
-                        { "Relative Humidity", pvRecordLabels.RelativeHumidityLabels }
+                        { PowerGroup, pvRecordLabels.PowerLabels },
+                        { ResidualsGroup, pvRecordLabels.ResidualsLabels },
+                        { RadiationGroup, pvRecordLabels.RadiationLabels },
+                        { TemperatureGroup, pvRecordLabels.TemperatureLabels },
+                        { WindspeedGroup, pvRecordLabels.WindSpeedLabels },
+                        { SnowDepthGroup, pvRecordLabels.SnowDepthLabels },
+                        { HumidityGroup, pvRecordLabels.RelativeHumidityLabels }
                     };
                 }
             }
@@ -61,42 +104,45 @@ namespace PV.Forecasting.App.Controllers
             }
 
             // 1. Build parameterGroups (already in your code)
-            var parameterGroups = MeteoParameterInfo.ParameterToUnit
-                .GroupBy(kvp => kvp.Value)
-                .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Key).ToList());
-            
-            parameterGroups = new Dictionary<string, List<string>> {
-                { "Power", new List<string> { PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF } },
-                { "Residuals", new List<string> { PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF } }
-            }.Concat(parameterGroups).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-            var groupVariables = parameterGroups; // Already maps group → variables
+            var parameterGroups = new Dictionary<string, List<string>>
+            {
+                { PowerGroup, new List<string> { MeasuredPower, PowerGR, PowerGRTW, PowerGRTWSF } },
+                { ResidualsGroup, new List<string> { Reference, UflGR, UflGRTW, UflGRTWSF } },
+                { RadiationGroup, new List<string> { GlobalRadiation, DiffuseRadiation } },
+                { TemperatureGroup, new List<string> { Temperature, DewPoint } },
+                { WindspeedGroup, new List<string> { WindSpeed } },
+                { SnowDepthGroup, new List<string> { SnowDepth } },
+                { HumidityGroup, new List<string> { RelativeHumidity } }
+            };
 
             // Build locations per group
             var groupLocations = new Dictionary<string, List<string>>();
             foreach (var group in parameterGroups.Keys)
             {
-                if (group == "Power" || group == "Residuals")
+                if (group == PowerGroup || group == ResidualsGroup)
                     groupLocations[group] = new List<string> { "PV Site" };
                 else
                     groupLocations[group] = DataImporter.SelectedStationsIdList; // or filter as needed
             }
 
             // 2. Set up default checked groups, variables, and locations (step 2)
-            var defaultCheckedGroups = new HashSet<string> { "Power", "Residuals", "Radiation", "Temperature", "Wind", "Snow", "Humidity" };
+            var defaultCheckedGroups = new HashSet<string> 
+            { PowerGroup, ResidualsGroup, RadiationGroup, TemperatureGroup, WindspeedGroup, SnowDepthGroup, HumidityGroup };
+
             var defaultCheckedVariables = new Dictionary<string, HashSet<string>>
             {
-                { "Radiation", new HashSet<string> { "Global", "Diffuse" } }, // others unchecked
-                { "Temperature", new HashSet<string> { "Temperature", "DewPoint" } }, // others unchecked
-                { "Wind", new HashSet<string> { "WindSpeed" } }, // others unchecked
-                { "Snow", new HashSet<string> { "SnowDepth" } }, // others unchecked
-                { "Humidity", new HashSet<string> { "RelativeHumidity" } }, // others unchecked
+                { RadiationGroup, new HashSet<string> { GlobalRadiation, DiffuseRadiation } }, // others unchecked
+                { TemperatureGroup, new HashSet<string> { Temperature, DewPoint } }, // others unchecked
+                { WindspeedGroup, new HashSet<string> { WindSpeed } }, // others unchecked
+                { SnowDepthGroup, new HashSet<string> { SnowDepth } }, // others unchecked
+                { HumidityGroup, new HashSet<string> { RelativeHumidity } }, // others unchecked
                 // Add more as needed
             };
 
             // For locations, you can default to all checked or a subset
             var defaultCheckedLocations = new Dictionary<string, HashSet<string>>();
             // ...build this as needed...
+
 
             // 3. Build the ViewModel
             var model = new VisualizationViewModel
@@ -107,18 +153,15 @@ namespace PV.Forecasting.App.Controllers
                     g => defaultCheckedGroups.Contains(g)
                 ),
                 GroupVariables = parameterGroups,
-                //GroupLocations = /* build from your data */,                          TODO
                 GroupLocations = groupLocations,
                 CheckedVariables = parameterGroups.Keys.ToDictionary(
                     g => g,
                     g => defaultCheckedVariables.ContainsKey(g) ? defaultCheckedVariables[g] : new HashSet<string>()
                 ),
-                //CheckedLocations = /* similar logic for locations */,         TODO
                 CheckedLocations = groupLocations.Keys.ToDictionary(
                     g => g,
                     g => defaultCheckedLocations.ContainsKey(g) ? defaultCheckedLocations[g] : new HashSet<string>()
                 ),
-                // ...other assignments...
             };
 
             // Handle reset: restore default selection
@@ -126,10 +169,10 @@ namespace PV.Forecasting.App.Controllers
 
             if (reset)
             {
-                SelectedPeriod = "All";
+                SelectedPeriod = PeriodAll;
                 SelectedDate = DateTime.Today;
                 viewOptions = GetFilteredViewOptions(SelectedPeriod);
-                SelectedView = "Weekly"; //viewOptions.FirstOrDefault()?.Value ?? "Weekly";
+                SelectedView = IntervalWeekly; 
                 SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
             }
             else if (SelectedTimeSeries is null || !SelectedTimeSeries.Any())
@@ -150,14 +193,60 @@ namespace PV.Forecasting.App.Controllers
             var minDate = _pvRecords[0].Timestamp.Date;
             var maxDate = _pvRecords[^1].Timestamp.Date;
             var nowDate = DateTime.Today.Date;
-            var currentDate = SelectedDate ?? nowDate;
+
+            // Set initialCalendarDate = Max(firstTimeStamp, Min(now, lastTimeStamp))
+            var initialCalendarDate = minDate > nowDate ? minDate : (nowDate > maxDate ? maxDate : nowDate);
+            var currentDate = SelectedDate ?? initialCalendarDate;
 
             var (startDate, endDate) = GetDateRange(currentDate, SelectedPeriod, minDate, maxDate);
             var recordsForPeriod = _pvRecords.Where(r => r.Timestamp >= startDate && r.Timestamp < endDate).ToList();
 
-            var plotHtmls = CreateSubplots(recordsForPeriod, SelectedTimeSeries, SelectedView, startDate, endDate);
+            var selectedGroups = (SelectedGroups == null || !SelectedGroups.Any())
+                ? defaultCheckedGroups
+                : SelectedGroups.ToHashSet();
 
-            var labelsByGroup = _pvRecordLabels ?? new Dictionary<string, List<string>>();
+            // If SelectedTimeSeries is null/empty or the period was changed, reset to all items of checked groups
+
+            if (SelectedTimeSeries == null || !SelectedTimeSeries.Any())
+            {
+                // Only reset if not provided
+                SelectedTimeSeries = (_pvRecordLabels ?? new Dictionary<string, List<string>>())
+                    .Where(g => selectedGroups.Contains(g.Key))
+                    .SelectMany(g => g.Value)
+                    .ToList();
+            }
+            else if (!string.IsNullOrEmpty(groupChanged))
+            {
+                // Only auto-select all series for the group that was just checked
+                var allGroupLabels = _pvRecordLabels ?? new Dictionary<string, List<string>>();
+                var selectedTimeSeriesSet = SelectedTimeSeries.ToHashSet();
+
+                if (selectedGroups.Contains(groupChanged) && allGroupLabels.TryGetValue(groupChanged, out var labels))
+                {
+                    // If none of the group's series are selected, select all
+                    if (!labels.Any(label => selectedTimeSeriesSet.Contains(label)))
+                    {
+                        foreach (var label in labels)
+                            selectedTimeSeriesSet.Add(label);
+                    }
+                }
+                SelectedTimeSeries = selectedTimeSeriesSet.ToList();
+            }
+            // else: do nothing, preserve user's manual series selection
+
+            // Always filter SelectedTimeSeries to only include series from checked groups
+            var validSeries = (_pvRecordLabels ?? new Dictionary<string, List<string>>())
+                .Where(g => selectedGroups.Contains(g.Key))
+                .SelectMany(g => g.Value)
+                .ToHashSet();
+
+            SelectedTimeSeries = SelectedTimeSeries.Where(ts => validSeries.Contains(ts)).ToList();
+
+            var labelsByGroup = (_pvRecordLabels ?? new Dictionary<string, List<string>>())
+                .Where(g => selectedGroups.Contains(g.Key))
+                .ToDictionary(g => g.Key, g => g.Value);
+
+            var plotHtmls = CreateSubplots(recordsForPeriod, SelectedTimeSeries, SelectedView, startDate, endDate, labelsByGroup.Keys.ToList());
 
             model = new VisualizationViewModel
             {
@@ -168,13 +257,23 @@ namespace PV.Forecasting.App.Controllers
                 PeriodOptions = GetPeriodOptions(),
                 SelectedPeriod = SelectedPeriod,
                 SelectedView = SelectedView,
-                SelectedDate = SelectedDate ?? DateTime.Today,
+                SelectedDate = SelectedDate ?? currentDate,
                 MinYear = minDate.Year,
                 MaxYear = maxDate.Year,    // ... existing properties ...
                 ParameterGroupsByUnit = parameterGroups,
                 //SelectedParameters = SelectedParameters // You may need to add logic to set this list
                                                         // ... other properties ...
             };
+
+            // Update GroupChecked based on user selection
+            model.GroupChecked = parameterGroups.Keys.ToDictionary(
+                g => g,
+                g => (SelectedGroups == null || !SelectedGroups.Any())
+                ? defaultCheckedGroups.Contains(g)
+                : SelectedGroups.Contains(g)
+                );
+
+            System.Diagnostics.Debug.WriteLine($"[DEBUG] Model.SelectedTimeSeries before view: {string.Join(", ", model.SelectedTimeSeries ?? new List<string>())}");
 
             return View(model);
         }
@@ -183,11 +282,11 @@ namespace PV.Forecasting.App.Controllers
         {
             return period switch
             {
-                "Day" => (date.Date, date.Date.AddDays(1)),
-                "Week" => (GetStartOfWeek(date), GetStartOfWeek(date).AddDays(7)),
-                "Month" => (new DateTime(date.Year, date.Month, 1), new DateTime(date.Year, date.Month, 1).AddMonths(1)),
-                "Year" => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 1, 1).AddYears(1)),
-                "All" => (minDate, maxDate.AddDays(1)),
+                PeriodDay => (date.Date, date.Date.AddDays(1)),
+                PeriodWeek => (GetStartOfWeek(date), GetStartOfWeek(date).AddDays(7)),
+                PeriodMonth => (new DateTime(date.Year, date.Month, 1), new DateTime(date.Year, date.Month, 1).AddMonths(1)),
+                PeriodYear => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 1, 1).AddYears(1)),
+                PeriodAll => (minDate, maxDate.AddDays(1)),
                 _ => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 1, 1).AddYears(1))
             };
         }
@@ -198,13 +297,19 @@ namespace PV.Forecasting.App.Controllers
             return date.AddDays(-1 * diff).Date;
         }
 
-        private Dictionary<string, (string HtmlWithLegend, string HtmlWithoutLegend)> CreateSubplots(List<PvRecordLists> records, List<string> selectedTimeSeries, string viewName, DateTime startDate, DateTime endDate)
+        private Dictionary<string, (string HtmlWithLegend, string HtmlWithoutLegend)> 
+            CreateSubplots(List<PvRecordLists> records, 
+            List<string> selectedTimeSeries, 
+            string viewName, 
+            DateTime startDate,
+            DateTime endDate,
+            List<string> selectedGroups)
         {
             var plotHtmls = new Dictionary<string, (string HtmlWithLegend, string HtmlWithoutLegend)>();
             if (records is null || !records.Any() || _pvRecordLabels is null) return plotHtmls;
 
             var activePlotGroups = _pvRecordLabels
-                .Where(g => g.Value.Any(ts => selectedTimeSeries.Contains(ts)))
+                .Where(g => selectedGroups.Contains(g.Key) && g.Value.Any(ts => selectedTimeSeries.Contains(ts)))
                 .ToDictionary(g => g.Key, g => g.Value);
 
             if (!activePlotGroups.Any()) return plotHtmls;
@@ -238,7 +343,7 @@ namespace PV.Forecasting.App.Controllers
                     var timeSeriesName = timeSeriesInGroup[j];
                     if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
-                    bool isSum = groupName is "Power" or "Radiation";
+                    bool isSum = groupName is PowerGroup or RadiationGroup;
                     Func<IEnumerable<double?>, double?> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
                     var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, timeSeriesName), aggregationFunc);
                     var plotColor = GetColorForTimeSeries(timeSeriesName, groupName, j);
@@ -293,25 +398,25 @@ namespace PV.Forecasting.App.Controllers
         private Color GetColorForTimeSeries(string timeSeriesName, string groupName, int seriesIndex)
         {
             // Power group has fixed, named colors
-            if (groupName == "Power")
+            if (groupName == PowerGroup)
             {
                 return timeSeriesName switch
                 {
-                    PvConstants.MeasuredPower => Colors.Red,
-                    PvConstants.PowerGR => Colors.Purple,
-                    PvConstants.PowerGRTW => Colors.Blue,
-                    PvConstants.PowerGRTWSF => Colors.Green,
+                    MeasuredPower => Colors.Red,
+                    PowerGR => Colors.Purple,
+                    PowerGRTW => Colors.Blue,
+                    PowerGRTWSF => Colors.Green,
                     _ => Colors.Gray
                 };
             }
-            if (groupName == "Residuals")
+            if (groupName == ResidualsGroup)
             {
                 return timeSeriesName switch
                 {
-                    PvConstants.Reference => Colors.Red,
-                    PvConstants.UflGR => Colors.Purple,
-                    PvConstants.UflGRTW => Colors.Blue,
-                    PvConstants.UflGRTWSF => Colors.Green,
+                    Reference => Colors.Red,
+                    UflGR => Colors.Purple,
+                    UflGRTW => Colors.Blue,
+                    UflGRTWSF => Colors.Green,
                     _ => Colors.Gray
                 };
             }
@@ -326,12 +431,12 @@ namespace PV.Forecasting.App.Controllers
         {
             switch (view)
             {
-                case "Hourly":
+                case IntervalHourly:
                     return records.GroupBy(r => new { r.Timestamp.Year, r.Timestamp.Month, r.Timestamp.Day, r.Timestamp.Hour })
                                   .Select(g => new DataPointViewModel { Timestamp = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day, g.Key.Hour, 0, 0), Value = aggregationFunc(g.Select(valueSelector)) })
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
-                case "3-hourly":
+                case Interval3Hourly:
                     return records.GroupBy(r => new { r.Timestamp.Date, HourBlock = r.Timestamp.Hour / 3 })
                                   .Select(g => new DataPointViewModel {
                                       Timestamp = g.Key.Date.AddHours(g.Key.HourBlock * 3),
@@ -339,27 +444,27 @@ namespace PV.Forecasting.App.Controllers
                                   })
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
-                case "Daily":
+                case IntervalDaily:
                     return records.GroupBy(r => r.Timestamp.Date)
                                   .Select(g => new DataPointViewModel { Timestamp = g.Key, Value = aggregationFunc(g.Select(valueSelector)) })
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
-                case "Weekly":
+                case IntervalWeekly:
                     return records.GroupBy(r => new { Year = System.Globalization.ISOWeek.GetYear(r.Timestamp), Week = System.Globalization.ISOWeek.GetWeekOfYear(r.Timestamp) })
                                   .Select(g => new DataPointViewModel { Timestamp = System.Globalization.ISOWeek.ToDateTime(g.Key.Year, g.Key.Week, DayOfWeek.Monday), Value = aggregationFunc(g.Select(valueSelector)) })
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
-                case "Monthly":
+                case IntervalMonthly:
                     return records.GroupBy(r => new { r.Timestamp.Year, r.Timestamp.Month })
                                   .Select(g => new DataPointViewModel { Timestamp = new DateTime(g.Key.Year, g.Key.Month, 1), Value = aggregationFunc(g.Select(valueSelector)) })
                                   .OrderBy(d => d.Timestamp)
                                   .ToList();
-                case "Yearly":
+                case IntervalYearly:
                     return records.GroupBy(r => r.Timestamp.Year)
                                  .Select(g => new DataPointViewModel { Timestamp = new DateTime(g.Key, 1, 1), Value = aggregationFunc(g.Select(valueSelector)) })
                                  .OrderBy(d => d.Timestamp)
                                   .ToList();
-                case "15-min":
+                case Interval15Min:
                 default:
                     return records.Select(r => new DataPointViewModel { Timestamp = r.Timestamp, Value = valueSelector(r) }).ToList();
             }
@@ -369,26 +474,26 @@ namespace PV.Forecasting.App.Controllers
         {
             return groupName switch
             {
-                "Power" => record.Power.TryGetValue(label, out var value) ? value : null,
-                "Residuals" => record.Residuals.TryGetValue(label, out var value) ? value : null,
-                "Radiation" => record.Radiation.TryGetValue(label, out var value) ? value : null,
-                "Temperature" => record.Temperature.TryGetValue(label, out var value) ? value : null,
-                "Wind Speed" => record.WindSpeed.TryGetValue(label, out var value) ? value : null,
-                "Snow Depth" => record.SnowDepth.TryGetValue(label, out var value) ? value : null,
-                "Relative Humidity" => record.RelativeHumidity.TryGetValue(label, out var value) ? value : null,
+                PowerGroup => record.Power.TryGetValue(label, out var value) ? value : null,
+                ResidualsGroup => record.Residuals.TryGetValue(label, out var value) ? value : null,
+                RadiationGroup => record.Radiation.TryGetValue(label, out var value) ? value : null,
+                TemperatureGroup => record.Temperature.TryGetValue(label, out var value) ? value : null,
+                WindspeedGroup => record.WindSpeed.TryGetValue(label, out var value) ? value : null,
+                SnowDepthGroup => record.SnowDepth.TryGetValue(label, out var value) ? value : null,
+                HumidityGroup => record.RelativeHumidity.TryGetValue(label, out var value) ? value : null,
                 _ => null
             };
         }
 
         private List<SelectListItem> GetViewOptions() =>
         [
-            new("15-min", "15-min"),
-            new("Hourly", "Hourly"),
-            new("3-hourly", "3-hourly"),
-            new("Daily", "Daily"),
-            new("Weekly", "Weekly"),
-            new("Monthly", "Monthly"),
-            new("Yearly", "Year")
+            new(Interval15Min, Interval15MinName),
+            new(IntervalHourly, IntervalHourlyName),
+            new(Interval3Hourly, Interval3HourlyName),
+            new(IntervalDaily, IntervalDailyName),
+            new(IntervalWeekly, IntervalWeeklyName),
+            new(IntervalMonthly, IntervalMonthlyName),
+            new(IntervalYearly, IntervalYearlyName)
         ];
 
         private List<SelectListItem> GetFilteredViewOptions(string period)
@@ -396,22 +501,22 @@ namespace PV.Forecasting.App.Controllers
             var allOptions = GetViewOptions();
             return period switch
             {
-                "Day" => allOptions.Where(o => o.Value == "15-min" || o.Value == "Hourly" || o.Value == "3-hourly").ToList(),
-                "Week" => allOptions.Where(o => o.Value != "Weekly" && o.Value != "Monthly" && o.Value != "Yearly").ToList(),
-                "Month" => allOptions.Where(o => o.Value != "15-min" && o.Value != "Monthly" && o.Value != "Yearly").ToList(),
-                "Year" => allOptions.Where(o => o.Value != "15-min" && o.Value != "Hourly" && o.Value != "Yearly").ToList(),
-                "All" => allOptions.Where(o => o.Value != "15-min" && o.Value != "Hourly" && o.Value != "3-hourly").ToList(),
+                PeriodDay => allOptions.Where(o => o.Value == Interval15MinName || o.Value == IntervalHourlyName || o.Value == Interval3HourlyName).ToList(),
+                PeriodWeek => allOptions.Where(o => o.Value != IntervalWeeklyName && o.Value != IntervalMonthlyName && o.Value != IntervalYearlyName).ToList(),
+                PeriodMonth => allOptions.Where(o => o.Value != Interval15MinName && o.Value != IntervalMonthlyName && o.Value != IntervalYearlyName).ToList(),
+                PeriodYear => allOptions.Where(o => o.Value != Interval15MinName && o.Value != IntervalHourlyName && o.Value != IntervalYearlyName).ToList(),
+                PeriodAll => allOptions.Where(o => o.Value != Interval15MinName && o.Value != IntervalHourlyName && o.Value != Interval3HourlyName).ToList(),
                 _ => allOptions
             };
         }
 
         private List<SelectListItem> GetPeriodOptions() =>
         [
-            new("Day", "Day"),
-            new("Week", "Week"),
-            new("Month", "Month"),
-            new("Year", "Year"),
-            new("All", "All")
+            new(PeriodDay, PeriodDayName),
+            new(PeriodWeek, PeriodWeekName),
+            new(PeriodMonth, PeriodMonthName),
+            new(PeriodYear, PeriodYearName),
+            new(PeriodAll, PeriodAllName)
         ];
         #endregion
     }

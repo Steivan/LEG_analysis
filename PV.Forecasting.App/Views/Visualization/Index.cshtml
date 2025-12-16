@@ -35,6 +35,19 @@
         </div>
     </div>
 
+    <div style="margin-bottom: 10px;">
+        <span>Show Groups:</span>
+        @foreach (var group in Model.GroupChecked.Keys)
+        {
+            <label style="margin-right: 1em;">
+                <input type="checkbox" name="SelectedGroups" value="@group"
+                       @(Model.GroupChecked[group] ? "checked" : "")
+                       onchange="onGroupChange('@group')" />
+                @group
+            </label>
+        }
+    </div>
+
     <div style="display: flex; flex-direction: column;">
 
         @{
@@ -158,6 +171,21 @@
 
         document.body.appendChild(form);
         form.submit();
+    }
+
+    function onGroupChange(group) {
+    var form = document.getElementById('visualizationForm');
+    // Remove any previous groupChanged input
+    var old = document.getElementById('groupChangedInput');
+    if (old) old.remove();
+    // Add new hidden input
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'groupChanged';
+    input.value = group;
+    input.id = 'groupChangedInput';
+    form.appendChild(input);
+    form.submit();
     }
 
 </script>
