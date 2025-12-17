@@ -4,6 +4,7 @@ using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using LEG.PV.Data.Processor.Helpers;
 
 namespace MeteoConsoleApp
 {
@@ -18,7 +19,7 @@ namespace MeteoConsoleApp
             List<string> selectedStationsIdList = ["SMA", "KLO", "HOE", "UEB"];
 
             var client = new WeatherForecastClient();
-            var blender = new ForecastBlender();
+            var blender = new MeteoForecastSeriesBlender();
 
             await GetForecastForLatLon(client, blender, lat, lon);
             await GetForecastForZipList(client, blender, selectedZips);
@@ -200,21 +201,21 @@ namespace MeteoConsoleApp
 
         public static async Task GetForecastForLatLon(
             WeatherForecastClient client, 
-            ForecastBlender blender, 
+            MeteoForecastSeriesBlender blender, 
             double lat, double lon)
         {
             var longCast = await client.Get16DayMeteoParametersAsync(lat, lon);
             var midCast = await client.Get7DayMeteoParametersAsync(lat, lon);
             var nowCast = await client.GetNowcast15MinuteMeteoParametersAsync(lat, lon);
 
-            var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+            var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
 
             printForecastSamples($"Lat: {lat:F4}, Lon: {lon:F4}", longCast, midCast, nowCast, blendedForecast);
         }
 
         public static async Task GetForecastForZipList(
             WeatherForecastClient client, 
-            ForecastBlender blender,
+            MeteoForecastSeriesBlender blender,
             List<string> selectedZips)
         {
             foreach (var zip in selectedZips)
@@ -223,7 +224,7 @@ namespace MeteoConsoleApp
                 var midCast = await client.Get7DayMeteoParametersByZipCodeAsync(zip);
                 var nowCast = await client.GetNowcast15MinuteMeteoParametersByZipCodeAsync(zip);
 
-                var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+                var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
 
                 printForecastSamples($"ZIP: {zip}", longCast, midCast, nowCast, blendedForecast);
             }
@@ -231,7 +232,7 @@ namespace MeteoConsoleApp
 
         public static async Task GetForecastForWeatherStations(
             WeatherForecastClient client, 
-            ForecastBlender blender,
+            MeteoForecastSeriesBlender blender,
             List<string> selectedStationsIdList)
         {
             foreach (var stationId in selectedStationsIdList)
@@ -240,7 +241,7 @@ namespace MeteoConsoleApp
                 var midCast = await client.Get7DayMeteoParametersByStationIdAsync(stationId);
                 var nowCast = await client.GetNowcast15MinuteMeteoParametersByStationIdAsync(stationId);
 
-                var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+                var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
 
                 printForecastSamples($"Station ID: {stationId}", longCast, midCast, nowCast, blendedForecast);
             }

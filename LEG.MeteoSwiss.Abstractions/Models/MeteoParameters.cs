@@ -174,12 +174,6 @@ namespace LEG.MeteoSwiss.Abstractions.Models
                 var weightRadiation = radiation * nonSnow * nonFog;
                 var weightSnow = radiation * (1.0 - nonSnow);
                 var weightFog = radiation * nonSnow * (1.0 - nonFog);
-                // Residual = 1.0 - weightRadiation - weightSnow - weigtFog = nonRadiation =>  "nighttime" records 
-
-                if (SnowDepth.Value > 2.0 && sinSunElevation > 0)
-                {
-                    // DEBUG chexkpoint
-                }
 
                 return (weightRadiation, weightSnow, weightFog);
             }

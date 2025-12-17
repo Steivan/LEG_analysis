@@ -13,6 +13,7 @@
     <ProjectReference Include="..\LEG.CoreLib\LEG.CoreLib.csproj" />
     <ProjectReference Include="..\LEG.MeteoSwiss.Abstractions\LEG.MeteoSwiss.Abstractions.csproj" />
     <ProjectReference Include="..\LEG.MeteoSwiss.Client\LEG.MeteoSwiss.Client.csproj" />
+    <ProjectReference Include="..\LEG.PV.Data.Processor\LEG.PV.Data.Processor.csproj" />
   </ItemGroup>
 
 </Project>

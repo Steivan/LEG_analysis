@@ -8,6 +8,7 @@ using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using System.Data;
 using LEG.PV.Core.Models;
+using LEG.PV.Data.Processor.Helpers;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
@@ -972,14 +973,14 @@ namespace LEG.PV.Data.Processor
 
             // Fetch forecasts for all stations
             var forecastClient = new WeatherForecastClient();
-            var blender = new ForecastBlender();
+            var blender = new MeteoForecastSeriesBlender();
             var blendedForecastPerStation = new List<List<MeteoParameters>>();
             foreach (var stationId in SelectedStationsIdList)
             {
                 var longCast = await forecastClient.Get16DayMeteoParametersByStationIdAsync(stationId);
                 var midCast = await forecastClient.Get7DayMeteoParametersByStationIdAsync(stationId);
                 var nowCast = await forecastClient.GetNowcast15MinuteMeteoParametersByStationIdAsync(stationId);
-                var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+                var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
                 blendedForecastPerStation.Add(blendedForecast);
             }
 

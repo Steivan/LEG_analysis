@@ -92,11 +92,6 @@ void ProcessSyntheticModelData(
     var defaultPriors = new PvPriors();
     var defaultModelParams = defaultPriors.PriorMeans;
 
-    if (defaultModelParams.IsNan())
-    {
-        var DEBUG = 1.0;
-    }
-
     var (filteredValidRecors, initialMeanSquaredError) = GetFilteredRecords(
         pvRecords,
         installedPower,
@@ -220,11 +215,6 @@ void ProcessPvData(
         }
     };
 
-    if (hullPriors.PriorMeans.IsNan())
-    {
-        var DEBUG = 1;
-    }
-
     Console.WriteLine();
     Console.WriteLine($"PV Site: {siteId} with {installedPower / 1000:F2} kWp");
     Console.WriteLine("Bayesian Calibration: default priors / no filter");
@@ -236,11 +226,6 @@ void ProcessPvData(
         periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
-
-    if (thetaCalibratedList[^1].IsNan())
-    {
-        var DEBUG = 1;
-    }
 
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 
@@ -256,11 +241,6 @@ void ProcessPvData(
             periodsPerHour: periodsPerHour,
             tolerance: tolerance,
             maxIterations: maxIterations);
-
-        if (thetaCalibratedList[^1].IsNan())
-        {
-            var DEBUG = 1;
-        }
 
         (minError, maxError, meanError0, binSize, binCenters, binCounts) = PvErrorStatistics.ComputeHistograms(
             pvRecords,
@@ -284,11 +264,6 @@ void ProcessPvData(
             tolerance: tolerance,
             maxIterations: maxIterations);
 
-        if (thetaCalibratedList[^1].IsNan())
-        {
-            var DEBUG = 1;
-        }
-
         PrintCalibrationResults(hullPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
     }
 
@@ -301,11 +276,6 @@ void ProcessPvData(
         periodsPerHour: periodsPerHour,
         tolerance: tolerance,
         maxIterations: maxIterations);
-
-    if (thetaCalibratedList[^1].IsNan())
-    {
-        var DEBUG = 1;
-    }
 
     PrintCalibrationResults(defaultPriors, thetaModel, thetaCalibratedList, iterations, maxIterations, meanError, initialMeanSquaredError);
 

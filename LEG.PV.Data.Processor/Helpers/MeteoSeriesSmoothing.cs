@@ -1,11 +1,8 @@
-﻿
-using LEG.MeteoSwiss.Abstractions.Models;
-using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
-namespace LEG.MeteoSwiss.Client.Forecast
+namespace LEG.PV.Data.Processor.Helpers
 {
-
-internal class SmoothBlender
+    internal class MeteoSeriesSmoothing
     {
         const double DegToRad = Math.PI / 180;
 
@@ -17,7 +14,7 @@ internal class SmoothBlender
                 sumWeights += weight;
             }
 
-            var filterIndices = new int[] {  -3,   -2,   -1,    0,    1,   2 };     // Symmetric filter shifted to the left for causal filtering (aggregated hourly data is reported at the end of 1h period
+            var filterIndices = new int[] { -3, -2, -1, 0, 1, 2 };     // Symmetric filter shifted to the left for causal filtering (aggregated hourly data is reported at the end of 1h period
             List<List<double>> filterWeightsList = [
                 [ 0.10, 0.15, 0.25, 0.25, 0.15, 0.10 ],
                 [ 0.05, 0.15, 0.30, 0.30, 0.15, 0.05 ],
@@ -114,4 +111,3 @@ internal class SmoothBlender
         }
     }
 }
-

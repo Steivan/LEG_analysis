@@ -1,22 +1,41 @@
-﻿
-using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
-namespace LEG.MeteoSwiss.Client.Forecast
+namespace LEG.PV.Data.Processor.Helpers
 {
-    public class ForecastBlender
+    public class MeteoForecastSeriesBlender
     {
-        public async Task<List<MeteoParameters>> CreateBlendedForecast(
-            DateTime now, // <-- Reference time
-            List<MeteoParameters> longTermData,
-            List<MeteoParameters> midTermData,
-            List<MeteoParameters> shortTermData,
-            int smoothingFilterId = 0)      // smoothing filters 0, 1, 2, ... ; -1 = no smoothing
+
+        public async Task<Dictionary<DateTime, MeteoParameters>> CreateBlendedForecastDictFromDicts(
+            DateTime now,                                           // <-- Reference time
+            Dictionary<DateTime, MeteoParameters> farCastSeries,
+            Dictionary<DateTime, MeteoParameters> midCastSeries,
+            Dictionary<DateTime, MeteoParameters> nearCastSeries,
+            int smoothingFilterId = 0)                              // smoothing filters 0, 1, 2, ... ; -1 = no smoothing
+        {
+            var blender = new MeteoForecastSeriesBlender();
+            var foreCastSampleList = await blender.CreateBlendedForecastListFromLists(
+                now,
+                farCastSeries: MeteoSeriesConverter.MeteoDictToList(farCastSeries),
+                midCastSeries: MeteoSeriesConverter.MeteoDictToList(midCastSeries),
+                nearCastSeries: MeteoSeriesConverter.MeteoDictToList(nearCastSeries),
+                smoothingFilterId: smoothingFilterId
+            );
+
+            return MeteoSeriesConverter.MeteoListToDict(foreCastSampleList);
+        }
+
+        public async Task<List<MeteoParameters>> CreateBlendedForecastListFromLists(
+            DateTime now,                                           // <-- Reference time
+            List<MeteoParameters> farCastSeries,
+            List<MeteoParameters> midCastSeries,
+            List<MeteoParameters> nearCastSeries,
+            int smoothingFilterId = 0)                              // smoothing filters 0, 1, 2, ... ; -1 = no smoothing
         {
             // --- STEP 1: Initialize the full 15-minute time axis ---
 
             // Find the total duration from the longest forecast (URL 1)
-            var startTime = longTermData.Min(p => p.Time).AddMinutes(-45);
-            var endTime = longTermData.Max(p => p.Time);
+            var startTime = farCastSeries.Min(p => p.Time).AddMinutes(-45);
+            var endTime = farCastSeries.Max(p => p.Time);
 
             var blendedData = new Dictionary<DateTime, MeteoParameters>();
             var quarterInterval = TimeSpan.FromMinutes(15);
@@ -30,7 +49,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
 
             // --- STEP 2: Apply Long-Term Base (Hourly to 15-min Upscaling) ---
 
-            foreach (var hourData in longTermData.Where(p => p.Temperature.HasValue))
+            foreach (var hourData in farCastSeries.Where(p => p.Temperature.HasValue))
             {
                 // Upscale the hourly data to four 15-minute slots
                 for (int i = 0; i < 4; i++)
@@ -51,7 +70,7 @@ namespace LEG.MeteoSwiss.Client.Forecast
             // --- STEP 3: Patch with Mid-Term High-Res (Hourly ICON-D2) ---
             // Overwrites the Long-Term data for the first ~3 days.
 
-            foreach (var hourData in midTermData.Where(p => p.Temperature.HasValue))
+            foreach (var hourData in midCastSeries.Where(p => p.Temperature.HasValue))
             {
                 // Repeat the upscaling logic: ICON-D2 is higher quality than ECMWF
                 for (int i = 0; i < 4; i++)
@@ -66,12 +85,12 @@ namespace LEG.MeteoSwiss.Client.Forecast
             }
 
             // Smooth after mid-term patching
-            if (smoothingFilterId >= 0) blendedData = SmoothBlender.SmoothBlendedPeriod(blendedData, filterId: smoothingFilterId);
+            if (smoothingFilterId >= 0) blendedData = MeteoSeriesSmoothing.SmoothBlendedPeriod(blendedData, filterId: smoothingFilterId);
 
             // --- STEP 4: Patch with Short-Term High-Res (15-min Nearcast) ---
             // Overwrites all prior data for the first ~48 hours.
 
-            foreach (var quarterData in shortTermData.Where(p => p.Temperature.HasValue))
+            foreach (var quarterData in nearCastSeries.Where(p => p.Temperature.HasValue))
             {
                 var quarterTime = quarterData.Time;
                 if (blendedData.ContainsKey(quarterData.Time))

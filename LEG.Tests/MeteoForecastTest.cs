@@ -2,6 +2,7 @@
 using LEG.MeteoSwiss.Client.Forecast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using LEG.PV.Data.Processor.Helpers;
 
 namespace LEG.Tests
 {
@@ -18,13 +19,13 @@ namespace LEG.Tests
             var (lat, lon) = (47.377925, 8.565742);     // SMA
 
             var client = new WeatherForecastClient();
-            var blender = new ForecastBlender();
+            var blender = new MeteoForecastSeriesBlender();
 
             var longCast = await client.Get16DayMeteoParametersAsync(lat, lon);
             var midCast = await client.Get7DayMeteoParametersAsync(lat, lon);
             var nowCast = await client.GetNowcast15MinuteMeteoParametersAsync(lat, lon);
 
-            var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+            var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
 
             printForecastSamples($"Lat: {lat:F4}, Lon: {lon:F4}", longCast, midCast, nowCast, blendedForecast);
         }
@@ -33,7 +34,7 @@ namespace LEG.Tests
         public async Task GetForecastForZipList()
         {
             var client = new WeatherForecastClient();
-            var blender = new ForecastBlender();
+            var blender = new MeteoForecastSeriesBlender();
 
             foreach (var zip in selectedZips)
             {
@@ -41,7 +42,7 @@ namespace LEG.Tests
                 var midCast = await client.Get7DayMeteoParametersByZipCodeAsync(zip);
                 var nowCast = await client.GetNowcast15MinuteMeteoParametersByZipCodeAsync(zip);
 
-                var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+                var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
 
                 printForecastSamples($"ZIP: {zip}", longCast, midCast, nowCast, blendedForecast);
             }
@@ -51,7 +52,7 @@ namespace LEG.Tests
         public async Task GetForecastForWeatherStations()
         {
             var client = new WeatherForecastClient();
-            var blender = new ForecastBlender();
+            var blender = new MeteoForecastSeriesBlender();
 
             foreach (var stationId in selectedStationsIdList)
             {
@@ -59,7 +60,7 @@ namespace LEG.Tests
                 var midCast = await client.Get7DayMeteoParametersByStationIdAsync(stationId);
                 var nowCast = await client.GetNowcast15MinuteMeteoParametersByStationIdAsync(stationId);
 
-                var blendedForecast = await blender.CreateBlendedForecast(DateTime.UtcNow, longCast, midCast, nowCast);
+                var blendedForecast = await blender.CreateBlendedForecastListFromLists(DateTime.UtcNow, longCast, midCast, nowCast);
 
                 printForecastSamples($"Station ID: {stationId}", longCast, midCast, nowCast, blendedForecast);
             }

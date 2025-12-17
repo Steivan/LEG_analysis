@@ -1,5 +1,4 @@
-﻿using LEG.MeteoSwiss.Abstractions.Models;
-using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Core.Models
 {

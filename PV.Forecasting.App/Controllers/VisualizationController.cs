@@ -64,15 +64,10 @@ namespace PV.Forecasting.App.Controllers
             bool reset = false,
             string groupChanged = null)
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] groupChanged: {groupChanged}");
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] SelectedGroups: {string.Join(", ", SelectedGroups ?? new List<string>())}");
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] SelectedTimeSeries: {string.Join(", ", SelectedTimeSeries ?? new List<string>())}");
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Request.Query: {string.Join(", ", Request.Query.Select(q => q.Key + "=" + q.Value))}");
-            
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(0, displayPeriod: 2);
+                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistoryAndCalculated(1, displayPeriod: 2);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)
@@ -272,8 +267,6 @@ namespace PV.Forecasting.App.Controllers
                 ? defaultCheckedGroups.Contains(g)
                 : SelectedGroups.Contains(g)
                 );
-
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] Model.SelectedTimeSeries before view: {string.Join(", ", model.SelectedTimeSeries ?? new List<string>())}");
 
             return View(model);
         }
