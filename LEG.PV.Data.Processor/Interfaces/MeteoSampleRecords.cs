@@ -55,21 +55,23 @@ namespace LEG.PV.Data.Processor.Interfaces
                 var snowDepth = hasSnow ? aSnowDepth * (cosAnnual -0.5) : 0.0;
                 var relativeHumidity = 100.0 - aRelativeHumidity * (1.0 - cosAnnual * cosDiurnal);
                 var dewPoint = temperature - (100 - relativeHumidity) / 5;
+                var radiationVariance = Math.Pow(directRadiation / 50.0, 2);
 
                 samples[timestamp] = new MeteoParameters(
                     time: timestamp,
                     interval: interval,
-                    sunshineDuration: sunshineDuration,
-                    directRadiation: directRadiation,
-                    directNormalIrradiance: directNormalIrradiance,
-                    globalRadiation: directRadiation + diffuseRadiation,
-                    diffuseRadiation: diffuseRadiation,
-                    temperature: temperature,
-                    windSpeed: windSpeed,
-                    windDirection: windDirection,
-                    snowDepth: snowDepth,
-                    relativeHumidity: relativeHumidity,
-                    dewPoint: dewPoint
+                    sunshineDuration: Math.Round(sunshineDuration, 0),
+                    directRadiation: Math.Round(directRadiation, 0),
+                    directNormalIrradiance: Math.Round(directNormalIrradiance, 0),
+                    globalRadiation: Math.Round(directRadiation + diffuseRadiation, 0),
+                    diffuseRadiation: Math.Round(diffuseRadiation, 0),
+                    temperature: Math.Round(temperature, 2),
+                    windSpeed: Math.Round(windSpeed, 1),
+                    windDirection: Math.Round(windDirection, 0) % 360.0,
+                    snowDepth: Math.Round(snowDepth, 1),
+                    relativeHumidity: Math.Round(relativeHumidity, 0),
+                    dewPoint: Math.Round(dewPoint, 2),
+                    radiationVariance: radiationVariance
                     );
 
             }

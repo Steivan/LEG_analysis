@@ -6,7 +6,7 @@ namespace LEG.PV.Data.Processor.Helpers
     {
         const double DegToRad = Math.PI / 180.0;
 
-        internal static (double windSpeed, double WindDirection) AggregatedWindVectorsFromList(List<MeteoParameters> inputRecords, double[]? weights = null)
+        internal static (double windSpeed, double WindDirection) MeanWindVectorFromList(List<MeteoParameters> inputRecords, double[]? weights = null)
         {
             var count = inputRecords.Count;
             if (count == 0)
@@ -44,9 +44,9 @@ namespace LEG.PV.Data.Processor.Helpers
             return (windSpeed, windDirection);
         }
 
-        internal static (double windSpeed, double WindDirection) AggregatedWindVectorsFromDict(Dictionary<DateTime, MeteoParameters> inputRecords, double[]? weights = null)
+        internal static (double windSpeed, double WindDirection) MeanWindVectorFromDict(Dictionary<DateTime, MeteoParameters> inputRecords, double[]? weights = null)
         {
-            return AggregatedWindVectorsFromList(MeteoSeriesConverter.MeteoDictToList(inputRecords), weights);
+            return MeanWindVectorFromList(MeteoSeriesConverter.MeteoDictToList(inputRecords), weights);
         }
     }
 }

@@ -1,20 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Data.Processor.Helpers
 {
-    internal class MeteoIntervalConverter
+    public class MeteoIntervalConverter
     {
+        public static bool FirstTimeStampIsSynced(Dictionary<DateTime, MeteoParameters> inputSeriesDict)
+        {
+            var kvp = inputSeriesDict.First();
+            var intervalMinutes = (int)kvp.Value.Interval.TotalMinutes;
 
-        internal static Dictionary<DateTime, MeteoParameters> MeteoIntervalSplitter(Dictionary<DateTime, MeteoParameters> inputSeriesDict, int subIntervalsTo)
+            return GetSyncDelta(kvp.Key.Hour, kvp.Key.Minute, intervalMinutes) == 0;
+        }
+
+        public static Dictionary<DateTime, MeteoParameters> SyncTimeStamps(Dictionary<DateTime, MeteoParameters> inputSeriesDict)
+        {
+            var targetMinutes = (int)inputSeriesDict.First().Value.Interval.TotalMinutes;
+            var syncedDict = new Dictionary<DateTime, MeteoParameters>();
+            foreach (var kvp in inputSeriesDict)
+            {
+                var deltaMinutes = GetSyncDelta(kvp.Key.Hour, kvp.Key.Minute, targetMinutes);
+                var syncedTime = new DateTime(kvp.Key.Year, kvp.Key.Month, kvp.Key.Day, kvp.Key.Hour, kvp.Key.Minute, 0).AddMinutes(deltaMinutes);
+                syncedDict[syncedTime] = kvp.Value;
+            }
+            return syncedDict;
+        }
+
+        public static Dictionary<DateTime, MeteoParameters> MeteoIntervalSplitter(Dictionary<DateTime, MeteoParameters> inputSeriesDict, int subIntervalsTo)
         {
             if (subIntervalsTo < 1) throw new ArgumentException("Target interval must be a finite fraction of the input interval.");
             if (subIntervalsTo == 1) return inputSeriesDict;
 
             var keys = inputSeriesDict.Keys.ToList();
             var inputInterval = inputSeriesDict[keys[0]].Interval;
+            var inputAnchor = inputSeriesDict[keys[0]].Anchor;
             var targetInterval = inputInterval / subIntervalsTo;
+            TimeSpan offset = 
+                inputAnchor == IntervalAnchor.Start ? TimeSpan.FromMinutes(0) : 
+                inputAnchor == IntervalAnchor.Midpoint ? targetInterval * (subIntervalsTo - 1) / 2 :
+                targetInterval * (subIntervalsTo - 1);
 
             var splitSeriesDict = new Dictionary<DateTime, MeteoParameters>();
             foreach (var key in keys)
@@ -24,14 +48,14 @@ namespace LEG.PV.Data.Processor.Helpers
 
                 for (int i = 0; i < subIntervalsTo; i++)
                 {
-                    var subIntervalTime = inputTimeStamp.Add(targetInterval * i);
+                    var subIntervalTime = inputTimeStamp.Add(-offset + targetInterval * i);
                     splitSeriesDict[subIntervalTime] = SplitMeteoRecord(inputRecord, subIntervalTime, subIntervalsTo);
                 }
             }
 
             return splitSeriesDict;
         }
-        internal static Dictionary<DateTime, MeteoParameters> MeteoIntervalAggregator(Dictionary<DateTime, MeteoParameters> inputSeriesDict, int subIntervalsFrom)
+        public static Dictionary<DateTime, MeteoParameters> MeteoIntervalAggregator(Dictionary<DateTime, MeteoParameters> inputSeriesDict, int subIntervalsFrom)
         {
             if (subIntervalsFrom < 1) throw new ArgumentException("Target interval must be greater than or equal to input interval.");
             if (subIntervalsFrom == 1) return inputSeriesDict;
@@ -57,7 +81,7 @@ namespace LEG.PV.Data.Processor.Helpers
             return aggregatedSeries;
         }
 
-        internal static Dictionary<DateTime, MeteoParameters> MeteoFromToConvertor(Dictionary<DateTime, MeteoParameters> inputSeriesDict, TimeSpan targetInterval)
+        public static Dictionary<DateTime, MeteoParameters> MeteoFromToConvertor(Dictionary<DateTime, MeteoParameters> inputSeriesDict, TimeSpan targetInterval)
         {
             var inputMinutesPerInterval = (int)inputSeriesDict.Values.First().Interval.TotalMinutes;
             var targetMinutesPerInterval = (int)targetInterval.TotalMinutes;
@@ -89,6 +113,16 @@ namespace LEG.PV.Data.Processor.Helpers
             return Math.Abs(a);
         }
 
+        private static int GetSyncDelta(int hour, int minute, int timeSpanMinutes)
+        {
+            int totalMinutes = hour * 60 + minute;
+            int shiftedMinutes = totalMinutes + (timeSpanMinutes / 2);
+            int newMinutes = (shiftedMinutes / timeSpanMinutes) * timeSpanMinutes;
+
+            return newMinutes - totalMinutes;
+        }
+
+
         private static MeteoParameters SplitMeteoRecord(MeteoParameters inputRecord, DateTime newTime, int countSubIntervals)
         {
             return inputRecord with
@@ -96,31 +130,37 @@ namespace LEG.PV.Data.Processor.Helpers
                 Time = newTime,
                 Interval = inputRecord.Interval / countSubIntervals,
                 SunshineDuration = inputRecord.SunshineDuration / countSubIntervals,
-                DirectRadiation = inputRecord.DirectRadiation / countSubIntervals,
-                DirectNormalIrradiance = inputRecord.DirectNormalIrradiance / countSubIntervals,
-                GlobalRadiation = inputRecord.GlobalRadiation / countSubIntervals,
-                DiffuseRadiation = inputRecord.DiffuseRadiation / countSubIntervals,
                 RadiationVariance = inputRecord.RadiationVariance / countSubIntervals
             };
         }
 
         private static MeteoParameters AggregateMeteoRecords(List<MeteoParameters> inputRecords)
         {
-            var time = inputRecords.Max(r => r.Time);
-            var interval = TimeSpan.FromTicks(inputRecords.Sum(r => r.Interval.Ticks));
+            var inputCount = inputRecords.Count;
+            var inputFirstTimestamp = inputRecords[0].Time;
+            var inputInterval = inputRecords[0].Interval;
+            var inputAnchor = inputRecords[0].Anchor;
+            TimeSpan offset =
+                inputAnchor == IntervalAnchor.Start ? TimeSpan.FromMinutes(0) :
+                inputAnchor == IntervalAnchor.Midpoint ? inputInterval * (inputCount - 1) / 2 :
+                inputInterval * (inputCount - 1);
+
+            var aggregateImeStamp = inputFirstTimestamp + offset;
+            var interval = inputInterval * inputCount;
             double? sunshineDuration = inputRecords.Sum(r => r.SunshineDuration ?? 0.0);
-            double? directRadiation = inputRecords.Sum(r => r.DirectRadiation ?? 0.0);
+            double? directRadiation = inputRecords.Average(r => r.DirectRadiation ?? 0.0);
             double? directNormalIrradiance = inputRecords.Average(r => r.DirectNormalIrradiance);
-            double? globalRadiation = inputRecords.Sum(r => r.GlobalRadiation ?? 0.0);
-            double? diffuseRadiation = inputRecords.Sum(r => r.DiffuseRadiation ?? 0.0);
+            double? globalRadiation = inputRecords.Average(r => r.GlobalRadiation ?? 0.0);
+            double? diffuseRadiation = inputRecords.Average(r => r.DiffuseRadiation ?? 0.0);
             double? temperature = inputRecords.Average(r => r.Temperature);
-            var (windSpeed, windDirection) = WindVectorsAggregator.AggregatedWindVectorsFromList(inputRecords);
+            var (windSpeed, windDirection) = WindVectorsAggregator.MeanWindVectorFromList(inputRecords);
             double? snowDepth = inputRecords.Average(r => r.SnowDepth);
             double? dewPoint = inputRecords.Average(r => r.DewPoint);
             double? relativeHumidity = inputRecords.Average(r => r.RelativeHumidity);
+            double? radiationVariance = inputRecords.Sum(r => r.RadiationVariance ?? 0.0);
 
             return new MeteoParameters(
-                time: time,
+                time: aggregateImeStamp,
                 interval: interval,
                 sunshineDuration: sunshineDuration,
                 directRadiation: directRadiation,
@@ -132,7 +172,8 @@ namespace LEG.PV.Data.Processor.Helpers
                 windDirection: windDirection,
                 snowDepth: snowDepth,
                 relativeHumidity: relativeHumidity,
-                dewPoint: dewPoint
+                dewPoint: dewPoint,
+                radiationVariance: radiationVariance
             );
         }
     }

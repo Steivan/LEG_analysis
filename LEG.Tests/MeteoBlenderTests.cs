@@ -1,6 +1,7 @@
 ﻿using LEG.PV.Data.Processor.Helpers;
 using LEG.PV.Data.Processor.Interfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OxyPlot;
 using System.Collections.Generic;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
@@ -10,14 +11,63 @@ namespace LEG.Tests
     public class MeteoBlenderTests
     {
         [TestMethod]
+        public async Task TestIntervalConverter()
+        {
+            // Arrange
+            const int sampleMinutes = 60;
+            const int targetMinutes = 12;
+            const int subPeriodsCount = sampleMinutes / targetMinutes;
+
+            var sampleInterval = TimeSpan.FromMinutes(sampleMinutes);
+            var targetInterval = TimeSpan.FromMinutes(12);
+            var sampleCount = 20;              // 20 hours 
+            var nowYear = DateTime.UtcNow.Year;
+            var sampleStartTime = new DateTime(nowYear, 5, 10, 12, 0, 0, DateTimeKind.Utc);
+            var sampleSeries = MeteoSampleRecords.GetMeteoSamples(sampleStartTime, sampleInterval, sampleCount);
+
+            var shiftedSeries = new Dictionary<DateTime, MeteoParameters>();
+            foreach (var sample in sampleSeries)
+            {
+                shiftedSeries[sample.Key.AddMinutes(5)] = sample.Value;
+            }
+
+            var syncedSeries = shiftedSeries;
+            if (!MeteoIntervalConverter.FirstTimeStampIsSynced(shiftedSeries))
+            {
+                syncedSeries = MeteoIntervalConverter.SyncTimeStamps(shiftedSeries);
+            }
+
+            var slpittedSeries = MeteoIntervalConverter.MeteoIntervalSplitter(syncedSeries, subPeriodsCount);
+            var aggregatedSeries = MeteoIntervalConverter.MeteoIntervalAggregator(slpittedSeries, subPeriodsCount);
+
+            var fromToSeries = MeteoIntervalConverter.MeteoFromToConvertor(syncedSeries, targetInterval);
+            var toFromSeries = MeteoIntervalConverter.MeteoFromToConvertor(fromToSeries, sampleInterval);
+
+            // Assert conversion Lists <-> Dictionaries
+            foreach (var record in sampleSeries)
+            {
+                var timestamp = record.Key;
+
+                var data0 = sampleSeries[timestamp];
+                var data1 = aggregatedSeries[timestamp];
+                var data2 = toFromSeries[timestamp];
+
+                Assert.IsTrue(AreAlmostEqual(data0, data1), $"Data mismatch at {timestamp:u}");
+                Assert.IsTrue(AreAlmostEqual(data0, data2), $"Data mismatch at {timestamp:u}");
+            }
+        }
+
+
+
+        [TestMethod]
         public async Task TestBlendingSampleForecastSeries()
         {
             // Arrange
-            var nearCastInterval = TimeSpan.FromMinutes(10);
+            var nearCastInterval = TimeSpan.FromMinutes(15);
             var forecastCastInterval = TimeSpan.FromMinutes(60);
-            var nearCastCount = 10;
-            var midCastCount = 10;
-            var farCastCount = 10;
+            var nearCastCount = 10;             // 10 quarter hours
+            var midCastCount = 10;              // 10 hours
+            var farCastCount = 20;              // 20 hours 
             var nowYear = DateTime.UtcNow.Year;
             var sampleNow = new DateTime(nowYear, 5, 10, 10, 15, 0, DateTimeKind.Utc);
             var startTimeNearCast = new DateTime(nowYear, 5, 10, 9, 45, 0, DateTimeKind.Utc);
@@ -31,27 +81,35 @@ namespace LEG.Tests
             var blender = new MeteoForecastSeriesBlender();
             var foreCastSampleList1 = await blender.CreateBlendedForecastListFromLists(
                 sampleNow,
-                farCastSeries: MeteoSeriesConverter.MeteoDictToList(farCastSample),
-                midCastSeries: MeteoSeriesConverter.MeteoDictToList(midCastSample),
-                nearCastSeries: MeteoSeriesConverter.MeteoDictToList(nearCastSample),
+                farCastSeriesList: MeteoSeriesConverter.MeteoDictToList(farCastSample),
+                midCastSeriesList: MeteoSeriesConverter.MeteoDictToList(midCastSample),
+                nearCastSeriesList: MeteoSeriesConverter.MeteoDictToList(nearCastSample),
                 smoothingFilterId: 0
             );
             var foreCastSampleDict1 = MeteoSeriesConverter.MeteoListToDict(foreCastSampleList1);
 
             var foreCastSampleDict2 = await blender.CreateBlendedForecastDictFromDicts(
                 sampleNow,
-                farCastSeries: farCastSample,
-                midCastSeries: midCastSample,
-                nearCastSeries: nearCastSample,
+                farCastSeriesDict: farCastSample,
+                midCastSeriesDict: midCastSample,
+                nearCastSeriesDict: nearCastSample,
                 smoothingFilterId: 0
             );
             var foreCastSampleList2 = MeteoSeriesConverter.MeteoDictToList(foreCastSampleDict2);
 
 
-            //var result = await _meteoDataService!.GetHistoricalWeatherAsync(startDate, endDate, stationId, granularity);
-
             // Assert
-            for (var i=0; i< foreCastSampleList1.Count; i++)
+            // Assert that nearCast is preserved
+            var nearCastList = MeteoSeriesConverter.MeteoDictToList(nearCastSample);
+            for (var i=0; i<nearCastCount; i++)
+            {
+                var data0 = nearCastList[i];
+                var data1 = foreCastSampleList1[i];
+                Assert.IsTrue(AreAlmostEqual(data0, data0), $"Data mismatch index {i}");
+            }
+
+            // Assert conversion Lists <-> Dictionaries
+            for (var i = 0; i < foreCastSampleList1.Count; i++)
             {
                 var data1 = foreCastSampleList1[i];
                 var data2 = foreCastSampleList2[i];
