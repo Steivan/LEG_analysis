@@ -2,12 +2,12 @@
 
 namespace LEG.PV.Data.Processor.Interfaces
 {
-    public class MeteoSampleRecords
+    public class MeteoDeterministicSeriesGenerator
     {
         private const double omegaYear = 2.0 * Math.PI / 365.0;
         private const double omegaDay = 2.0 * Math.PI / 24.0;
         private const double DegToRad = Math.PI / 180.0;
-        public static Dictionary<DateTime, MeteoParameters> GetMeteoSamples(DateTime startTime, TimeSpan interval, int countOfRecords, double amplitude = 1.0)
+        public static Dictionary<DateTime, MeteoParameters> GetMeteoSampleDictionary(DateTime startTime, TimeSpan interval, int countOfRecords, double amplitude = 1.0)
         {
             var timeZero = new DateTime(startTime.Year, 1, 1, 0, 0, 0);
             int minutesPerInterval = (int)interval.TotalMinutes;
@@ -73,7 +73,6 @@ namespace LEG.PV.Data.Processor.Interfaces
                     dewPoint: Math.Round(dewPoint, 2),
                     radiationVariance: radiationVariance
                     );
-
             }
 
             return samples;

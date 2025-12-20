@@ -1,8 +1,7 @@
-﻿using LEG.PV.Data.Processor;
-using LEG.PV.Data.Processor.Abstractions;
+﻿using LEG.PV.Data.Processor.Abstractions;
 using static LEG.PV.Core.Models.PvDataClass;
 
-namespace LEG.PV.Data.Processor.Interfaces
+namespace LEG.PV.Data.Processor.Simulator
 {
     public class SimulatedPvDataSource : IPvDataSource
     {

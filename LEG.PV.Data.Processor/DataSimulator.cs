@@ -3,6 +3,7 @@ using LEG.PV.Core.Models;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPowerJacobian;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using LEG.PV.Data.Processor.Simulator;
 
 namespace LEG.PV.Data.Processor;
 
@@ -161,7 +162,7 @@ public class DataSimulator
                         if (initialize)
                         {
                             var priorPeriodDateTime = timeStamp - TimeSpan.FromMinutes(minutesPerPeriod);
-                            (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(
+                            (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = PvGeometryRecordSimulator.GetPvSolarGeometry(
                                 startYear, priorPeriodDateTime,
                                 siteLatitude, siteLongitude,
                                 roofAzimuth, sinRoofElevation, cosRoofElevation);
@@ -179,7 +180,7 @@ public class DataSimulator
                         }
 
                         // Solar position
-                        (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = SunGeometrySimulator.GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
+                        (roundedSolarGeometry, cosOmegaYear, cosOmegaDay) = PvGeometryRecordSimulator.GetPvSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude, roofAzimuth, sinRoofElevation, cosRoofElevation);
                         var sinSunElevation = roundedSolarGeometry.SinSunElevation;
 
                         (roundedMeteoParameters, newSnowDepth, weight) = MeteoSimulator.UpdatedMeteoParameters(

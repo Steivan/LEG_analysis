@@ -1,8 +1,7 @@
-﻿using LEG.PV.Core.Models;
-
-namespace LEG.PV.Data.Processor
+﻿
+namespace LEG.PV.Data.Processor.Simulator
 {
-    internal class SunGeometrySimulator
+    internal class SolarGeometryRecordSimulator
     {
         const double earthTilt = 23.4; // [degrees]
         const double daysPerYears = 365.2422;
@@ -11,10 +10,10 @@ namespace LEG.PV.Data.Processor
         const double omegaYear = 2 * Math.PI / daysPerYears;
         const double omegaDay = 2 * Math.PI / hoursPerDay;
 
-        public static (PvSolarGeometry sunGeometry, double cosOmegaYear, double omegaDay) GetSolarGeometry(
+
+        public static (double sunAzimut, double sunElevation, double cosOmegaYear, double omegaDay) GetSolarGeometry(
             int startYear, DateTime timeStamp,
-            double siteLatitude, double siteLongitude,
-            double roofAzimuth, double sinRoofElevation, double cosRoofElevation)
+            double siteLatitude, double siteLongitude)
         {
             var time0 = new DateTime(startYear, 1, 1, 0, 0, 0);
             var timeLag = (timeStamp - time0).Days;
@@ -25,7 +24,7 @@ namespace LEG.PV.Data.Processor
             var cosOmegaYear = Math.Cos(omegaYear * timeLag);
             var annualZenithangle = 90 + annualSolarAmplitude * cosOmegaYear;      // zenith angle of the sun is largest in winter
 
-            var timeOfDay = (double)timeStamp.Hour + (double)timeStamp.Minute / 60.0;
+            var timeOfDay = timeStamp.Hour + timeStamp.Minute / 60.0;
 
             var cosOmegaDay = Math.Cos(omegaDay * timeOfDay);
             var diurnalZenithAngle = (90 - siteLatitude) * cosOmegaDay; // zenith angle of the sun is largest at night
@@ -35,17 +34,15 @@ namespace LEG.PV.Data.Processor
             var sunZenithAngle = annualZenithangle + diurnalZenithAngle;
             var sunElevation = 90 - sunZenithAngle;
             var sinSunElevation = Math.Cos(sunZenithAngle * Math.PI / 180.0);
-            var directGeometryFactor = Math.Cos(sunElevation * Math.PI / 180.0) * cosRoofElevation * Math.Cos((sunAzimuth - roofAzimuth) * Math.PI / 180.0)  // theta = 90 - elevation => Cos() <-> Sin()
-                + Math.Sin(sunElevation * Math.PI / 180.0) * sinRoofElevation;
-            var diffuseGeometryFactor = (1.0 + cosRoofElevation) / 2;
 
-            return (new PvSolarGeometry(
-                Math.Round(directGeometryFactor, 4),
-                Math.Round(diffuseGeometryFactor, 4),
-                Math.Round(sinSunElevation, 4)), 
-                Math.Round(cosOmegaYear, 4), 
+            return (
+                Math.Round(sunAzimuth, 4),
+                Math.Round(sunElevation, 4),
+                Math.Round(cosOmegaYear, 4),
                 Math.Round(cosOmegaDay, 4));
         }
+
+
 
     }
 }
