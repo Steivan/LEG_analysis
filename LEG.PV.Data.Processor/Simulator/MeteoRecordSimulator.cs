@@ -1,5 +1,5 @@
 ﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
-using static LEG.PV.Data.Processor.Simulator.MeteoSimulatorParameters;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 using static LEG.PV.Data.Processor.Simulator.SolarGeometryRecordSimulator;
 
 namespace LEG.PV.Data.Processor.Simulator

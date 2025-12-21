@@ -1,6 +1,6 @@
 ﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Data.Processor.Simulator.MeteoRecordSimulator;
-using static LEG.PV.Data.Processor.Simulator.MeteoSimulatorParameters;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Simulator
 {
@@ -111,7 +111,7 @@ namespace LEG.PV.Data.Processor.Simulator
                                 fogDissolveEndHour: fogDissolveEndHour,
                                 initialize: true);
 
-                            meteoSeriesDictionary[timeStamp] = roundedMeteoParameters;
+                            meteoSeriesDictionary[timeStamp] = roundedMeteoParameters with { RadiationVariance = 1.0 / weight };
 
                             timeStamp += interval;
                             period++;

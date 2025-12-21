@@ -25,7 +25,7 @@ namespace LEG.Tests
             var deterministicSampleSeries = MeteoDeterministicSeriesGenerator.GetMeteoSampleDictionary(sampleStartTime, sampleInterval, sampleCount);
             var randomSampleSeries = MeteoRandomSeriesGenerator.GetMeteoSampleDictionary(sampleStartTime, sampleInterval, sampleCount);
 
-            //TestIntervalConverterSeries(deterministicSampleSeries, sampleInterval, targetInterval, subPeriodsCount);
+            TestIntervalConverterSeries(deterministicSampleSeries, sampleInterval, targetInterval, subPeriodsCount);
             TestIntervalConverterSeries(randomSampleSeries, sampleInterval, targetInterval, subPeriodsCount);
         }
 

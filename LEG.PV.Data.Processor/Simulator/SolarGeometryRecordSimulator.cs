@@ -1,4 +1,6 @@
 ﻿
+using LEG.PV.Core.Models;
+
 namespace LEG.PV.Data.Processor.Simulator
 {
     internal class SolarGeometryRecordSimulator
@@ -7,9 +9,9 @@ namespace LEG.PV.Data.Processor.Simulator
         const double daysPerYears = 365.2422;
         const int hoursPerDay = 24;
 
+        const double radPerDeg = Math.PI / 180.0;
         const double omegaYear = 2 * Math.PI / daysPerYears;
         const double omegaDay = 2 * Math.PI / hoursPerDay;
-
 
         public static (double sunAzimut, double sunElevation, double cosOmegaYear, double omegaDay) GetSolarGeometry(
             int startYear, DateTime timeStamp,
@@ -33,7 +35,7 @@ namespace LEG.PV.Data.Processor.Simulator
             var sunAzimuth = (timeOfDay - 12.0) * 15.0;
             var sunZenithAngle = annualZenithangle + diurnalZenithAngle;
             var sunElevation = 90 - sunZenithAngle;
-            var sinSunElevation = Math.Cos(sunZenithAngle * Math.PI / 180.0);
+            var sinSunElevation = Math.Cos(sunZenithAngle * radPerDeg);
 
             return (
                 Math.Round(sunAzimuth, 4),
@@ -42,6 +44,27 @@ namespace LEG.PV.Data.Processor.Simulator
                 Math.Round(cosOmegaDay, 4));
         }
 
+        public static PvSolarGeometry GetSimulatedPvSolarGeometry(
+            int startYear,
+            DateTime timeStamp, 
+            double siteLatitude, 
+            double siteLongitude, 
+            double roofAzimuth, 
+            double roofElevation)
+        {
+            var roofElevationRad = roofElevation * radPerDeg;
+            var (roundedSolarGeometry, _, _) = PvGeometryRecordSimulator.GetPvSolarGeometry(
+                startYear, 
+                timeStamp, 
+                siteLatitude, 
+                siteLongitude, 
+                roofAzimuth, 
+                Math.Sin(roofElevationRad), 
+                Math.Cos(roofElevationRad)
+                );
+
+            return roundedSolarGeometry;
+        }
 
 
     }

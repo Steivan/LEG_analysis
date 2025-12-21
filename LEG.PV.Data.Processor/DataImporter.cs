@@ -6,11 +6,12 @@ using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
-using System.Data;
 using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor.Helpers;
-using static LEG.PV.Core.Models.PvDataClass;
+using LEG.PV.Data.Processor.Simulator;
+using System.Data;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using static LEG.PV.Core.Models.PvDataClass;
 
 namespace LEG.PV.Data.Processor
 {
@@ -233,18 +234,36 @@ namespace LEG.PV.Data.Processor
    
             var siteId = "SyntheticSite";
 
-            var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
-                modelParameters,
-                installedPower: installedPower,
+            var now = DateTime.UtcNow;
+            var (pvRecords, modelValidRecords, periodsPerHour) = PvProductionSimulator.GetPvSimulatedRecordsList(
+                now,
+                now.AddYears(-(int)simulationsPeriod),
+                minutesPerPeriod: 15,
+                pvParams: modelParameters,
                 siteLatitude: 46,
+                siteLongitude: 10,
+                installedPower: installedPower,
                 roofAzimuth: -30,
                 roofElevation: 20,
-                simulationsPeriod: simulationsPeriod,
                 applyRandomNoise: applyRandomNoise,
                 applySnowDays: applySnowDays,
                 applyFoggyDays: applyFoggyDays,
                 applyOutliers: applyOutliers
                 );
+
+
+            //var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
+            //    modelParameters,
+            //    installedPower: installedPower,
+            //    siteLatitude: 46,
+            //    roofAzimuth: -30,
+            //    roofElevation: 20,
+            //    simulationsPeriod: simulationsPeriod,
+            //    applyRandomNoise: applyRandomNoise,
+            //    applySnowDays: applySnowDays,
+            //    applyFoggyDays: applyFoggyDays,
+            //    applyOutliers: applyOutliers
+            //    );
 
             var blendedWeatherData = pvRecords.Select(record => record.MeteoDataRecord).ToList();
             var perStationWeatherData = new List<StationMeteoData>() { new StationMeteoData("MC", blendedWeatherData) };

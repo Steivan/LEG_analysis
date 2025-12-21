@@ -1,7 +1,7 @@
 ﻿
 namespace LEG.PV.Data.Processor.Simulator
 {
-    internal class MeteoSimulatorParameters
+    internal class SimulatorParameters
     {
         // Physical constants
         internal const double maxIrradiance = 1361;                                              // [W/m^2] Solar constant
@@ -64,5 +64,13 @@ namespace LEG.PV.Data.Processor.Simulator
         internal static List<int> averageCoveredDaysPerMonth = new List<int> { 5, 5, 5, 10, 5, 5, 5, 5, 5, 5, 10, 5 };
         internal static List<int> averageSnowyowDaysPerMonth = new List<int> { 10, 10, 0, 0, 0, 0, 0, 0, 0, 0, 5, 10 };
         internal static List<int> averageFoggyDaysPerMonth = new List<int> { 10, 5, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10 };
+
+        // Random noixse and outliers
+        internal const double randomNoiseVariation = 0.1;
+
+        internal const double probabilityPeriodOutlier = 0.001;
+        internal const double probabilityHourOutlier = 0.001;
+        internal const double probabilityBlockOutlier = 0.001;
+
     }
 }

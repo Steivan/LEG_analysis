@@ -1,11 +1,12 @@
-﻿using MathNet.Numerics.Distributions;
+﻿using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor;
+using LEG.PV.Data.Processor.Simulator;
+using MathNet.Numerics.Distributions;
 using PV.Calibration.Tool;
-using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvDataClass;
-using static PV.Calibration.Tool.BayesianCalibrator;
 using static LEG.PV.Core.Models.PvModelParamsMetaData;
+using static LEG.PV.Core.Models.PvPriorConfig;
+using static PV.Calibration.Tool.BayesianCalibrator;
 
 //ProcessSyntheticModelData(
 //    applyRandomNoise: true,
@@ -76,18 +77,35 @@ void ProcessSyntheticModelData(
     var installedKwP = 10.0;      // [kWp]
     var installedPower = installedKwP * 1000;
 
-    var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
-        thetaModel, 
-        installedPower: installedPower,
+    var now = DateTime.UtcNow;
+    var (pvRecords, modelValidRecords, periodsPerHour) = PvProductionSimulator.GetPvSimulatedRecordsList(
+        now,
+        now.AddYears(-simulationsPeriod),
+        minutesPerPeriod: 15,
+        pvParams: thetaModel,
         siteLatitude: 46,
+        siteLongitude: 10,
+        installedPower: installedPower,
         roofAzimuth: -30,
         roofElevation: 20,
-        simulationsPeriod: simulationsPeriod,
         applyRandomNoise: applyRandomNoise,
         applySnowDays: applySnowDays,
         applyFoggyDays: applyFoggyDays,
         applyOutliers: applyOutliers
         );
+
+    //var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
+    //    thetaModel, 
+    //    installedPower: installedPower,
+    //    siteLatitude: 46,
+    //    roofAzimuth: -30,
+    //    roofElevation: 20,
+    //    simulationsPeriod: simulationsPeriod,
+    //    applyRandomNoise: applyRandomNoise,
+    //    applySnowDays: applySnowDays,
+    //    applyFoggyDays: applyFoggyDays,
+    //    applyOutliers: applyOutliers
+    //    );
 
     var defaultPriors = new PvPriors();
     var defaultModelParams = defaultPriors.PriorMeans;
