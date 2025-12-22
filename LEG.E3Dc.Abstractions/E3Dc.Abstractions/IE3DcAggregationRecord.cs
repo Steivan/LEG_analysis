@@ -1,9 +1,7 @@
-﻿using LEG.E3Dc.Abstractions;
-using System;
-
-namespace LEG.E3Dc.Client
+﻿
+namespace LEG.PvImport.Abstractions.E3Dc.Abstractions
 {
-    public class E3DcAggregationRecord : IE3DcAggregationRecord
+    public interface IE3DcAggregationRecord
     {
         public int CountOfRecords { get; set; }
         public DateTime PeriodStart { get; set; }

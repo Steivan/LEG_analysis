@@ -1,6 +1,5 @@
-﻿using System;
-
-namespace LEG.E3Dc.Abstractions
+﻿
+namespace LEG.PvImport.Abstractions.E3Dc.Abstractions
 {
     public interface IE3DcAggregateArrayRecord
     {

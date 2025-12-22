@@ -1,6 +1,6 @@
-﻿using LEG.E3Dc.Abstractions;
+﻿using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     public class E3DcAggregateArrayRecord : IE3DcAggregateArrayRecord
     {

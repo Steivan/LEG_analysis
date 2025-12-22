@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
-using LEG.Common;
-using LEG.E3Dc.Abstractions;
+﻿using LEG.Common;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     public class E3DcLoadArrayRecords
     {
@@ -25,7 +18,7 @@ namespace LEG.E3Dc.Client
                 for (var month = 1; month <= 12; month++)
                 {
                     var filePath = folder + E3DcFileHelper.FileName(shortYear, month);
-                    if (System.IO.File.Exists(filePath))
+                    if (File.Exists(filePath))
                     {
                         var records = ImportCsv.ImportFromFile<E3DcRecord>(filePath, ";");
                         foreach (var record in records) arrayRecords.LoadE3DcRecord(record);

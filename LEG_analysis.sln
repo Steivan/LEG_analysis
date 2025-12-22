@@ -39,9 +39,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.Common", "LEG.Common\LE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeteoConsoleApp", "MeteoConsoleApp\MeteoConsoleApp.csproj", "{B57198DE-E9D7-4C23-BE23-325DCC214077}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.E3Dc.Abstractions", "LEG.E3Dc.Abstractions\LEG.E3Dc.Abstractions.csproj", "{7B6A6A2A-6029-4B3B-9802-FA95D18F799F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.PvImport.Abstractions", "LEG.E3Dc.Abstractions\LEG.PvImport.Abstractions.csproj", "{7B6A6A2A-6029-4B3B-9802-FA95D18F799F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.E3Dc.Client", "LEG.E3Dc.Client\LEG.E3Dc.Client.csproj", "{340CE674-ED57-46CB-91E6-26F2A06150C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.PvImport.Clients", "LEG.E3Dc.Client\LEG.PvImport.Clients.csproj", "{340CE674-ED57-46CB-91E6-26F2A06150C1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEG.HorizonProfiles.Abstractions", "LEG.HorizonProfiles.Abstractions\LEG.HorizonProfiles.Abstractions.csproj", "{7C5CEAC6-A4A9-4DD5-9A86-7E4094A3A6A6}"
 EndProject

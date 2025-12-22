@@ -8,12 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\LEG.E3Dc.Abstractions\LEG.E3Dc.Abstractions.csproj" />
-    <ProjectReference Include="..\LEG.E3Dc.Client\LEG.E3Dc.Client.csproj" />
+    <ProjectReference Include="..\LEG.E3Dc.Abstractions\LEG.PvImport.Abstractions.csproj" />
+    <ProjectReference Include="..\LEG.E3Dc.Client\LEG.PvImport.Clients.csproj" />
     <ProjectReference Include="..\LEG.MeteoSwiss.Abstractions\LEG.MeteoSwiss.Abstractions.csproj" />
     <ProjectReference Include="..\LEG.MeteoSwiss.Client\LEG.MeteoSwiss.Client.csproj" />
     <ProjectReference Include="..\LEG.PV.Core.Models\LEG.PV.Core.Models.csproj" />

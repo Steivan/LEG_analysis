@@ -1,11 +1,11 @@
 ﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
-using LEG.E3Dc.Abstractions;
-using LEG.E3Dc.Client;
 
 using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.HorizonProfiles.Client;
 using LEG.CoreLib.SampleData;
 using LEG.CoreLib.SampleData.SampleData;
+using LEG.PvImport.Clients.E3Dc.Client;
+using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 
 namespace CalibrationApp
 {

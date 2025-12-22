@@ -1,6 +1,7 @@
 ﻿using LEG.Common;
+using LEG.PvImport.Abstractions;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     public class E3DcLoadPeriodRecords
     {
@@ -46,6 +47,18 @@ namespace LEG.E3Dc.Client
             }
 
             return periodRecords;
+        }
+
+        public static List<IPowerRecord> LoadPowerRecords(int folderNumber, DateTime? startDateTime = null, DateTime? endDateTime = null)
+        {
+            var periodRecords = LoadRecords(folderNumber, startDateTime, endDateTime);
+            var powerRecords = periodRecords.Select(r => new IPowerRecord
+            {
+                Timestamp = E3DcFileHelper.ParseTimestamp(r.Timestamp),
+                SolarProduction = r.SolarProduction
+            }).ToList();
+
+            return powerRecords;
         }
     }
 }

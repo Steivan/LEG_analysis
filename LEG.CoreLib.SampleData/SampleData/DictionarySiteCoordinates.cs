@@ -19,6 +19,7 @@ namespace LEG.CoreLib.SampleData.SampleData
             [Liuns] = new SiteLocation(new Dms(46, 47, 56.7), new Dms(10, 17, 40.8), 1324),
             [Lotz] = new SiteLocation(new Dms(47, 19, 20.8), new Dms(8, 39, 7.2), 685),
             [Senn] = new SiteLocation(new Dms(47, 20, 19.3), new Dms(8, 39, 49.5), 527),
+            [Studenrain] = new SiteLocation(new Dms(47, 21, 13.0), new Dms(8, 37, 35.4), 666),
             [Tof] = new SiteLocation(new Dms(46, 47, 58.3), new Dms(10, 17, 39.2), 1337),
         };
 

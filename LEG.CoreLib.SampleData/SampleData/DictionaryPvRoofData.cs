@@ -218,6 +218,16 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Area: 25.0,
                     Peak: 20.0
                 ),
+                [Studenrain + "_1"] = new PvRoof(
+                    SystemName: Studenrain + "_1",
+                    EgrId: "",
+                    Inverter: Studenrain + "_1",
+                    Azi: 15.0,
+                    Elev: 35.0,
+                    Elev2: 0.0,
+                    Area: 55.0,
+                    Peak: 17.0
+                ),
 
                 [TestSite + "_1"] = new PvRoof(
                     SystemName: TestSite + "_1",

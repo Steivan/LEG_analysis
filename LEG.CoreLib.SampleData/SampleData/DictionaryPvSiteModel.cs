@@ -140,6 +140,17 @@ namespace LEG.CoreLib.SampleData.SampleData
                     meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[SennV].MeteoId]
                 ),
 
+                [Studenrain] = new PvSiteModel(
+                    pvSite: PvSiteDataDict[Studenrain],
+                    inverters: [PvInverterDataDict[Studenrain + "_1"]],
+                    roofsPerInverter: new Dictionary<string, PvRoof[]>
+                    {
+                        { Studenrain + "_1", [PvRoofDataDict[Studenrain + "_1"]] }
+                    },
+                    consumers: [PvConsumerDataDict[Studenrain + "_1"]],
+                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Studenrain].MeteoId]
+                ),
+
                 [TestSite] = new PvSiteModel(
                     pvSite: PvSiteDataDict[TestSite],
                     inverters: [PvInverterDataDict[TestSite + "_1"]],

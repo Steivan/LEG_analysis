@@ -1,8 +1,8 @@
 ﻿using CsvHelper.Configuration.Attributes;
 using LEG.Common;
-using LEG.E3Dc.Abstractions;
+using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     // Example CSV file content:
     // timestamp;Battery SOC;Battery (charging);Battery (discharging);NetIn;NetOut;Solar production tracker 1;Solar production tracker 2;Solar production;House consumption

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Globalization;
-using LEG.E3Dc.Abstractions;
+﻿using System.Globalization;
+using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     public static class E3DcFileHelper
     {
@@ -12,9 +11,9 @@ namespace LEG.E3Dc.Client
             1);
         public static DateTime MaxDate => DateTime.Now;
         public static int NrOfFolders => E3DcConstants.NrOfSubFolders;
-        public static string FileBody => E3DcConstants.CsvFileBody;
+        public static string FileBody => E3DcConstants.FileBody;
         public static string FileTail(int year, int month) => $"{year:00}.{month:00}";
-        public static string FileExtension => E3DcConstants.CsvExtension;
+        public static string FileExtension => E3DcConstants.FileExtension;
         public static string FileName(int year, int month) => $"{FileBody}_{FileTail(year, month)}{FileExtension}";
         public static int GetDaysInMonth(int year, int month) => DateTime.DaysInMonth(2000 + year, month);
 
@@ -57,7 +56,7 @@ namespace LEG.E3Dc.Client
             {
                 1 => Range(E3DcConstants.FirstYear1, E3DcConstants.FirstMonth1, E3DcConstants.LastYear1, E3DcConstants.LastMonth1),
                 2 => Range(E3DcConstants.FirstYear2, E3DcConstants.FirstMonth2, E3DcConstants.LastYear2, E3DcConstants.LastMonth2),
-                _ => throw new ArgumentOutOfRangeException(nameof(folderNumber), $"Folder number must be 1 ... {E3DcConstants.NrOfSubFolders}."),
+                _ => throw new ArgumentOutOfRangeException(nameof(folderNumber), $"Folder number must be 1 ... {E3DcConstants.NrOfSubFolders+1}."),
             };
         }
         public static DateTime ParseTimestamp(string timestamp)

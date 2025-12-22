@@ -272,6 +272,19 @@ namespace LEG.CoreLib.SampleData.SampleData
                         HourlyProfileId: HourlyResidential
                     ),
 
+                [Studenrain + "_1"] =
+                    new Consumer(
+                        SystemName: Studenrain + "_1",
+                        SiteId: Studenrain,
+                        Label: Studenrain + "_1",
+                        AnnualEnergy: 15000.0,
+                        PeakPower: 5.0,
+                        AnnualProfileId: AnnualResidential,
+                        WeeklyProfileId: WeeklyResidential,
+                        DailyProfileId: DailyResidential,
+                        HourlyProfileId: HourlyResidential
+                    ),
+
                 [TestSite + "_1"] =
                     new Consumer(
                         SystemName: TestSite + "_1",

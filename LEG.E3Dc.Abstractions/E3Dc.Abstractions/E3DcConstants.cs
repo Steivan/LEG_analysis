@@ -1,11 +1,11 @@
 ﻿
-namespace LEG.E3Dc.Abstractions
+namespace LEG.PvImport.Abstractions.E3Dc.Abstractions
 {
     public static class E3DcConstants
     {
         public const string DataFolder = @"C:\Users\steiv\OneDrive\Dokumente\ORACLE VM shared folder\PV_calculator\Data\";
-        public const string CsvFileBody = "E3DC-Export";
-        public const string CsvExtension = ".csv";
+        public const string FileBody = "E3DC-Export";
+        public const string FileExtension = ".csv";
         public const int NrOfSubFolders = 2;
         public const string SubFolder1 = @"Felix_Senn_48-2490\";
         public const int FirstYear1 = 18;

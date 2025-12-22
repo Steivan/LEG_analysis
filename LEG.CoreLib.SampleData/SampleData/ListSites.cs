@@ -14,11 +14,12 @@ namespace LEG.CoreLib.SampleData.SampleData
         public const string Lotz = nameof(Lotz);
         public const string Senn = nameof(Senn);
         public const string SennV = nameof(SennV);
+        public const string Studenrain = nameof(Studenrain);
         public const string TestSite = nameof(TestSite);
         public const string Tof = nameof(Tof);
 
         internal static List<string> SitesList = [
-            Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Kleiner, Liuns, Lotz, Senn, SennV, TestSite, Tof, "Manual"
+            Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Kleiner, Liuns, Lotz, Senn, SennV, Studenrain, TestSite, Tof, "Manual"
         ];
     }
 }

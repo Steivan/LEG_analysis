@@ -1,6 +1,6 @@
 ﻿using LEG.PV.Data.Processor.Abstractions;
-using LEG.E3Dc.Client;
 using static LEG.PV.Core.Models.PvDataClass;
+using LEG.PvImport.Clients.E3Dc.Client;
 
 namespace LEG.PV.Data.Processor.Interfaces
 {

@@ -1,10 +1,10 @@
 ﻿using LEG.Common;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
-using LEG.E3Dc.Abstractions;
+using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 using System;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     public static class E3DcAggregator
     {

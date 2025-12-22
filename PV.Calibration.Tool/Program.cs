@@ -22,7 +22,7 @@ await CalibrateE3DcData(2, "SennV");
 async Task CalibrateE3DcData(int folder, string label)
 {
     var dataImporter = new DataImporter();
-    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportE3DcHistory(folder); // meteoDataLag in multiples of 5 minutes
+    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportProductionHistory(folder); // meteoDataLag in multiples of 5 minutes
     var installedPower = installedKwP; // / periodsPerHour;
 
     var defaultPriors = new PvPriors();

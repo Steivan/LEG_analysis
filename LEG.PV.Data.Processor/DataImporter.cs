@@ -1,7 +1,6 @@
 ﻿using LEG.CoreLib.SampleData;
 using LEG.CoreLib.SampleData.SampleData;
 using LEG.CoreLib.SolarCalculations.Calculations;
-using LEG.E3Dc.Client;
 using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
@@ -9,6 +8,9 @@ using LEG.MeteoSwiss.Client.MeteoSwiss;
 using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor.Helpers;
 using LEG.PV.Data.Processor.Interfaces;
+using LEG.PvImport.Abstractions;
+using LEG.PvImport.Clients.E3Dc.Client;
+using LEG.PvImport.Clients.Fronius.Client;
 using System.Data;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvDataClass;
@@ -73,89 +75,85 @@ namespace LEG.PV.Data.Processor
         public Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightedSumMeteoValuesArrays { get; set; } = new();
 
-
-        // Selected stations, available parameters and blending weights
-        public static Dictionary<string, WeightMeteoParameters> StationDictionary = new()
+        public static Dictionary<MeteoParameterType, double> OneZeroWeights = new Dictionary<MeteoParameterType, double>
         {
-            { "SMA", new WeightMeteoParameters
-                {
-                    Weights = new Dictionary<MeteoParameterType, double>
-                    {
-                        { MeteoParameterType.SunshineDuration, 3.0 },
-                        { MeteoParameterType.DirectRadiation, 3.0 },
-                        { MeteoParameterType.DirectNormalIrradiance, 3.0 },
-                        { MeteoParameterType.GlobalRadiation, 3.0 },
-                        { MeteoParameterType.DiffuseRadiation, 3.0 },
-                        { MeteoParameterType.Temperature, 1.0 },
-                        { MeteoParameterType.WindSpeed, 1.0 },
-                        { MeteoParameterType.WindDirection, 1.0 },
-                        { MeteoParameterType.SnowDepth, 1.0 },
-                        { MeteoParameterType.RelativeHumidity, 1.0 },
-                        { MeteoParameterType.DewPoint, 1.0 },
-                        { MeteoParameterType.RadiationVariance, 1.0 }
-                    }
-                }
-            },
-            { "KLO", new WeightMeteoParameters
-                {
-                    Weights = new Dictionary<MeteoParameterType, double>
-                    {
-                        { MeteoParameterType.SunshineDuration, 1.0 },
-                        { MeteoParameterType.DirectRadiation, 1.0 },
-                        { MeteoParameterType.DirectNormalIrradiance, 1.0 },
-                        { MeteoParameterType.GlobalRadiation, 1.0 },
-                        { MeteoParameterType.DiffuseRadiation, 1.0 },
-                        { MeteoParameterType.Temperature, 1.0 },
-                        { MeteoParameterType.WindSpeed, 1.0 },
-                        { MeteoParameterType.WindDirection, 1.0 },
-                        { MeteoParameterType.SnowDepth, 1.0 },
-                        { MeteoParameterType.RelativeHumidity, 1.0 },
-                        { MeteoParameterType.DewPoint, 1.0 },
-                        { MeteoParameterType.RadiationVariance, 1.0 }
-                    }
-                }
-            },
-            { "HOE", new WeightMeteoParameters
-                {
-                    Weights = new Dictionary<MeteoParameterType, double>
-                    {
-                        { MeteoParameterType.SunshineDuration, 1.0 },
-                        { MeteoParameterType.DirectRadiation, 1.0 },
-                        { MeteoParameterType.DirectNormalIrradiance, 1.0 },
-                        { MeteoParameterType.GlobalRadiation, 1.0 },
-                        { MeteoParameterType.DiffuseRadiation, 1.0 },
-                        { MeteoParameterType.Temperature, 0.0 },
-                        { MeteoParameterType.WindSpeed, 0.0 },
-                        { MeteoParameterType.WindDirection, 0.0 },
-                        { MeteoParameterType.SnowDepth, 0.0 },
-                        { MeteoParameterType.RelativeHumidity, 0.0 },
-                        { MeteoParameterType.DewPoint, 0.0 },
-                        { MeteoParameterType.RadiationVariance, 1.0 }
-                    }
-                }
-            },
-            { "UEB", new WeightMeteoParameters
-                {
-                    Weights = new Dictionary<MeteoParameterType, double>
-                    {
-                        { MeteoParameterType.SunshineDuration, 1.0 },
-                        { MeteoParameterType.DirectRadiation, 1.0 },
-                        { MeteoParameterType.DirectNormalIrradiance, 1.0 },
-                        { MeteoParameterType.GlobalRadiation, 1.0 },
-                        { MeteoParameterType.DiffuseRadiation, 1.0 },
-                        { MeteoParameterType.Temperature, 0.0 },
-                        { MeteoParameterType.WindSpeed, 0.0 },
-                        { MeteoParameterType.WindDirection, 0.0 },
-                        { MeteoParameterType.SnowDepth, 0.0 },
-                        { MeteoParameterType.RelativeHumidity, 0.0 },
-                        { MeteoParameterType.DewPoint, 0.0 },
-                        { MeteoParameterType.RadiationVariance, 1.0 }
-                    }
-                }
-            }
+            { MeteoParameterType.SunshineDuration, 1.0 },
+            { MeteoParameterType.DirectRadiation, 1.0 },
+            { MeteoParameterType.DirectNormalIrradiance, 1.0 },
+            { MeteoParameterType.GlobalRadiation, 1.0 },
+            { MeteoParameterType.DiffuseRadiation, 1.0 },
+            { MeteoParameterType.Temperature, 0.0 },
+            { MeteoParameterType.WindSpeed, 0.0 },
+            { MeteoParameterType.WindDirection, 0.0 },
+            { MeteoParameterType.SnowDepth, 0.0 },
+            { MeteoParameterType.RelativeHumidity, 0.0 },
+            { MeteoParameterType.DewPoint, 0.0 },
+            { MeteoParameterType.RadiationVariance, 1.0 }
         };
 
-        public static List<string> SelectedStationsIdList = StationDictionary.Keys.ToList();
+        public static Dictionary<MeteoParameterType, double> OneOneWeights = new Dictionary<MeteoParameterType, double>
+        {
+            { MeteoParameterType.SunshineDuration, 1.0 },
+            { MeteoParameterType.DirectRadiation, 1.0 },
+            { MeteoParameterType.DirectNormalIrradiance, 1.0 },
+            { MeteoParameterType.GlobalRadiation, 1.0 },
+            { MeteoParameterType.DiffuseRadiation, 1.0 },
+            { MeteoParameterType.Temperature, 1.0 },
+            { MeteoParameterType.WindSpeed, 1.0 },
+            { MeteoParameterType.WindDirection, 1.0 },
+            { MeteoParameterType.SnowDepth, 1.0 },
+            { MeteoParameterType.RelativeHumidity, 1.0 },
+            { MeteoParameterType.DewPoint, 1.0 },
+            { MeteoParameterType.RadiationVariance, 1.0 }
+        };
+
+        public static Dictionary<MeteoParameterType, double> ThreeOneWeights = new Dictionary<MeteoParameterType, double>
+        {
+            { MeteoParameterType.SunshineDuration, 3.0 },
+            { MeteoParameterType.DirectRadiation, 3.0 },
+            { MeteoParameterType.DirectNormalIrradiance, 3.0 },
+            { MeteoParameterType.GlobalRadiation, 3.0 },
+            { MeteoParameterType.DiffuseRadiation, 3.0 },
+            { MeteoParameterType.Temperature, 1.0 },
+            { MeteoParameterType.WindSpeed, 1.0 },
+            { MeteoParameterType.WindDirection, 1.0 },
+            { MeteoParameterType.SnowDepth, 1.0 },
+            { MeteoParameterType.RelativeHumidity, 1.0 },
+            { MeteoParameterType.DewPoint, 1.0 },
+            { MeteoParameterType.RadiationVariance, 1.0 }
+        };
+
+        public static readonly Dictionary<string, Dictionary<string, WeightMeteoParameters>> ProfileToStationDictionary = new()
+        {
+            // Key: profile name (e.g., "ZurichGroup", "BernGroup")
+            { "MaurGroup", new Dictionary<string, WeightMeteoParameters>
+                { 
+                { "SMA", new WeightMeteoParameters { Weights = ThreeOneWeights } },
+                { "KLO", new WeightMeteoParameters { Weights = OneOneWeights } },
+                { "HOE", new WeightMeteoParameters { Weights = OneZeroWeights } },
+                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }
+                }
+            },
+            { "BinzGroup", new Dictionary<string, WeightMeteoParameters>
+                {
+                { "SMA", new WeightMeteoParameters { Weights = ThreeOneWeights } },
+                { "HOE", new WeightMeteoParameters { Weights = OneZeroWeights } },
+                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }
+                }
+            }
+            // Add more profiles as needed
+        };
+
+        public static readonly Dictionary<int, string> SiteToProfilesDictionary = new()
+        {
+            // Key: site/folder id, Value: profile name
+            { 1, "MaurGroup" },
+            { 2, "MaurGroup" },
+            { 3, "BinzGroup" },
+            // etc.
+        };
+
+        public static List<string> SelectedStationsIdList = new List<string>();
 
         public static Dictionary<string, PvModelParams> PvModelParamsDictionary = new ()
             {
@@ -256,25 +254,38 @@ namespace LEG.PV.Data.Processor
         }
 
         // Import meteo history and merge with actual and calculated pvProduction data
-        public async Task<MeteoImportResult> ImportE3DcAndMeteoHistory(int folder, bool meteoTillNow = false)
+        public async Task<MeteoImportResult> ImportProductionAndMeteoHistory(int folder, bool meteoTillNow = false)
         {
             // Compute normalized weights
-            SetSelectedStationsWeightArrays(); // StationDictionary);
+            SetSelectedStationsWeightArrays(folder); // StationDictionary);
 
             // Fetch pvProduction records
-            folder = 1 + (folder - 1) % 2;
+            folder = 1 + (folder - 1) % 3;
             var siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
+            var pvDataRecords = new List<IPowerRecord>();
+            switch (folder)
+            {
+                case 1:
+                case 2:
+                    siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
+                    pvDataRecords = E3DcLoadPeriodRecords.LoadPowerRecords(folder);
+                    break;
+                case 3:
+                    siteId = ListSites.Studenrain;
+                    pvDataRecords = FroniusLoadPeriodRecords.LoadPowerRecords();
+                    break;
+                default:
+                    break;
+            }
 
-            var pvDataRecords = E3DcLoadPeriodRecords.LoadRecords(folder);
+            var firstImportTimestamp = pvDataRecords[0].Timestamp;
+            var secondImportTimestamp = pvDataRecords[1].Timestamp;
+            var lastImportTimestamp3 = pvDataRecords[^1].Timestamp;
 
-            // Determine time range and periods per hour in local time
-            var firstE3DcTimestamp = E3DcFileHelper.ParseTimestamp(pvDataRecords[0].Timestamp);
-            var secondE3DcTimestamp = E3DcFileHelper.ParseTimestamp(pvDataRecords[1].Timestamp);
-            var lastE3DcTimestamp = E3DcFileHelper.ParseTimestamp(pvDataRecords[^1].Timestamp);
-            var minutesPerPeriod = (secondE3DcTimestamp - firstE3DcTimestamp).Minutes;
+            var minutesPerPeriod = (secondImportTimestamp - firstImportTimestamp).Minutes;
             var periodsPerHour = 60 / minutesPerPeriod;
 
-            var firstTimestamp = firstE3DcTimestamp;
+            var firstTimestamp = firstImportTimestamp;
             var lastTimestamp = meteoTillNow ? DateTime.Now : DateTime.Now.AddDays(10);
 
             // Fetch geometry factors
@@ -294,7 +305,7 @@ namespace LEG.PV.Data.Processor
                 shiftMeteoTimeStamps: meteoDataOffset + meteoDataLagHistory);
 
             // Merge data
-            var countOfE3DcRecords = pvDataRecords.Count;
+            var countOfImportRecords = pvDataRecords.Count;
             var countOfMeteoRecords = blendedWeatherData.Count;
             var dataRecords = new List<PvRecord>();
             var validRecords = new List<bool>();
@@ -303,12 +314,12 @@ namespace LEG.PV.Data.Processor
                 var recordIndex = i;
                 var meteoParam = blendedWeatherData[i];
                 var weight = 1.0 / (1E-6 + meteoParam.RadiationVariance ?? (double.MaxValue - 1E-6));
-                double? solarProduction = i < countOfE3DcRecords ? pvDataRecords[i].SolarProduction : null;
+                double? solarProduction = i < countOfImportRecords ? pvDataRecords[i].SolarProduction : null;
                 if (!solarProduction.HasValue)
                 {
                     weight = 0.0;
                 }
-                var age = (timeStamps[i] - firstE3DcTimestamp).TotalMinutes / minutesPerYear;
+                var age = (timeStamps[i] - firstImportTimestamp).TotalMinutes / minutesPerYear;
                 var pvRecord = new PvRecord(
                     timeStamps[i],
                     recordIndex,                            // TODO: pvDataRecord.Index,
@@ -319,8 +330,8 @@ namespace LEG.PV.Data.Processor
                     solarProduction
                     );
                 dataRecords.Add(pvRecord);
-                var validE3Dc = solarProduction.HasValue && solarProduction.Value > 0.0;
-                validRecords.Add(pvRecord.SolarGeometry.HasIrradiance || validE3Dc);
+                var validImport = solarProduction.HasValue && solarProduction.Value > 0.0;
+                validRecords.Add(pvRecord.SolarGeometry.HasIrradiance || validImport);
             }
 
             perStationWeatherData.Add(new StationMeteoData("Blended", blendedWeatherData));
@@ -331,7 +342,7 @@ namespace LEG.PV.Data.Processor
         // Import meteo forecast and merge with calculated pvProduction data
         public async Task<MeteoImportResult> ImportMeteoForecastAndCalculatedProduction(
             int folder,
-            DateTime firstE3DcTimestamp,
+            DateTime firstImportTimestamp,
             DateTime lastHistoryTimestamp,
             int forecastDays = 16)
         {
@@ -363,7 +374,7 @@ namespace LEG.PV.Data.Processor
             for (var i = 0; i < countOfMeteoRecords; i++)
             {
                 var recordIndex = i;
-                var age = (timeStamps[i] - firstE3DcTimestamp).TotalMinutes / minutesPerYear;
+                var age = (timeStamps[i] - firstImportTimestamp).TotalMinutes / minutesPerYear;
                 var pvRecord = new PvRecord(
                     timeStamps[i],
                     recordIndex,
@@ -383,15 +394,15 @@ namespace LEG.PV.Data.Processor
             return new MeteoImportResult(perStationWeatherData, blendedWeatherData, siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
 
-        // Import e3dc history and computed data only
+        // Import history and computed data only
         public async Task<(string siteId,
             List<PvRecord> dataRecords,
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportE3DcHistory(int folder, bool meteoTillNow = false)      // 0: downloaded E3Dc history, 1: meteo history till now, 2: including meteo forecast
+            ImportProductionHistory(int folder, bool meteoTillNow = false)      // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
         {
-            var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: meteoTillNow);
+            var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportProductionAndMeteoHistory(folder, meteoTillNow: meteoTillNow);
 
             return (siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
@@ -507,7 +518,7 @@ namespace LEG.PV.Data.Processor
 
         }
 
-        // Import e3dc history and computed data with selected meteo parameters
+        // Import history and computed data with selected meteo parameters
         public async Task<(
             string siteId,
             List<PvRecordLists> dataRecords,
@@ -515,7 +526,7 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportE3DcHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded meteo for PV history, 1: meteo PV history till now, 2: including meteo forecast
+            ImportHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded meteo for PV history, 1: meteo PV history till now, 2: including meteo forecast
         {
             var siteModelId = AvailableSitesIdList[folder];
             var pvModelParams = PvModelParamsDictionary[siteModelId];
@@ -529,8 +540,9 @@ namespace LEG.PV.Data.Processor
                     break;
                 case 1:
                 case 2:
+                case 3:
                     // Fetch pvProduction and meteo data
-                    meteoImportResult = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
+                    meteoImportResult = await ImportProductionAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(folder), "Folder index out of range");
@@ -571,7 +583,7 @@ namespace LEG.PV.Data.Processor
             // If forecast is requested, extend data with forecast values
             if (displayPeriod == 2)
             {
-                var firstE3DcTimestamp = dataRecordsHistory[0].Timestamp;
+                var firstImportTimestamp = dataRecordsHistory[0].Timestamp;
                 var lHistoryTimestamp = dataRecordsHistory[^3].Timestamp;
                 var (perStationWeatherForecast, 
                     blendedWeatherForecasty, 
@@ -579,7 +591,7 @@ namespace LEG.PV.Data.Processor
                     dataRecordsForecast, 
                     validRecordsForecast, 
                     _, 
-                    _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstE3DcTimestamp, lHistoryTimestamp);
+                    _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstImportTimestamp, lHistoryTimestamp);
 
                 var (filteredRadiationForecastSeries, _,
                     filteredTemperatureForecastSeries, _,
@@ -947,7 +959,7 @@ namespace LEG.PV.Data.Processor
             int shiftMeteoTimeStamps = 60)                 // shift in minutes UTC -> local time
         {
             // Compute normalized weights
-            SetSelectedStationsWeightArrays();
+            //SetSelectedStationsWeightArrays();
 
             var now = DateTime.Now;
             var supportCount = supportTimeStamps.Count;
@@ -1144,8 +1156,16 @@ namespace LEG.PV.Data.Processor
         }
 
         // Helper method to get weight arrays for all selected stations
-        private void SetSelectedStationsWeightArrays() //Dictionary<string, WeightMeteoParameters> stationDictionary)
+        private void SetSelectedStationsWeightArrays(int folder) //Dictionary<string, WeightMeteoParameters> stationDictionary)
         {
+            var folderList = SiteToProfilesDictionary.Keys.ToList();
+            if (!folderList.Contains(folder))
+            {
+                throw new Exception($"Folder {folder} not found in SiteToProfilesDictionary.");
+            }
+
+            var stationDictionary = ProfileToStationDictionary[SiteToProfilesDictionary[folder]];
+            SelectedStationsIdList = stationDictionary.Keys.ToList();
             var stationsCount = SelectedStationsIdList.Count;
 
             foreach (var meteoParameterType in MeteoParameterTypeList)
@@ -1156,7 +1176,7 @@ namespace LEG.PV.Data.Processor
             var stationIndex = 0;
             foreach (var stationId in SelectedStationsIdList)
             {
-                var weights = StationDictionary[stationId];
+                var weights = stationDictionary[stationId];
                 foreach (var meteoParameterType in MeteoParameterTypeList)
                 {
                     WeightMeteoArrays[meteoParameterType][stationIndex] = weights.GetWeight(meteoParameterType);

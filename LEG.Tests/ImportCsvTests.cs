@@ -1,11 +1,6 @@
-﻿using LEG.CoreLib;
-using LEG.E3Dc.Abstractions;
-using LEG.E3Dc.Client;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.IO;
-using System.Linq;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using LEG.Common;
+using LEG.PvImport.Clients.E3Dc.Client;
 
 namespace LEG.Tests
 {

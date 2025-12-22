@@ -198,6 +198,23 @@ namespace LEG.CoreLib.SampleData.SampleData
                     IndicativeNrOfConsumers: 2
                 ),
 
+                [Studenrain] = new PvSite(
+                    SystemName: Studenrain,
+                    EgId: "",
+                    Status: Active,
+                    StreetName: "Zollikonstrasse",
+                    HouseNumber: "31",
+                    ZipNumber: "8122",
+                    Town: "Binz",
+                    Lon: SiteLatLonElevDict[Studenrain].GetLongitude(),
+                    Lat: SiteLatLonElevDict[Studenrain].GetLatitude(),
+                    UtcShift: -1,
+                    MeteoId: "Maur_meteo",
+                    IndicativeNrOfInverters: 1,
+                    IndicativeNrOfRoofs: 2,
+                    IndicativeNrOfConsumers: 1
+                ),
+
                 [TestSite] = new PvSite(
                     SystemName: TestSite,
                     EgId: "",

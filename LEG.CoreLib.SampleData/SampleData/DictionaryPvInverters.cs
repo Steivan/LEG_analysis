@@ -118,6 +118,16 @@ namespace LEG.CoreLib.SampleData.SampleData
                     IndicativeNrOfRoofs: 2
                 ),
 
+                [Studenrain + "_1"] = new Inverter(
+                    SystemName: Studenrain + "_1",
+                    Site: Studenrain,
+                    HasBattery: false,
+                    Capacity: 0.0,
+                    MaxLoad: 0.0,
+                    MaxDrain: 0.0,
+                    IndicativeNrOfRoofs: 1
+                ),
+
                 [TestSite + "_1"] = new Inverter(
                     SystemName: TestSite + "_1",
                     Site: TestSite,

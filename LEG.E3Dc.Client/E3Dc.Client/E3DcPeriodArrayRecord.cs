@@ -1,6 +1,6 @@
-﻿using LEG.E3Dc.Abstractions;
+﻿using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 
-namespace LEG.E3Dc.Client
+namespace LEG.PvImport.Clients.E3Dc.Client
 {
     public class E3DcPeriodArrayRecord : IE3DcPeriodArrayRecord
     {
@@ -15,7 +15,7 @@ namespace LEG.E3Dc.Client
         public DateTime RecordingStartTime { get; set; }
         public DateTime RecordingEndTime { get; set; }
         public static int DateDateIndex(DateTime date) =>
-            ((date.DayOfYear - 1) * HoursPerDay + date.Hour) * RecordsPerHour + (date.Minute * RecordsPerHour) / 60;
+            ((date.DayOfYear - 1) * HoursPerDay + date.Hour) * RecordsPerHour + date.Minute * RecordsPerHour / 60;
         public DateTime IndexDateTime(int dateIndex) =>
             new DateTime(Year, 1, 1, 0, 0, 0).AddMinutes((int)(dateIndex * GetMinutesPerPeriod));
         public int RecordingStartIndex => DateDateIndex(RecordingStartTime);
