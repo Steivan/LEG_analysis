@@ -1,12 +1,10 @@
 ﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Interfaces
 {
     public class MeteoDeterministicSeriesGenerator
     {
-        private const double omegaYear = 2.0 * Math.PI / 365.0;
-        private const double omegaDay = 2.0 * Math.PI / 24.0;
-        private const double DegToRad = Math.PI / 180.0;
         public static Dictionary<DateTime, MeteoParameters> GetMeteoSampleDictionary(DateTime startTime, TimeSpan interval, int countOfRecords, double amplitude = 1.0)
         {
             var timeZero = new DateTime(startTime.Year, 1, 1, 0, 0, 0);
@@ -41,7 +39,7 @@ namespace LEG.PV.Data.Processor.Interfaces
 
                 var annualSunElevation = 45.0 - 10.0 * cosAnnual;
                 var diurnalSunElevation = -annualSunElevation * cosDiurnal;
-                var sinSunElevation = Math.Sin(diurnalSunElevation * DegToRad);
+                var sinSunElevation = Math.Sin(diurnalSunElevation * radPerDeg);
                 var hasRadiation = sinSunElevation > 0.0;
                 var hasSnow = cosAnnual > 0.5;
 

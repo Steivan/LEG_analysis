@@ -8,10 +8,11 @@ using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
 using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor.Helpers;
-using LEG.PV.Data.Processor.Simulator;
+using LEG.PV.Data.Processor.Interfaces;
 using System.Data;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvDataClass;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor
 {
@@ -26,10 +27,6 @@ namespace LEG.PV.Data.Processor
         );
     public class DataImporter
     {
-        const double daysPerYear = 365.2422;
-        const double hoursPerDay = 24.0;
-        const double minutesPerHour = 60.0;
-        const double minutesPerYear = minutesPerHour * hoursPerDay * daysPerYear;
         const double maxGroundIrradiance = 1000.0;                                                 // [W/m²]
         const double radiationNoise = maxGroundIrradiance / 100.0;                                 // [W/m²]      Fluctuation of 1% of max irradiance
         const double radiationBaselineVariance = radiationNoise * radiationNoise;                  // [(W/m²)²]
@@ -180,8 +177,8 @@ namespace LEG.PV.Data.Processor
                     u1: 20.0,
                     lDegr: 0.0127,
                     dSnow: 1.27,
-                    lambdaAFog: -0.248,
-                    bFog: 0.913,
+                    lambdaAFog: -0.252,
+                    bFog: 0.920,
                     lambdaKFog: 1.03
                 ) },
                 { "SennV", new(                                    // SennV: elevation 35° 
@@ -191,9 +188,9 @@ namespace LEG.PV.Data.Processor
                     u1: 0.001,
                     lDegr: 0.00797,
                     dSnow: 1.09,
-                    lambdaAFog: 0.139,
-                    bFog: 1.19,
-                    lambdaKFog: 0.924
+                    lambdaAFog: 0.144,
+                    bFog: 1.20,
+                    lambdaKFog: 0.928
                 ) },
                 { "Senn_Initial", new(                          // initial calibration without Snow/Fog
                     etha: 0.619,
@@ -233,12 +230,13 @@ namespace LEG.PV.Data.Processor
             bool applyOutliers = true;
    
             var siteId = "SyntheticSite";
-
+            var minutesPerPeriod = 15;
+            var periodsPerHour = 60 / minutesPerPeriod;
             var now = DateTime.UtcNow;
-            var (pvRecords, modelValidRecords, periodsPerHour) = PvProductionSimulator.GetPvSimulatedRecordsList(
-                now,
+            var (pvRecords, modelValidRecords) = PvRandomRecordGenerator.GetPvSimulatedRecordsList(
                 now.AddYears(-(int)simulationsPeriod),
-                minutesPerPeriod: 15,
+                now,
+                minutesPerPeriod: minutesPerPeriod,
                 pvParams: modelParameters,
                 siteLatitude: 46,
                 siteLongitude: 10,
@@ -251,20 +249,6 @@ namespace LEG.PV.Data.Processor
                 applyOutliers: applyOutliers
                 );
 
-
-            //var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
-            //    modelParameters,
-            //    installedPower: installedPower,
-            //    siteLatitude: 46,
-            //    roofAzimuth: -30,
-            //    roofElevation: 20,
-            //    simulationsPeriod: simulationsPeriod,
-            //    applyRandomNoise: applyRandomNoise,
-            //    applySnowDays: applySnowDays,
-            //    applyFoggyDays: applyFoggyDays,
-            //    applyOutliers: applyOutliers
-            //    );
-
             var blendedWeatherData = pvRecords.Select(record => record.MeteoDataRecord).ToList();
             var perStationWeatherData = new List<StationMeteoData>() { new StationMeteoData("MC", blendedWeatherData) };
 
@@ -274,6 +258,9 @@ namespace LEG.PV.Data.Processor
         // Import meteo history and merge with actual and calculated pvProduction data
         public async Task<MeteoImportResult> ImportE3DcAndMeteoHistory(int folder, bool meteoTillNow = false)
         {
+            // Compute normalized weights
+            SetSelectedStationsWeightArrays(); // StationDictionary);
+
             // Fetch pvProduction records
             folder = 1 + (folder - 1) % 2;
             var siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
@@ -542,8 +529,6 @@ namespace LEG.PV.Data.Processor
                     break;
                 case 1:
                 case 2:
-                    // Compute normalized weights
-                    SetSelectedStationsWeightArrays(); // StationDictionary);
                     // Fetch pvProduction and meteo data
                     meteoImportResult = await ImportE3DcAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
                     break;
@@ -961,6 +946,7 @@ namespace LEG.PV.Data.Processor
             List<DateTime> supportTimeStamps,
             int shiftMeteoTimeStamps = 60)                 // shift in minutes UTC -> local time
         {
+            // Compute normalized weights
             SetSelectedStationsWeightArrays();
 
             var now = DateTime.Now;

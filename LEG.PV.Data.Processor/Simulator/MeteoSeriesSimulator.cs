@@ -4,9 +4,9 @@ using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Simulator
 {
-    public class MeteoSeriesSimulator
+    internal class MeteoSeriesSimulator
     {
-        public static Dictionary<DateTime, MeteoParameters> GetMeteoSampleDictionary(
+        internal static Dictionary<DateTime, MeteoParameters> GetMeteoSampleDictionary(
             DateTime startDate, TimeSpan interval, int supportCount,
             double siteLatitude = 46,
             double siteLongitude = 10,

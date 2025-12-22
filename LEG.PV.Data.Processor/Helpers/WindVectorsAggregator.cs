@@ -1,11 +1,10 @@
 ﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Helpers
 {
     internal class WindVectorsAggregator
     {
-        const double DegToRad = Math.PI / 180.0;
-
         internal static (double windSpeed, double WindDirection) MeanWindVectorFromList(List<MeteoParameters> inputRecords, double[]? weights = null)
         {
             var count = inputRecords.Count;
@@ -32,13 +31,13 @@ namespace LEG.PV.Data.Processor.Helpers
                 var w = normalizedWeights[i];
                 if (r.WindSpeed.HasValue && r.WindDirection.HasValue)
                 {
-                    double windDirRad = r.WindDirection.Value * DegToRad;
+                    double windDirRad = r.WindDirection.Value * radPerDeg;
                     sumWind_X += r.WindSpeed.Value * Math.Cos(windDirRad) * w;
                     sumWind_Y += r.WindSpeed.Value * Math.Sin(windDirRad) * w;
                 }
             }
             var windSpeed = Math.Sqrt(sumWind_X * sumWind_X + sumWind_Y * sumWind_Y);
-            var windDirection = Math.Atan2(sumWind_Y, sumWind_X) / DegToRad;
+            var windDirection = Math.Atan2(sumWind_Y, sumWind_X) / radPerDeg;
             if (windDirection < 0) windDirection += 360.0;
 
             return (windSpeed, windDirection);

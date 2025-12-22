@@ -1,6 +1,6 @@
 ﻿using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor;
-using LEG.PV.Data.Processor.Simulator;
+using LEG.PV.Data.Processor.Interfaces;
 using MathNet.Numerics.Distributions;
 using PV.Calibration.Tool;
 using static LEG.PV.Core.Models.PvDataClass;
@@ -77,11 +77,13 @@ void ProcessSyntheticModelData(
     var installedKwP = 10.0;      // [kWp]
     var installedPower = installedKwP * 1000;
 
+    var minutesPerPeriod = 15;
+    var periodsPerHour = 60 / minutesPerPeriod;
     var now = DateTime.UtcNow;
-    var (pvRecords, modelValidRecords, periodsPerHour) = PvProductionSimulator.GetPvSimulatedRecordsList(
-        now,
+    var (pvRecords, modelValidRecords) = PvRandomRecordGenerator.GetPvSimulatedRecordsList(
         now.AddYears(-simulationsPeriod),
-        minutesPerPeriod: 15,
+        now,
+        minutesPerPeriod: minutesPerPeriod,
         pvParams: thetaModel,
         siteLatitude: 46,
         siteLongitude: 10,
@@ -93,19 +95,6 @@ void ProcessSyntheticModelData(
         applyFoggyDays: applyFoggyDays,
         applyOutliers: applyOutliers
         );
-
-    //var (pvRecords, modelValidRecords, periodsPerHour) = DataSimulator.GetPvSimulatedRecords(
-    //    thetaModel, 
-    //    installedPower: installedPower,
-    //    siteLatitude: 46,
-    //    roofAzimuth: -30,
-    //    roofElevation: 20,
-    //    simulationsPeriod: simulationsPeriod,
-    //    applyRandomNoise: applyRandomNoise,
-    //    applySnowDays: applySnowDays,
-    //    applyFoggyDays: applyFoggyDays,
-    //    applyOutliers: applyOutliers
-    //    );
 
     var defaultPriors = new PvPriors();
     var defaultModelParams = defaultPriors.PriorMeans;

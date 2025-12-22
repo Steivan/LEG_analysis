@@ -1,19 +1,12 @@
 ﻿
 using LEG.PV.Core.Models;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Simulator
 {
     internal class SolarGeometryRecordSimulator
     {
-        const double earthTilt = 23.4; // [degrees]
-        const double daysPerYears = 365.2422;
-        const int hoursPerDay = 24;
-
-        const double radPerDeg = Math.PI / 180.0;
-        const double omegaYear = 2 * Math.PI / daysPerYears;
-        const double omegaDay = 2 * Math.PI / hoursPerDay;
-
-        public static (double sunAzimut, double sunElevation, double cosOmegaYear, double omegaDay) GetSolarGeometry(
+        internal static (double sunAzimut, double sunElevation, double cosOmegaYear, double omegaDay) GetSolarGeometry(
             int startYear, DateTime timeStamp,
             double siteLatitude, double siteLongitude)
         {
@@ -44,7 +37,7 @@ namespace LEG.PV.Data.Processor.Simulator
                 Math.Round(cosOmegaDay, 4));
         }
 
-        public static PvSolarGeometry GetSimulatedPvSolarGeometry(
+        internal static PvSolarGeometry GetSimulatedPvSolarGeometry(
             int startYear,
             DateTime timeStamp, 
             double siteLatitude, 
@@ -65,7 +58,5 @@ namespace LEG.PV.Data.Processor.Simulator
 
             return roundedSolarGeometry;
         }
-
-
     }
 }

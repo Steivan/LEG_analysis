@@ -6,7 +6,7 @@ namespace LEG.PV.Data.Processor.Simulator
 {
     internal class MeteoRecordSimulator
     {
-        public static (MeteoParameters meteoParam, double snowDepth, double weight) UpdatedMeteoParameters(
+        internal static (MeteoParameters meteoParam, double snowDepth, double weight) UpdatedMeteoParameters(
             int startYear, DateTime timeStamp, int minutesPerPeriod,
             double siteLatitude, double siteLongitude,
             MeteoParameters? priortMeteoParameters,
@@ -28,7 +28,7 @@ namespace LEG.PV.Data.Processor.Simulator
             var weight = 0.0;
 
             var (sunAzimuth, sunElevation, cosOmegaYear, cosOmegaDay) = GetSolarGeometry(startYear, timeStamp, siteLatitude, siteLongitude);
-            var sinSunElevation = Math.Sin(sunElevation * Math.PI / 180.0);
+            var sinSunElevation = Math.Sin(sunElevation * radPerDeg);
 
             // Update radiation with some randomness
             if (sinSunElevation > 0.0)

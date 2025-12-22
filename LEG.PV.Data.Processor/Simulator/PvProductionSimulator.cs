@@ -1,54 +1,14 @@
 ﻿using LEG.PV.Core.Models;
+using LEG.PV.Data.Processor.Interfaces;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvPowerJacobian;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
-using LEG.PV.Data.Processor.Interfaces;
 
 namespace LEG.PV.Data.Processor.Simulator
 {
-    public class PvProductionSimulator
+    internal class PvProductionSimulator
     {
-
-        public static (List<PvRecord> dataRecord, List<bool> validRecord, int minutesPerPeriod) GetPvSimulatedRecordsList(
-            DateTime startTime,
-            DateTime endTime,
-            int minutesPerPeriod,
-            PvModelParams pvParams,
-            double siteLatitude = 46,
-            double siteLongitude = 10,
-            double installedPower = 10000,
-            double roofAzimuth = -30,
-            double roofElevation = 20,
-            bool applyRandomNoise = false,
-            bool applySnowDays = false,
-            bool applyFoggyDays = false,
-            bool applyOutliers = false)
-        { 
-            var pvRecordsDictionary = GetPvSimulatedRecordsDictionary(
-                startTime,
-                endTime,
-                minutesPerPeriod,
-                pvParams,
-                siteLatitude,
-                siteLongitude,
-                installedPower,
-                roofAzimuth,
-                roofElevation,
-                applyRandomNoise,
-                applySnowDays,
-                applyFoggyDays,
-                applyOutliers);
-
-            return (
-                pvRecordsDictionary.Select(kvp => kvp.Value.dataRecord).ToList(), 
-                pvRecordsDictionary.Select(kvp => kvp.Value.validRecord).ToList(),
-                minutesPerPeriod
-                );
-
-
-        }
-
-        public static Dictionary<DateTime, (PvRecord dataRecord, bool validRecord)> GetPvSimulatedRecordsDictionary(
+        internal static (Dictionary<DateTime, PvRecord>, Dictionary<DateTime, bool>) GetPvSimulatedRecordsDictionary(
             DateTime startTime, 
             DateTime endTime, 
             int minutesPerPeriod,
@@ -88,13 +48,14 @@ namespace LEG.PV.Data.Processor.Simulator
             int block = -1;
             int blockHour = -1;
             var blockOutlier = false;
-            var hourOutlier = false; 
+            var hourOutlier = false;
 
-            var pvRecordsDictionary = new Dictionary<DateTime, (PvRecord dataRecord, bool validRecord)>();
+            var pvRecordsDictionary = new Dictionary<DateTime, PvRecord>();
+            var pvValidReordDictionary = new Dictionary<DateTime, bool>();
             for (int i = 0; i < sampleCount; i++)
             {
                 var timestamp = startTime + TimeSpan.FromMinutes(i * minutesPerPeriod);
-                var age = (timestamp - startTime).TotalDays / 365.25;
+                var age = (timestamp - startTime).TotalDays / daysPerYears;
                 var newBlock = timestamp.Hour / hoursPerBlock;
                 var newBlockHour = timestamp.Hour % hoursPerBlock;
                 var period = timestamp.Minute / minutesPerPeriod;
@@ -147,10 +108,11 @@ namespace LEG.PV.Data.Processor.Simulator
 
                 var isValidRecord = (weight > 0) && (!applySnowDays || !isSnowyDay) && (!applyFoggyDays || !isFoggyDay) && (!applyOutliers || !isOutlier);
 
-                pvRecordsDictionary[timestamp] = (pvRecord, isValidRecord);
+                pvRecordsDictionary[timestamp] = pvRecord;
+                pvValidReordDictionary[timestamp] = isValidRecord;
             }
 
-            return pvRecordsDictionary;
+            return (pvRecordsDictionary, pvValidReordDictionary);
         }
 
         private static DateTime NormalizedDateTime(DateTime dateTime, int minutesPerPeriod)

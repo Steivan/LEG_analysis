@@ -3,6 +3,19 @@ namespace LEG.PV.Data.Processor.Simulator
 {
     internal class SimulatorParameters
     {
+        // Solar geometry constants
+        internal const double earthTilt = 23.4; // [degrees]
+        internal const double daysPerYears = 365.2422;
+        internal const int hoursPerDay = 24;
+        internal const int minutesPerHour = 60;
+        internal const double minutesPerYear = minutesPerHour * hoursPerDay * daysPerYears;
+        internal const double omegaYear = 2 * Math.PI / daysPerYears;
+        internal const double omegaDay = 2 * Math.PI / hoursPerDay;
+
+        // Mathematical constants
+        internal const double radPerDeg = Math.PI / 180.0;
+        internal const double degPerRad = 180.0 / Math.PI;
+
         // Physical constants
         internal const double maxIrradiance = 1361;                                              // [W/m^2] Solar constant
         internal const double KelvinZeroC = 273.15;                                              // [K]
@@ -46,8 +59,6 @@ namespace LEG.PV.Data.Processor.Simulator
         internal const double deltaDewPoint = 0.1;
 
         // MeteoSeriesSimulator
-        internal const int hoursPerDay = 24;
-        internal const int minutesPerHour = 60;
         internal const int hoursPerBlock = 3;
         internal const int blocksPerDay = hoursPerDay / hoursPerBlock;
 

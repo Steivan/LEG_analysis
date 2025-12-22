@@ -1,11 +1,10 @@
 ﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Helpers
 {
     internal class MeteoSeriesSmoothing
     {
-        const double DegToRad = Math.PI / 180;
-
         public static Dictionary<DateTime, MeteoParameters> SmoothBlendedPeriod(Dictionary<DateTime, MeteoParameters> quarterForecast, int filterId = 0)
         {
             void UpdateRowSource(ref double sumValues, ref double sumWeights, double value, double weight)
@@ -78,7 +77,7 @@ namespace LEG.PV.Data.Processor.Helpers
                         if (quarterForecast_ij.WindSpeed.HasValue) UpdateRowSource(ref sumWindSpeed, ref weightWindSpeed, quarterForecast_ij.WindSpeed.Value, weight);
                         if (quarterForecast_ij.WindSpeed.HasValue && quarterForecast_ij.WindDirection.HasValue)
                         {
-                            double windDirRad = quarterForecast_ij.WindDirection.Value * DegToRad;
+                            double windDirRad = quarterForecast_ij.WindDirection.Value * radPerDeg;
                             sumWind_X += quarterForecast_ij.WindSpeed.Value * Math.Cos(windDirRad) * weight;
                             sumWind_Y += quarterForecast_ij.WindSpeed.Value * Math.Sin(windDirRad) * weight;
                             weightWindDirection += weight;
@@ -99,7 +98,7 @@ namespace LEG.PV.Data.Processor.Helpers
                     diffuseRadiation: weightDiffuseRadiation > 0 ? sumDiffuseRadiation / weightDiffuseRadiation : null,
                     temperature: weightTemperature > 0 ? sumTemperatue / weightTemperature : null,
                     windSpeed: weightWindSpeed > 0 ? sumWindSpeed / weightWindSpeed : null,
-                    windDirection: weightWindDirection > 0 ? Math.Atan2(sumWind_Y, sumWind_X) / DegToRad : null,
+                    windDirection: weightWindDirection > 0 ? Math.Atan2(sumWind_Y, sumWind_X) / radPerDeg : null,
                     snowDepth: weightSnowDepth > 0 ? sumSnowDepth / weightSnowDepth : null,
                     relativeHumidity: weightRelativeHumidity > 0 ? sumRelativeHumidity / weightRelativeHumidity : null,
                     dewPoint: weightDewPoint > 0 ? sumDewPoint / weightDewPoint : null,
