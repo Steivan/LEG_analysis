@@ -147,7 +147,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Studenrain + "_1", [PvRoofDataDict[Studenrain + "_1"]] }
                     },
-                    consumers: [PvConsumerDataDict[Studenrain + "_1"]],
+                    consumers: [PvConsumerDataDict[Studenrain + "_1"], PvConsumerDataDict[Studenrain + "_2"]],
                     meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Studenrain].MeteoId]
                 ),
 

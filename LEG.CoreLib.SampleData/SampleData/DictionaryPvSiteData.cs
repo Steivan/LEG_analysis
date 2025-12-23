@@ -211,8 +211,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                     UtcShift: -1,
                     MeteoId: "Maur_meteo",
                     IndicativeNrOfInverters: 1,
-                    IndicativeNrOfRoofs: 2,
-                    IndicativeNrOfConsumers: 1
+                    IndicativeNrOfRoofs: 1,
+                    IndicativeNrOfConsumers: 2
                 ),
 
                 [TestSite] = new PvSite(

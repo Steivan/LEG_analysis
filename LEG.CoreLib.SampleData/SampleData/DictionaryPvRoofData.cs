@@ -225,8 +225,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Azi: 15.0,
                     Elev: 35.0,
                     Elev2: 0.0,
-                    Area: 55.0,
-                    Peak: 17.0
+                    Area: 80.0,
+                    Peak: 16.5
                 ),
 
                 [TestSite + "_1"] = new PvRoof(

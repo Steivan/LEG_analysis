@@ -1,5 +1,4 @@
-﻿using CsvHelper;
-using LEG.Common;
+﻿using LEG.Common;
 using LEG.PvImport.Abstractions;
 using LEG.PvImport.Abstractions.Fronius.Abstractions;
 using NPOI.SS.UserModel;
@@ -7,9 +6,9 @@ using System.Globalization;
 
 namespace LEG.PvImport.Clients.Fronius.Client
 {
-    public class FromiusLoadRecords
+    internal class FromiusLoadRecords
     {
-        public static List<IPowerRecord?> ImportFroniusRecords(string filePath, string tabName= FroniusConstants.PowerTab, int headerRow=FroniusConstants.HeaderRow)
+        internal static List<IPowerRecord?> ImportFroniusRecords(string filePath, string tabName= FroniusConstants.PowerTab, int headerRow=FroniusConstants.HeaderRow)
         {
             return ImportXls.ImportFromFile(
                 filePath,

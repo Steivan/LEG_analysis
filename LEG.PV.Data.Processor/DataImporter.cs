@@ -91,6 +91,22 @@ namespace LEG.PV.Data.Processor
             { MeteoParameterType.RadiationVariance, 1.0 }
         };
 
+        public static Dictionary<MeteoParameterType, double> OneZeroOneWeights = new Dictionary<MeteoParameterType, double>
+        {
+            { MeteoParameterType.SunshineDuration, 1.0 },
+            { MeteoParameterType.DirectRadiation, 1.0 },
+            { MeteoParameterType.DirectNormalIrradiance, 1.0 },
+            { MeteoParameterType.GlobalRadiation, 1.0 },
+            { MeteoParameterType.DiffuseRadiation, 1.0 },
+            { MeteoParameterType.Temperature, 0.0 },
+            { MeteoParameterType.WindSpeed, 0.0 },
+            { MeteoParameterType.WindDirection, 0.0 },
+            { MeteoParameterType.SnowDepth, 1.0 },
+            { MeteoParameterType.RelativeHumidity, 0.0 },
+            { MeteoParameterType.DewPoint, 0.0 },
+            { MeteoParameterType.RadiationVariance, 1.0 }
+        };
+
         public static Dictionary<MeteoParameterType, double> OneOneWeights = new Dictionary<MeteoParameterType, double>
         {
             { MeteoParameterType.SunshineDuration, 1.0 },
@@ -129,16 +145,16 @@ namespace LEG.PV.Data.Processor
             { "MaurGroup", new Dictionary<string, WeightMeteoParameters>
                 { 
                 { "SMA", new WeightMeteoParameters { Weights = ThreeOneWeights } },
-                { "KLO", new WeightMeteoParameters { Weights = OneOneWeights } },
-                { "HOE", new WeightMeteoParameters { Weights = OneZeroWeights } },
-                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }
+                { "KLO", new WeightMeteoParameters { Weights = OneOneWeights } },   
+                { "HOE", new WeightMeteoParameters { Weights = OneZeroOneWeights } },   // Radiation and SnowDept
+                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
                 }
             },
             { "BinzGroup", new Dictionary<string, WeightMeteoParameters>
                 {
                 { "SMA", new WeightMeteoParameters { Weights = ThreeOneWeights } },
-                { "HOE", new WeightMeteoParameters { Weights = OneZeroWeights } },
-                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }
+                { "HOE", new WeightMeteoParameters { Weights = OneZeroOneWeights } },   // Radiation and SnowDepth
+                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
                 }
             }
             // Add more profiles as needed
@@ -168,7 +184,7 @@ namespace LEG.PV.Data.Processor
                     bFog: 0.5,
                     lambdaKFog: 2.0
                 ) },
-                { "Senn", new(
+                { ListSites.Senn, new(
                     etha: 0.525,
                     gamma: -0.00665,
                     u0: 200.0,
@@ -179,7 +195,7 @@ namespace LEG.PV.Data.Processor
                     bFog: 0.920,
                     lambdaKFog: 1.03
                 ) },
-                { "SennV", new(                                    // SennV: elevation 35° 
+                { ListSites.SennV, new(                                    // SennV: elevation 35° 
                     etha: 0.467,
                     gamma: -0.0,
                     u0: 5.0,
@@ -189,6 +205,17 @@ namespace LEG.PV.Data.Processor
                     lambdaAFog: 0.144,
                     bFog: 1.20,
                     lambdaKFog: 0.928
+                ) },
+                { ListSites.Studenrain, new(                           // SennV: elevation 35° 
+                    etha: 0.532,
+                    gamma: -0.00,
+                    u0: 47.0,
+                    u1: 0.491,
+                    lDegr: 0.00845,
+                    dSnow: 6.74,
+                    lambdaAFog: 0.0630,
+                    bFog: 2.01,
+                    lambdaKFog: 1.97
                 ) },
                 { "Senn_Initial", new(                          // initial calibration without Snow/Fog
                     etha: 0.619,
@@ -254,7 +281,7 @@ namespace LEG.PV.Data.Processor
         }
 
         // Import meteo history and merge with actual and calculated pvProduction data
-        public async Task<MeteoImportResult> ImportProductionAndMeteoHistory(int folder, bool meteoTillNow = false)
+        public async Task<MeteoImportResult> ImportProductionAndMeteoHistory(int folder, int displayPeriod = 0)
         {
             // Compute normalized weights
             SetSelectedStationsWeightArrays(folder); // StationDictionary);
@@ -280,13 +307,13 @@ namespace LEG.PV.Data.Processor
 
             var firstImportTimestamp = pvDataRecords[0].Timestamp;
             var secondImportTimestamp = pvDataRecords[1].Timestamp;
-            var lastImportTimestamp3 = pvDataRecords[^1].Timestamp;
+            var lastImportTimestamp = pvDataRecords[^1].Timestamp;
 
             var minutesPerPeriod = (secondImportTimestamp - firstImportTimestamp).Minutes;
             var periodsPerHour = 60 / minutesPerPeriod;
 
             var firstTimestamp = firstImportTimestamp;
-            var lastTimestamp = meteoTillNow ? DateTime.Now : DateTime.Now.AddDays(10);
+            var lastTimestamp = displayPeriod==1 ? DateTime.Now : displayPeriod == 2 ? DateTime.Now.AddDays(10) : lastImportTimestamp;
 
             // Fetch geometry factors
             var (timeStamps, geometryFactors, installedPower) = await PvProduction(siteId, firstTimestamp, lastTimestamp, minutesPerPeriod, shiftSupportTimeStamps: 0);
@@ -400,9 +427,9 @@ namespace LEG.PV.Data.Processor
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportProductionHistory(int folder, bool meteoTillNow = false)      // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
+            ImportProductionHistory(int folder, int displayPeriod = 0)      // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
         {
-            var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportProductionAndMeteoHistory(folder, meteoTillNow: meteoTillNow);
+            var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportProductionAndMeteoHistory(folder, displayPeriod: displayPeriod);
 
             return (siteId, dataRecords, validRecords, installedPower, periodsPerHour);
         }
@@ -535,14 +562,18 @@ namespace LEG.PV.Data.Processor
             switch (folder)
             {
                 case 0:
-                    meteoImportResult = GenerateSyntheticData(pvModelParams, simulationsPeriod: 5);
                     displayPeriod = 0;   // synthetic meteo data is only available for the simulated period
+                    meteoImportResult = GenerateSyntheticData(pvModelParams, simulationsPeriod: 5);
                     break;
                 case 1:
                 case 2:
+                    // 1: Senn and 2: SennV site with E3Dc data
+                    meteoImportResult = await ImportProductionAndMeteoHistory(folder, displayPeriod: displayPeriod);
+                    break;
                 case 3:
-                    // Fetch pvProduction and meteo data
-                    meteoImportResult = await ImportProductionAndMeteoHistory(folder, meteoTillNow: displayPeriod > 0);
+                    // Studenrain site with Fronius data
+                    displayPeriod = 0; // data from 2011 till 2015 only
+                    meteoImportResult = await ImportProductionAndMeteoHistory(3, displayPeriod);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(folder), "Folder index out of range");

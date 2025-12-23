@@ -1,4 +1,5 @@
-﻿using LEG.PV.Core.Models;
+﻿using LEG.CoreLib.SampleData.SampleData;
+using LEG.PV.Core.Models;
 using LEG.PV.Data.Processor;
 using LEG.PV.Data.Processor.Interfaces;
 using MathNet.Numerics.Distributions;
@@ -14,12 +15,13 @@ using static PV.Calibration.Tool.BayesianCalibrator;
 //    applyFoggyDays: true,
 //    applyOutliers: !true);
 
-await CalibrateE3DcData(1, "Senn");
-await CalibrateE3DcData(2, "SennV");
+//await CalibrateProductionData(1, ListSites.Senn);
+//await CalibrateProductionData(2, ListSites.SennV);
+await CalibrateProductionData(3, ListSites.Studenrain);
 
 //ProcessSyntheticModelData();
 
-async Task CalibrateE3DcData(int folder, string label)
+async Task CalibrateProductionData(int folder, string label)
 {
     var dataImporter = new DataImporter();
     var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportProductionHistory(folder); // meteoDataLag in multiples of 5 minutes
