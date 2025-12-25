@@ -222,11 +222,11 @@ namespace LEG.CoreLib.SampleData.SampleData
                     SystemName: Studenrain + "_1",
                     EgrId: "",
                     Inverter: Studenrain + "_1",
-                    Azi: 15.0,
+                    Azi: 16.5,
                     Elev: 35.0,
                     Elev2: 0.0,
-                    Area: 80.0,
-                    Peak: 16.5
+                    Area: 50.0,
+                    Peak: 10.5
                 ),
 
                 [TestSite + "_1"] = new PvRoof(

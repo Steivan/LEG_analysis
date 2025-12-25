@@ -6,9 +6,9 @@ using System.Globalization;
 
 namespace LEG.PvImport.Clients.Fronius.Client
 {
-    internal class FromiusLoadRecords
+    public class FromiusLoadRecords
     {
-        internal static List<IPowerRecord?> ImportFroniusRecords(string filePath, string tabName= FroniusConstants.PowerTab, int headerRow=FroniusConstants.HeaderRow)
+        public static List<IPowerRecord?> ImportFroniusRecords(string filePath, string tabName= FroniusConstants.PowerTab, int headerRow=FroniusConstants.HeaderRow)
         {
             return ImportXls.ImportFromFile(
                 filePath,

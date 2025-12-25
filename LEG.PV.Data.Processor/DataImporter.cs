@@ -12,9 +12,11 @@ using LEG.PvImport.Abstractions;
 using LEG.PvImport.Clients.E3Dc.Client;
 using LEG.PvImport.Clients.Fronius.Client;
 using System.Data;
+using static LEG.CoreLib.SampleData.ReferenceData.MeteoStationProfile;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
+using static LEG.PV.Core.Models.MeteoCalibrationParameters.MeteoCalibrationParameters;
 
 namespace LEG.PV.Data.Processor
 {
@@ -41,205 +43,9 @@ namespace LEG.PV.Data.Processor
         const double latSma = 47.378;
         const double lonSma = 8.566;
 
-        public List<MeteoParameterType> MeteoParameterTypeList  { get; set; } = new()
-        {
-            MeteoParameterType.SunshineDuration,
-            MeteoParameterType.DirectRadiation,
-            MeteoParameterType.DirectNormalIrradiance,
-            MeteoParameterType.GlobalRadiation,
-            MeteoParameterType.DiffuseRadiation,
-            MeteoParameterType.Temperature,
-            MeteoParameterType.WindSpeed,
-            MeteoParameterType.WindDirection,
-            MeteoParameterType.SnowDepth,
-            MeteoParameterType.RelativeHumidity,
-            MeteoParameterType.DewPoint
-        };
-
-        public static readonly Dictionary<MeteoParameterType, bool> ParameterIsAdditive = new()
-        {
-            { MeteoParameterType.SunshineDuration, true },
-            { MeteoParameterType.DirectRadiation, true },
-            { MeteoParameterType.DirectNormalIrradiance, true },
-            { MeteoParameterType.GlobalRadiation, true },
-            { MeteoParameterType.DiffuseRadiation, true },
-            { MeteoParameterType.Temperature, false },
-            { MeteoParameterType.WindSpeed, false },
-            { MeteoParameterType.WindDirection, false },
-            { MeteoParameterType.SnowDepth, false },
-            { MeteoParameterType.RelativeHumidity, false },
-            { MeteoParameterType.DewPoint, false },
-        };
-        
         public Dictionary<MeteoParameterType, double?[]> MeteoValuesArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightMeteoArrays { get; set; } = new();
         public Dictionary<MeteoParameterType, double[]> WeightedSumMeteoValuesArrays { get; set; } = new();
-
-        public static Dictionary<MeteoParameterType, double> OneZeroWeights = new Dictionary<MeteoParameterType, double>
-        {
-            { MeteoParameterType.SunshineDuration, 1.0 },
-            { MeteoParameterType.DirectRadiation, 1.0 },
-            { MeteoParameterType.DirectNormalIrradiance, 1.0 },
-            { MeteoParameterType.GlobalRadiation, 1.0 },
-            { MeteoParameterType.DiffuseRadiation, 1.0 },
-            { MeteoParameterType.Temperature, 0.0 },
-            { MeteoParameterType.WindSpeed, 0.0 },
-            { MeteoParameterType.WindDirection, 0.0 },
-            { MeteoParameterType.SnowDepth, 0.0 },
-            { MeteoParameterType.RelativeHumidity, 0.0 },
-            { MeteoParameterType.DewPoint, 0.0 },
-            { MeteoParameterType.RadiationVariance, 1.0 }
-        };
-
-        public static Dictionary<MeteoParameterType, double> OneZeroOneWeights = new Dictionary<MeteoParameterType, double>
-        {
-            { MeteoParameterType.SunshineDuration, 1.0 },
-            { MeteoParameterType.DirectRadiation, 1.0 },
-            { MeteoParameterType.DirectNormalIrradiance, 1.0 },
-            { MeteoParameterType.GlobalRadiation, 1.0 },
-            { MeteoParameterType.DiffuseRadiation, 1.0 },
-            { MeteoParameterType.Temperature, 0.0 },
-            { MeteoParameterType.WindSpeed, 0.0 },
-            { MeteoParameterType.WindDirection, 0.0 },
-            { MeteoParameterType.SnowDepth, 1.0 },
-            { MeteoParameterType.RelativeHumidity, 0.0 },
-            { MeteoParameterType.DewPoint, 0.0 },
-            { MeteoParameterType.RadiationVariance, 1.0 }
-        };
-
-        public static Dictionary<MeteoParameterType, double> OneOneWeights = new Dictionary<MeteoParameterType, double>
-        {
-            { MeteoParameterType.SunshineDuration, 1.0 },
-            { MeteoParameterType.DirectRadiation, 1.0 },
-            { MeteoParameterType.DirectNormalIrradiance, 1.0 },
-            { MeteoParameterType.GlobalRadiation, 1.0 },
-            { MeteoParameterType.DiffuseRadiation, 1.0 },
-            { MeteoParameterType.Temperature, 1.0 },
-            { MeteoParameterType.WindSpeed, 1.0 },
-            { MeteoParameterType.WindDirection, 1.0 },
-            { MeteoParameterType.SnowDepth, 1.0 },
-            { MeteoParameterType.RelativeHumidity, 1.0 },
-            { MeteoParameterType.DewPoint, 1.0 },
-            { MeteoParameterType.RadiationVariance, 1.0 }
-        };
-
-        public static Dictionary<MeteoParameterType, double> ThreeOneWeights = new Dictionary<MeteoParameterType, double>
-        {
-            { MeteoParameterType.SunshineDuration, 3.0 },
-            { MeteoParameterType.DirectRadiation, 3.0 },
-            { MeteoParameterType.DirectNormalIrradiance, 3.0 },
-            { MeteoParameterType.GlobalRadiation, 3.0 },
-            { MeteoParameterType.DiffuseRadiation, 3.0 },
-            { MeteoParameterType.Temperature, 1.0 },
-            { MeteoParameterType.WindSpeed, 1.0 },
-            { MeteoParameterType.WindDirection, 1.0 },
-            { MeteoParameterType.SnowDepth, 1.0 },
-            { MeteoParameterType.RelativeHumidity, 1.0 },
-            { MeteoParameterType.DewPoint, 1.0 },
-            { MeteoParameterType.RadiationVariance, 1.0 }
-        };
-
-        public static readonly Dictionary<string, Dictionary<string, WeightMeteoParameters>> ProfileToStationDictionary = new()
-        {
-            // Key: profile name (e.g., "ZurichGroup", "BernGroup")
-            { "MaurGroup", new Dictionary<string, WeightMeteoParameters>
-                { 
-                { "SMA", new WeightMeteoParameters { Weights = ThreeOneWeights } },
-                { "KLO", new WeightMeteoParameters { Weights = OneOneWeights } },   
-                { "HOE", new WeightMeteoParameters { Weights = OneZeroOneWeights } },   // Radiation and SnowDept
-                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
-                }
-            },
-            { "BinzGroup", new Dictionary<string, WeightMeteoParameters>
-                {
-                { "SMA", new WeightMeteoParameters { Weights = ThreeOneWeights } },
-                { "HOE", new WeightMeteoParameters { Weights = OneZeroOneWeights } },   // Radiation and SnowDepth
-                { "UEB", new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
-                }
-            }
-            // Add more profiles as needed
-        };
-
-        public static readonly Dictionary<int, string> SiteToProfilesDictionary = new()
-        {
-            // Key: site/folder id, Value: profile name
-            { 1, "MaurGroup" },
-            { 2, "MaurGroup" },
-            { 3, "BinzGroup" },
-            // etc.
-        };
-
-        public static List<string> SelectedStationsIdList = new List<string>();
-
-        public static Dictionary<string, PvModelParams> PvModelParamsDictionary = new ()
-            {
-                { "Synthetic", new(                                    // Model parameters fo synthetic data
-                    etha: 0.9,
-                    gamma: -0.005,
-                    u0: 25,
-                    u1: 0.4,
-                    lDegr: 0.01,
-                    dSnow: 15.0,
-                    lambdaAFog: 0.1,
-                    bFog: 0.5,
-                    lambdaKFog: 2.0
-                ) },
-                { ListSites.Senn, new(
-                    etha: 0.525,
-                    gamma: -0.00665,
-                    u0: 200.0,
-                    u1: 20.0,
-                    lDegr: 0.0127,
-                    dSnow: 1.27,
-                    lambdaAFog: -0.252,
-                    bFog: 0.920,
-                    lambdaKFog: 1.03
-                ) },
-                { ListSites.SennV, new(                                    // SennV: elevation 35° 
-                    etha: 0.467,
-                    gamma: -0.0,
-                    u0: 5.0,
-                    u1: 0.001,
-                    lDegr: 0.00797,
-                    dSnow: 1.09,
-                    lambdaAFog: 0.144,
-                    bFog: 1.20,
-                    lambdaKFog: 0.928
-                ) },
-                { ListSites.Studenrain, new(                           // SennV: elevation 35° 
-                    etha: 0.532,
-                    gamma: -0.00,
-                    u0: 47.0,
-                    u1: 0.491,
-                    lDegr: 0.00845,
-                    dSnow: 6.74,
-                    lambdaAFog: 0.0630,
-                    bFog: 2.01,
-                    lambdaKFog: 1.97
-                ) },
-                { "Senn_Initial", new(                          // initial calibration without Snow/Fog
-                    etha: 0.619,
-                    gamma: -0.00461,
-                    u0: 213.7,
-                    u1: 0.173,
-                    lDegr: 0.0139,
-                    dSnow: 15.0,
-                    lambdaAFog: 2.0,
-                    bFog: 1.0,
-                    lambdaKFog: 2.0
-                ) },
-            { "SennV_Initial", new( 
-                    etha: 0.478,
-                    gamma: -0.00096,
-                    u0: 29.0,
-                    u1: 0.500,
-                    lDegr: 0.00631,
-                    dSnow: 2.0,
-                    lambdaAFog: 2.0,
-                    bFog: 1.0,
-                    lambdaKFog: 2.0
-                ) },    
-        };
 
         public static List<string> AvailableSitesIdList = PvModelParamsDictionary.Keys.ToList();
 

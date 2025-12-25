@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvConstants;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoConstants;
+using LEG.CoreLib.SampleData.ReferenceData;
 
 namespace PV.Forecasting.App.Controllers
 {
@@ -117,7 +118,7 @@ namespace PV.Forecasting.App.Controllers
                 if (group == PowerGroup || group == ResidualsGroup)
                     groupLocations[group] = new List<string> { "PV Site" };
                 else
-                    groupLocations[group] = DataImporter.SelectedStationsIdList; // or filter as needed
+                    groupLocations[group] = MeteoStationProfile.SelectedStationsIdList; // or filter as needed
             }
 
             // 2. Set up default checked groups, variables, and locations (step 2)
