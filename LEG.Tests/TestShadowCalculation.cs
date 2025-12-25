@@ -1,5 +1,6 @@
-﻿using static LEG.Common.Utils.RoofGeometry;
+﻿using static LEG.CoreLib.SampleData.SampleData.ListSites;
 using static LEG.Common.Utils.ShadowCalculator;
+using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofObstacles;
 
 namespace LEG.Tests
 {
@@ -29,8 +30,8 @@ namespace LEG.Tests
             var topLineOrigin = lukarnePolygon[0];
             var westLineOrigin = lukarnePolygon[1];
             var eastLineOrigin = lukarnePolygon[5];
-            var topLineLength = -lukarnePolygon[3].Y / cosRoofEl;
-            var sideLineLength = (lukarnePolygon[1].Y - lukarnePolygon[2].Y) / cosRoofEl;
+            var topLineLength = 4.22; // -lukarnePolygon[3].Y * cosRoofEl;
+            var sideLineLength = 2.46; // (lukarnePolygon[1].Y - lukarnePolygon[2].Y) * cosRoofEl;
 
             var panelWestPolygon = GetRoofPoints2DList(new List<(double x, double y)>
                 {
@@ -58,21 +59,26 @@ namespace LEG.Tests
                     (1.84, -5.11)
                 });
 
+            var roofId = Studenrain + "_1";
+            var roofPanelsArea = GetRoofPanelsArea(roofId);
 
             for (var deltaSunAzimuth = - 85.0; deltaSunAzimuth <= 85.0; deltaSunAzimuth += 34.0)
             {
                 var sunAzimuth = roofAzimuth + deltaSunAzimuth;
                 for (var sunElevation = 15.0; sunElevation < 90.0; sunElevation += 20.0)
                 {
-                    var (totalWestArea, shadowedTopWestArea, shadowTopWestPercentage) = CalculateCompleteShadowAnalysis(
+                    var totalShadowArea = GetRoofShadowArea(roofId, sunAzimuth, sunElevation);
+
+                    var (totalWestArea, shadowedTopWestArea) = CalculateCompleteShadowAnalysis(
                             panelWestPolygon,
                             roofAzimuth,
                             roofElevation,
                             sunAzimuth,
                             sunElevation,
                             topLineOrigin,
-                            topLineLength);
-                    var (_, shadowedWestWestArea, shadowWestWestPercentage) = CalculateCompleteShadowAnalysis(
+                            topLineLength,
+                            true);
+                    var (_, shadowedWestWestArea) = CalculateCompleteShadowAnalysis(
                             panelWestPolygon,
                             roofAzimuth,
                             roofElevation,
@@ -82,15 +88,16 @@ namespace LEG.Tests
                             sideLineLength);
                     var shadowAreaWest = Math.Max(shadowedTopWestArea, shadowedWestWestArea);
 
-                    var (totalEastArea, shadowedTopEastArea, shadowTopEastPercentage) = CalculateCompleteShadowAnalysis(
+                    var (totalEastArea, shadowedTopEastArea) = CalculateCompleteShadowAnalysis(
                             panelEastPolygon,
                             roofAzimuth,
                             roofElevation,
                             sunAzimuth,
                             sunElevation,
                             topLineOrigin,
-                            topLineLength);
-                    var (_, shadowedEastEastArea, shadowEastEastPercentage) = CalculateCompleteShadowAnalysis(
+                            topLineLength,
+                            true);
+                    var (_, shadowedEastEastArea) = CalculateCompleteShadowAnalysis(
                             panelEastPolygon,
                             roofAzimuth,
                             roofElevation,
@@ -103,6 +110,9 @@ namespace LEG.Tests
                     var totalArea = totalWestArea + totalEastArea;
                     var shadowedArea = shadowAreaWest + shadowAreaEast;
                     var shadowPercentage = totalArea > 0.0 ? shadowedArea / totalArea * 100.0 : 0.0;
+
+                    Assert.AreEqual(roofPanelsArea, totalArea,0.01);
+                    Assert.AreEqual(totalShadowArea, shadowedArea, 0.01);
                 }
             }
         }

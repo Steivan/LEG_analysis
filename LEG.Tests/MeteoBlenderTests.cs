@@ -1,7 +1,6 @@
 ﻿using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.PV.Data.Processor.Helpers;
 using LEG.PV.Data.Processor.Interfaces;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.Tests

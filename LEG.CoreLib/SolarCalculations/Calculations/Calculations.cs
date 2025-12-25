@@ -1,14 +1,16 @@
 ﻿using LEG.Common.Utils;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.CoreLib.HorizonProfiles;
+using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.CoreLib.SolarCalculations.Utilities;
 using LEG.HorizonProfiles.Abstractions;
+using static LEG.CoreLib.SolarCalculations.Calculations.PvShadowCalculations;
 
 namespace LEG.CoreLib.SolarCalculations.Calculations
 {
     public static class SolarCalculate
     {
-        public static (double[] azi, double[] elev, double[] elev2, double[] size, double[] peak) GetRoofArrays(
+        public static (double[] azi, double[] elev, double[] elev2, double[] size, double[] peak, bool[] hasPanelsAndObstacles) GetRoofArrays(
                 List<PvRoof> roofRecords)
         // Extract roof data from List of PvRoof records and return as 1D arrays per attribute
         {
@@ -18,16 +20,18 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             var elev2 = new double[nrRoofs];
             var size = new double[nrRoofs];
             var peak = new double[nrRoofs];
+            var hasPanelsAndObstacles = new bool[nrRoofs];
             for (var i = 0; i < nrRoofs; i++)
             {
                 azi[i] = roofRecords[i].Azi;
                 elev[i] = roofRecords[i].Elev;
                 elev2[i] = roofRecords[i].Elev2;
-                size[i] = roofRecords[i].Area;
+                size[i] = GetRoofPanelsArea(roofRecords[i].PanelsPolygons, estimatedArea: roofRecords[i].Area);
                 peak[i] = roofRecords[i].Peak;
+                hasPanelsAndObstacles[i] = roofRecords[i].HasPanelsAndHorizontalObstacles;
             }
 
-            return (azi, elev, elev2, size, peak);
+            return (azi, elev, elev2, size, peak, hasPanelsAndObstacles);
         }
 
         public static async Task<SolarProductionDetails> ComputePvSiteDetailedProductionFromSiteData(
@@ -66,7 +70,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                 .ToList();
             var nrRoofs = roofsList.Count;
 
-            var (azi, elev, elev2, size, peak) = GetRoofArrays(roofsList);
+            var (azi, elev, elev2, size, peak, hasPanelsAndObstacles) = GetRoofArrays(roofsList);
             var (_, _, factorModel) = FourierHelpers.GetFourierMeteo(pvSiteModel.MeteoProfile);
             var peakSum = peak.Sum();
 
@@ -140,7 +144,18 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                     {
                         for (var roof = 1; roof <= nrRoofs; roof++)
                         {
-                            var geometryFactor = AstroGeometry.GetCosAngleToSun(sunAziDeg, sunElevDeg, azi[roof - 1], elev[roof - 1], 0);
+                            var shadowFactor = 1.0;
+                            if (hasPanelsAndObstacles[roof - 1])
+                            {
+                                var roofShadowArea = GetRoofShadowArea(
+                                    roofsList[roof - 1].PanelsPolygons,
+                                    roofsList[roof - 1].HorizontalObstacles,
+                                    azi[roof - 1], elev[roof - 1], sunAziDeg, sunElevDeg);
+                                shadowFactor = size[roof-1] > 0 ? (1.0 - roofShadowArea / size[roof - 1]) : 1.0;
+                            }
+                            shadowFactor = shadowFactor < 0.0 ? 0.0 : shadowFactor > 1.0 ? 1.0 : shadowFactor;
+
+                            var geometryFactor = shadowFactor * AstroGeometry.GetCosAngleToSun(sunAziDeg, sunElevDeg, azi[roof - 1], elev[roof - 1], 0);
                             var combinedFactor = geometryFactor * factorSun;
 
                             theoreticalIrradianceFactor[roof - 1, indexAnnualSupport] = geometryFactor;

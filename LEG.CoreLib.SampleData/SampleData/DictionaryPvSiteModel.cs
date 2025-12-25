@@ -7,7 +7,6 @@ using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofData;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvSiteData;
 using static LEG.CoreLib.SampleData.SampleData.ListSites;
 
-
 namespace LEG.CoreLib.SampleData.SampleData
 {
     internal class DictionaryPvSiteModel
@@ -214,7 +213,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                                     Elev: 25.0,
                                     Elev2: 0.0,
                                     Area: 100.0,
-                                    Peak: 20.0),
+                                    Peak: 20.0,
+                                    null, null),
                                 new PvRoof(
                                     SystemName: "TestRoof2",
                                     EgrId: "",
@@ -223,7 +223,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                                     Elev: 25.0,
                                     Elev2: 0.0,
                                     Area: 100.0,
-                                    Peak: 20.0)
+                                    Peak: 20.0,
+                                    null, null)
                             ]
                         }
                     },

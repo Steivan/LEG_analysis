@@ -87,7 +87,8 @@ namespace LEG.Common.Utils
             double horizontalLineLength,
             double cosRoofAzi,
             double sinRoofAzi,
-            double cosRoofEl)
+            double cosRoofEl,
+            bool computeTotalArea = false)
         {
             bool IsTriangleLeftHanded(RoofPoint2D a, RoofPoint2D b, RoofPoint2D c)
             {
@@ -96,10 +97,12 @@ namespace LEG.Common.Utils
             }
 
             // Calculate areas
-            var totalArea = CalculatePolygonArea(panelPolygon);
+            var totalArea = computeTotalArea ? CalculatePolygonArea(panelPolygon) : 0.0;
+
             if (!sunIsVisible)
             {
                 // Entire panel is in shadow
+                totalArea = computeTotalArea ? totalArea : CalculatePolygonArea(panelPolygon);
                 return (totalArea, totalArea);
             }
             // Create shadow polygon (triangle)
@@ -271,7 +274,7 @@ namespace LEG.Common.Utils
         /// <summary>
         /// Complete calculation combining shadow vector and area calculations
         /// </summary>
-        public static (double TotalArea, double ShadowedArea, double ShadowPercentage)
+        public static (double TotalArea, double ShadowedArea)
             CalculateCompleteShadowAnalysis(
                 List<RoofPoint2D> panelPolygon,
                 double roofAzimuth,
@@ -279,7 +282,8 @@ namespace LEG.Common.Utils
                 double sunAzimuth,
                 double sunElevation,
                 RoofPoint2D horizontalLineOrigin,
-                double horizontalLineLength)
+                double horizontalLineLength,
+                bool computeTotalArea = false)
         {
             // Get shadow vector from previous calculation
             var (sunIsVisible, shadowVector, baseLineVector, cosRoofAzi, sinRoofAzi, cosRoofEl) = CalculateRoofShadow(
@@ -296,11 +300,12 @@ namespace LEG.Common.Utils
                 horizontalLineLength,
                 cosRoofAzi,
                 sinRoofAzi,
-                cosRoofEl);
+                cosRoofEl,
+                computeTotalArea: computeTotalArea);
 
             double shadowPercentage = totalArea > 0 ? (shadowedArea / totalArea) * 100f : 0f;
 
-            return (totalArea, shadowedArea, shadowPercentage);
+            return (totalArea, shadowedArea);
         }
     }
 }

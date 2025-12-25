@@ -120,7 +120,7 @@ namespace LEG.Common.Utils
 
             var checkShadowVector = Vector3.Cross(roofNormal, Vector3.Cross(horizontalLine, sunDirection));
             var isParallel = Vector3.Cross(shadowVector, checkShadowVector).LengthSquared() < 1e-6;
-            if (!isParallel)
+            if (sunIsVisible && !isParallel)
             { 
                 throw new InvalidOperationException("Calculated shadow vector is not parallel to expected direction.");
             }

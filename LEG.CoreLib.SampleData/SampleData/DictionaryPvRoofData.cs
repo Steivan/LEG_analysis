@@ -1,5 +1,6 @@
 ﻿using static LEG.CoreLib.SampleData.SampleData.ListSites;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
+using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofObstacles;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {
@@ -16,7 +17,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 34.0,
                     Elev2: 0.0,
                     Area: 45.0,
-                    Peak: 9.0
+                    Peak: 9.0,
+                    null,
+                    null
                     ),
                 [Bagnera + "_2"] = new PvRoof(
                     SystemName: Bagnera + "_2",
@@ -26,7 +29,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 33.0,
                     Elev2: 0.0,
                     Area: 45.0,
-                    Peak: 9.0
+                    Peak: 9.0,
+                    null,
+                    null
                 ),
 
                 [Bos_cha + "_1"] = new PvRoof(
@@ -37,7 +42,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 36.0,
                     Elev2: 0.0,
                     Area: 200.0,
-                    Peak: 27.0
+                    Peak: 27.0,
+                    null,
+                    null
                 ),
                 [Bos_cha + "_2"] = new PvRoof(
                     SystemName: Bos_cha + "_2",
@@ -47,7 +54,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 36.0,
                     Elev2: 0.0,
                     Area: 200.0,
-                    Peak: 26.0
+                    Peak: 26.0,
+                    null,
+                    null
                 ),
 
                 [Clozza + "_1"] = new PvRoof(
@@ -58,7 +67,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 30.0,
                     Elev2: 0.0,
                     Area: 50.0,
-                    Peak: 10.0
+                    Peak: 10.0,
+                    null,
+                    null
                 ),
                 [Clozza + "_2"] = new PvRoof(
                     SystemName: Clozza + "_2",
@@ -68,7 +79,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 45.0,
                     Elev2: 0.0,
                     Area: 50.0,
-                    Peak: 10.0
+                    Peak: 10.0,
+                    null,
+                    null
                 ),
                 [Clozza + "_3"] = new PvRoof(
                     SystemName: Clozza + "_3",
@@ -78,7 +91,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 90.0,
                     Elev2: 0.0,
                     Area: 50.0,
-                    Peak: 8.0
+                    Peak: 8.0,
+                    null,
+                    null
                 ),
 
                 [Ftan + "_1"] = new PvRoof(
@@ -89,7 +104,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 20.0,
                     Elev2: 0.0,
                     Area: 55.0,
-                    Peak: 11.0
+                    Peak: 11.0,
+                    null,
+                    null
                 ),
                 [Ftan + "_2"] = new PvRoof(
                     SystemName: Ftan + "_2",
@@ -99,7 +116,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 20.0,
                     Elev2: 0.0,
                     Area: 55.0,
-                    Peak: 11.0
+                    Peak: 11.0,
+                    null,
+                    null
                 ),
 
                 [Fuorcla + "_1"] = new PvRoof(
@@ -110,7 +129,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 60.0,
                     Elev2: 0.0,
                     Area: 10.0,
-                    Peak: 2.0
+                    Peak: 2.0,
+                    null,
+                    null
                 ),
 
                 [Guldenen + "_1"] = new PvRoof(
@@ -121,7 +142,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 10.0,
                     Elev2: 0.0,
                     Area: 31.0,
-                    Peak: 6.0
+                    Peak: 6.0,
+                    null,
+                    null
                 ),
                 [Guldenen + "_2"] = new PvRoof(
                     SystemName: Guldenen + "_2",
@@ -131,7 +154,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 20.0,
                     Elev2: 0.0,
                     Area: 31.0,
-                    Peak: 6.0
+                    Peak: 6.0,
+                    null,
+                    null
                 ),
 
                 [Kleiner + "_1"] = new PvRoof(
@@ -142,7 +167,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 42.0,
                     Elev2: 0.0,
                     Area: 130.0,
-                    Peak: 10.0
+                    Peak: 10.0,
+                    null,
+                    null
                 ),
                 [Kleiner + "_2"] = new PvRoof(
                     SystemName: Kleiner + "_2",
@@ -152,7 +179,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 41.0,
                     Elev2: 0.0,
                     Area: 130.0,
-                    Peak: 10.0
+                    Peak: 10.0,
+                    null,
+                    null
                 ),
 
                 [Liuns + "_1"] = new PvRoof(
@@ -163,7 +192,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 20.0,
                     Elev2: 0.0,
                     Area: 57.0,
-                    Peak: 33 * 0.465 // 13.53
+                    Peak: 33 * 0.465, // 13.53
+                    null,
+                    null
                 ),
                 [Liuns + "_2"] = new PvRoof(
                     SystemName: Liuns + "_2",
@@ -173,7 +204,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 20.0,
                     Elev2: 0.0,
                     Area: 41.0,
-                    Peak: 22 * 0.41 // 9.02
+                    Peak: 22 * 0.41, // 9.02
+                    null,
+                    null
                 ),
 
                 [Lotz + "_1"] = new PvRoof(
@@ -184,7 +217,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 35.0,
                     Elev2: 0.0,
                     Area: 86.36,
-                    Peak: 17.34
+                    Peak: 17.34,
+                    null,
+                    null
                 ),
 
                 [Senn + "_1"] = new PvRoof(
@@ -195,7 +230,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 35.0,
                     Elev2: 0.0,
                     Area: 25.0,
-                    Peak: 5.88
+                    Peak: 5.88,
+                    null,
+                    null
                 ),
                 [Senn + "_2"] = new PvRoof(
                     SystemName: Senn + "_2",
@@ -205,7 +242,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 9.0,
                     Elev2: 0.0,
                     Area: 25.0,
-                    Peak: 5.41
+                    Peak: 5.41,
+                    null,
+                    null
                 ),
 
                 [SennV + "_1"] = new PvRoof(
@@ -216,7 +255,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 35.0,
                     Elev2: 0.0,
                     Area: 25.0,
-                    Peak: 20.0
+                    Peak: 20.0,
+                    null,
+                    null
                 ),
                 [Studenrain + "_1"] = new PvRoof(
                     SystemName: Studenrain + "_1",
@@ -225,8 +266,10 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Azi: 16.5,
                     Elev: 35.0,
                     Elev2: 0.0,
-                    Area: 50.0,
-                    Peak: 10.5
+                    Area: 55.0,
+                    Peak: 10.5,
+                    PvRoofPanelPolygons[Studenrain + "_1"],
+                    PvRoofHorizontalObstacles[Studenrain + "_1"]
                 ),
 
                 [TestSite + "_1"] = new PvRoof(
@@ -237,7 +280,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 25.0,
                     Elev2: 0.0,
                     Area: 100.0,
-                    Peak: 20.0
+                    Peak: 20.0,
+                    null,
+                    null
                 ),
                 [TestSite + "_2"] = new PvRoof(
                     SystemName: TestSite + "_2",
@@ -247,7 +292,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 25.0,
                     Elev2: 0.0,
                     Area: 100.0,
-                    Peak: 20.0
+                    Peak: 20.0,
+                    null,
+                    null
                 ),
 
                 [Tof + "_1"] = new PvRoof(
@@ -258,7 +305,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 32.0,
                     Elev2: 0.0,
                     Area: 75.0,
-                    Peak: 36 * 0.44 // 15.84
+                    Peak: 36 * 0.44, // 15.84
+                    null,
+                    null
                 ),
                 [Tof + "_2"] = new PvRoof(
                     SystemName: Tof + "_2",
@@ -268,7 +317,9 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 22.0,
                     Elev2: 0.0,
                     Area: 75.0,
-                    Peak: 62 * 0.44 // 27.28
+                    Peak: 62 * 0.44, // 27.28
+                    null,
+                    null
                 ),
             };
     }
