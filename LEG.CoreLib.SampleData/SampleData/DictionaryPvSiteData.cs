@@ -1,8 +1,9 @@
-﻿using static LEG.CoreLib.SampleData.SampleData.ListSites;
+﻿using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
 using static LEG.CoreLib.SampleData.SampleData.DictionarySiteCoordinates;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using static LEG.CoreLib.Abstractions.ReferenceData.SiteStatus;
+using static LEG.CoreLib.SampleData.ReferenceData.StationNamesList;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {
@@ -158,7 +159,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Lon: SiteLatLonElevDict[Lotz].GetLongitude(),
                     Lat: SiteLatLonElevDict[Lotz].GetLatitude(),
                     UtcShift: -1,
-                    MeteoId: "Maur_meteo",
+                    MeteoId: Maur_meteo,
                     IndicativeNrOfInverters: 1,
                     IndicativeNrOfRoofs: 1,
                     IndicativeNrOfConsumers: 0
@@ -175,10 +176,11 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Lon: SiteLatLonElevDict[Senn].GetLongitude(),
                     Lat: SiteLatLonElevDict[Senn].GetLatitude(),
                     UtcShift: -1,
-                    MeteoId: "Senn_meteo",
+                    MeteoId: Senn_meteo,
                     IndicativeNrOfInverters: 1,
                     IndicativeNrOfRoofs: 2,
-                    IndicativeNrOfConsumers: 1
+                    IndicativeNrOfConsumers: 1,
+                    MeteoGroupId: MaurGroup
                 ),
 
                 [SennV] = new PvSite(
@@ -195,7 +197,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                     MeteoId: "Senn_meteo",
                     IndicativeNrOfInverters: 1,
                     IndicativeNrOfRoofs: 2,
-                    IndicativeNrOfConsumers: 2
+                    IndicativeNrOfConsumers: 2,
+                    MeteoGroupId: MaurGroup
                 ),
 
                 [Studenrain] = new PvSite(
@@ -212,7 +215,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                     MeteoId: "Maur_meteo",
                     IndicativeNrOfInverters: 1,
                     IndicativeNrOfRoofs: 1,
-                    IndicativeNrOfConsumers: 2
+                    IndicativeNrOfConsumers: 2,
+                    MeteoGroupId: BinzGroup
                 ),
 
                 [TestSite] = new PvSite(

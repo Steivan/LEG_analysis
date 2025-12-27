@@ -35,7 +35,7 @@ namespace CalibrationApp
             int recordsPerDay = 96;
 
             // PV Reference model
-            var referenceModelId = modelNr == 1 ? ListSites.Senn : ListSites.SennV;
+            var referenceModelId = modelNr == 1 ? SiteNamesList.Senn : SiteNamesList.SennV;
 
             var folder = dataFolder + subFolder;
             var aggregationRecord = new E3DcAggregateArrayRecord();

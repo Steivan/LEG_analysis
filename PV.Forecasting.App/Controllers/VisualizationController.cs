@@ -17,7 +17,7 @@ namespace PV.Forecasting.App.Controllers
 {
     public class VisualizationController : Controller
     {
-        string[] siteIds = { ListSites.SyntheticSite, ListSites.Senn, ListSites.SennV, ListSites.Studenrain };
+        string[] siteIds = { SiteNamesList.SyntheticSite, SiteNamesList.Senn, SiteNamesList.SennV, SiteNamesList.Studenrain };
 
         // *****************************************************************************************************************
 

@@ -5,7 +5,8 @@ using static LEG.CoreLib.SampleData.SampleData.DictionaryPvConsumers;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvInverters;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofData;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvSiteData;
-using static LEG.CoreLib.SampleData.SampleData.ListSites;
+using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
+using static LEG.CoreLib.SampleData.ReferenceData.StationNamesList;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {
@@ -172,7 +173,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Tof].MeteoId]
                 ),
 
-                ["Manual"] = new PvSiteModel(
+                [Manual] = new PvSiteModel(
                     pvSite: new PvSite(
                         SystemName: "TestSite",
                         EgId: "",
@@ -184,7 +185,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                         Lon: 10.0,
                         Lat: 50.0,
                         UtcShift: -1,
-                        MeteoId: "TestMeteoId",
+                        MeteoId: TestProfile,
                         IndicativeNrOfInverters: 1,
                         IndicativeNrOfRoofs: 2,
                         IndicativeNrOfConsumers: 0
@@ -242,7 +243,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                             HourlyProfileId: "TestHourlyProfile"
                         )
                     ],
-                    meteoProfile: MeteoProfiles.MeteoDict["TestProfile"]
+                    meteoProfile: MeteoProfiles.MeteoDict[TestProfile]
                 ),
             };
     }

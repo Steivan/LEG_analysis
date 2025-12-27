@@ -1,4 +1,4 @@
-﻿using static LEG.CoreLib.SampleData.SampleData.ListSites;
+﻿using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
 using static LEG.Common.Utils.ShadowCalculator;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofObstacles;
 

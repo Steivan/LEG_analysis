@@ -14,9 +14,9 @@ const double siteElevation = 800;
 
 // Use the getter from the SampleData project
 var siteOptions = PvSiteModelGetters.GetSitesList();
-siteOptions.Add("Manual");
+siteOptions.Add(SiteNamesList.Manual);
 
-siteName = "Liuns";
+siteName = SiteNamesList.Liuns;
 const double nearbySitesLookupDistance = 250; // meters
 
 // Instantiate the providers from the SampleData project

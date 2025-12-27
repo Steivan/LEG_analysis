@@ -1,4 +1,4 @@
-﻿using static LEG.CoreLib.SampleData.SampleData.ListSites;
+﻿using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {

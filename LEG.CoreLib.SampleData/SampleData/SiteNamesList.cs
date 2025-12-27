@@ -1,7 +1,7 @@
 ﻿
 namespace LEG.CoreLib.SampleData.SampleData
 {
-    public class ListSites
+    public class SiteNamesList
     {
         public const string Bagnera = nameof(Bagnera);
         public const string Bos_cha = nameof(Bos_cha);
@@ -18,10 +18,11 @@ namespace LEG.CoreLib.SampleData.SampleData
         public const string TestSite = nameof(TestSite);
         public const string Tof = nameof(Tof);
 
+        public const string Manual = nameof(Manual);
         public const string SyntheticSite = nameof(SyntheticSite);
 
         internal static List<string> SitesList = [
-            Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Kleiner, Liuns, Lotz, Senn, SennV, Studenrain, TestSite, Tof, "Manual"
+            Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Kleiner, Liuns, Lotz, Senn, SennV, Studenrain, TestSite, Tof, Manual
         ];
     }
 }

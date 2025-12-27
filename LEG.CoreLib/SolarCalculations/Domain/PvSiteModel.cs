@@ -1,9 +1,5 @@
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.SwissTopo.Abstractions;
-using LEG.SwissTopo.Client.SwissTopo;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LEG.CoreLib.SolarCalculations.Domain
 {

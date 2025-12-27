@@ -13,6 +13,7 @@ using LEG.PvImport.Clients.E3Dc.Client;
 using LEG.PvImport.Clients.Fronius.Client;
 using System.Data;
 using static LEG.CoreLib.SampleData.ReferenceData.MeteoStationProfile;
+using static LEG.CoreLib.SampleData.ReferenceData.MeteoParameterTypes;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
@@ -60,7 +61,7 @@ namespace LEG.PV.Data.Processor
             bool applyFoggyDays = true;
             bool applyOutliers = true;
 
-            var siteId = ListSites.SyntheticSite;
+            var siteId = SiteNamesList.SyntheticSite;
             var minutesPerPeriod = 15;
             var periodsPerHour = 60 / minutesPerPeriod;
             var now = DateTime.UtcNow;
@@ -96,11 +97,11 @@ namespace LEG.PV.Data.Processor
             var pvDataRecords = new List<IPowerRecord>();
             switch (siteId)
             {
-                case ListSites.Senn:
-                case ListSites.SennV:
+                case SiteNamesList.Senn:
+                case SiteNamesList.SennV:
                     pvDataRecords = E3DcLoadPeriodRecords.LoadPowerRecords(siteId);
                     break;
-                case ListSites.Studenrain:
+                case SiteNamesList.Studenrain:
                     pvDataRecords = FroniusLoadPeriodRecords.LoadPowerRecords(minutesShift: 20); // Shift to align with meteo data
                     break;
                 default:
@@ -366,16 +367,16 @@ namespace LEG.PV.Data.Processor
             MeteoImportResult meteoImportResult = null;
             switch (siteId)
             {
-                case ListSites.SyntheticSite:
+                case SiteNamesList.SyntheticSite:
                     displayPeriod = 0;   // synthetic meteo data is only available for the simulated period
                     meteoImportResult = GenerateSyntheticData(pvModelParams, simulationsPeriod: 5);
                     break;
-                case ListSites.Senn:
-                case ListSites.SennV:
+                case SiteNamesList.Senn:
+                case SiteNamesList.SennV:
                     // 1: Senn and 2: SennV site with E3Dc data
                     meteoImportResult = await ImportProductionAndMeteoHistory(siteId, displayPeriod: displayPeriod);
                     break;
-                case ListSites.Studenrain:
+                case SiteNamesList.Studenrain:
                     // Studenrain site with Fronius data
                     displayPeriod = 0; // data from 2011 till 2015 only
                     meteoImportResult = await ImportProductionAndMeteoHistory(siteId, displayPeriod);
@@ -994,13 +995,7 @@ namespace LEG.PV.Data.Processor
         // Helper method to get weight arrays for all selected stations
         private void SetSelectedStationsWeightArrays(string siteId) //Dictionary<string, WeightMeteoParameters> stationDictionary)
         {
-            var profilesList = SiteToProfilesDictionary.Keys.ToList();
-            if (!profilesList.Contains(siteId))
-            {
-                throw new Exception($"Site ID {siteId} not found in SiteToProfilesDictionary.");
-            }
-
-            var stationDictionary = ProfileToStationDictionary[SiteToProfilesDictionary[siteId]];
+            var stationDictionary = PvSiteModelGetters.GetSiteMeteoGroup(siteId);   // The getter checks for site and group existence
             SelectedStationsIdList = stationDictionary.Keys.ToList();
             var stationsCount = SelectedStationsIdList.Count;
 

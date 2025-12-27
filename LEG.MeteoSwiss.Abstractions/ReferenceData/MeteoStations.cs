@@ -6,41 +6,41 @@
     /// </summary>
     public static class MeteoStations
     {
-        public const string AND = "AND"; // Andermatt
-        public const string ARO = "ARO"; // Arosa
-        public const string BEH = "BEH"; // Bernhardin
-        public const string BIV = "BIV"; // Bivio
-        public const string BUF = "BUF"; // Buffalora
-        public const string CHU = "CHU"; // Chur
-        public const string CMA = "CMA"; // Cimetta
-        public const string COV = "COV"; // Covara
-        public const string DAV = "DAV"; // Davos
-        public const string DIS = "DIS"; // Disentis
-        public const string GRO = "GRO"; // Grono
-        public const string GUE = "GUE"; // Gütsch
-        public const string HOE = "HOE"; // Hörnli
-        public const string ILZ = "ILZ"; // Ilanz
-        public const string KLO = "KLO"; // Kloten
-        public const string LAE = "LAE"; // Lägern
-        public const string LAT = "LAT"; // La Dôle
-        public const string NAS = "NAS"; // Nàss
-        public const string PFA = "PFA"; // Pfäffikon
-        public const string PMA = "PMA"; // Plaffeien
-        public const string REH = "REH"; // Rehen
-        public const string ROB = "ROB"; // Robbia
-        public const string SAM = "SAM"; // Samedan
-        public const string SBE = "SBE"; // Säntis
-        public const string SCU = "SCU"; // Scuol
-        public const string SIA = "SIA"; // Sial
-        public const string SMM = "SMM"; // St. Maria
-        public const string SRS = "SRS"; // Sils/Segl Maria
-        public const string SMA = "SMA"; // Zürich-Fluntern
-        public const string UEB = "UEB"; // Uetliberg
-        public const string VAB = "VAB"; // Valbella
-        public const string VIO = "VIO"; // Vicosoprano
-        public const string VLS = "VLS"; // Vals
-        public const string WAE = "WAE"; // Wädenswil
-        public const string WFJ = "WFJ"; // Weissfluhjoch
+        public const string AND = nameof(AND); // Andermatt
+        public const string ARO = nameof(ARO); // Arosa
+        public const string BEH = nameof(BEH); // Bernhardin
+        public const string BIV = nameof(BIV); // Bivio
+        public const string BUF = nameof(BUF); // Buffalora
+        public const string CHU = nameof(CHU); // Chur
+        public const string CMA = nameof(CMA); // Cimetta
+        public const string COV = nameof(COV); // Covara
+        public const string DAV = nameof(DAV); // Davos
+        public const string DIS = nameof(DIS); // Disentis
+        public const string GRO = nameof(GRO); // Grono
+        public const string GUE = nameof(GUE); // Gütsch
+        public const string HOE = nameof(HOE); // Hörnli
+        public const string ILZ = nameof(ILZ); // Ilanz
+        public const string KLO = nameof(KLO); // Kloten
+        public const string LAE = nameof(LAE); // Lägern
+        public const string LAT = nameof(LAT); // La Dôle
+        public const string NAS = nameof(NAS); // Nàss
+        public const string PFA = nameof(PFA); // Pfäffikon
+        public const string PMA = nameof(PMA); // Plaffeien
+        public const string REH = nameof(REH); // Rehen
+        public const string ROB = nameof(ROB); // Robbia
+        public const string SAM = nameof(SAM); // Samedan
+        public const string SBE = nameof(SBE); // Säntis
+        public const string SCU = nameof(SCU); // Scuol
+        public const string SIA = nameof(SIA); // Sial
+        public const string SMM = nameof(SMM); // St. Maria
+        public const string SRS = nameof(SRS); // Sils/Segl Maria
+        public const string SMA = nameof(SMA); // Zürich-Fluntern
+        public const string UEB = nameof(UEB); // Uetliberg
+        public const string VAB = nameof(VAB); // Valbella
+        public const string VIO = nameof(VIO); // Vicosoprano
+        public const string VLS = nameof(VLS); // Vals
+        public const string WAE = nameof(WAE); // Wädenswil
+        public const string WFJ = nameof(WFJ); // Weissfluhjoch
     }
 }
 

@@ -16,5 +16,6 @@ public record PvSite(
     string MeteoId,
     int IndicativeNrOfInverters,
     int IndicativeNrOfRoofs,
-    int IndicativeNrOfConsumers
+    int IndicativeNrOfConsumers,
+    string? MeteoGroupId = null
 );

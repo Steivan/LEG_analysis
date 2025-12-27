@@ -1,7 +1,7 @@
 ﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using static LEG.Common.Utils.ShadowCalculator;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofData;
-using static LEG.CoreLib.SampleData.SampleData.ListSites;
+using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {

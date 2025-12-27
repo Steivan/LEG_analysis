@@ -1,4 +1,4 @@
-﻿using static LEG.CoreLib.SampleData.SampleData.ListSites;
+﻿using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofObstacles;
 
