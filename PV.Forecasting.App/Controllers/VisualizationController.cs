@@ -11,11 +11,22 @@ using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvConstants;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoConstants;
 using LEG.CoreLib.SampleData.ReferenceData;
+using LEG.CoreLib.SampleData.SampleData;
 
 namespace PV.Forecasting.App.Controllers
 {
     public class VisualizationController : Controller
     {
+        string[] siteIds = { ListSites.SyntheticSite, ListSites.Senn, ListSites.SennV, ListSites.Studenrain };
+
+        // *****************************************************************************************************************
+
+        const int siteIdIndex = 1;           // <<<<< ==== Choose site 0 -3 here
+
+        const int displayPeriod = 2;        // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
+
+        // ******************************************************************************************************************
+
         const string PowerGroup = "Power";
         const string ResidualsGroup = "Residuals";
         const string RadiationGroup = "Radiation";
@@ -36,7 +47,7 @@ namespace PV.Forecasting.App.Controllers
         const string PeriodYearName = "Year";
         const string PeriodAllName = "All";
 
-        const string Interval15Min = "15-min";
+        const string Interval15Min = "Data";
         const string IntervalHourly = "Hourly";
         const string Interval3Hourly = "3-hourly";
         const string IntervalDaily = "Daily";
@@ -44,7 +55,7 @@ namespace PV.Forecasting.App.Controllers
         const string IntervalMonthly = "Monthly";
         const string IntervalYearly = "Yearly";
 
-        const string Interval15MinName = "15-min";
+        const string Interval15MinName = "Data";
         const string IntervalHourlyName = "Hourly";
         const string Interval3HourlyName = "3-hourly";
         const string IntervalDailyName = "Daily";
@@ -68,7 +79,8 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (siteId, pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportHistoryAndCalculated(2, displayPeriod: 2);
+                var (pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = 
+                    await dataImporter.ImportHistoryAndCalculated(siteIds[siteIdIndex], displayPeriod: displayPeriod);
                 _pvRecords = pvRecords;
 
                 if (pvRecordLabels is not null)

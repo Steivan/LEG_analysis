@@ -1,4 +1,5 @@
-﻿using LEG.MeteoSwiss.Abstractions.Models;
+﻿using LEG.CoreLib.SampleData.SampleData;
+using LEG.MeteoSwiss.Abstractions.Models;
 
 namespace LEG.CoreLib.SampleData.ReferenceData
 {
@@ -124,12 +125,12 @@ namespace LEG.CoreLib.SampleData.ReferenceData
             // Add more profiles as needed
         };
 
-        public static readonly Dictionary<int, string> SiteToProfilesDictionary = new()
+        public static readonly Dictionary<string, string> SiteToProfilesDictionary = new()
         {
-            // Key: site/folder id, Value: profile name
-            { 1, "MaurGroup" },
-            { 2, "MaurGroup" },
-            { 3, "BinzGroup" },
+            // Key: site id, Value: profile name
+            { ListSites.Senn, "MaurGroup" },
+            { ListSites.SennV, "MaurGroup" },
+            { ListSites.Studenrain, "BinzGroup" },
             // etc.
         };
 

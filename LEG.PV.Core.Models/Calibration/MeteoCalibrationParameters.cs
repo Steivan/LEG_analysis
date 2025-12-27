@@ -7,7 +7,7 @@ namespace LEG.PV.Core.Models.MeteoCalibrationParameters
     {
         public static Dictionary<string, PvModelParams> PvModelParamsDictionary = new()
             {
-                { "Synthetic", new(                                    // Model parameters fo synthetic data
+                {  ListSites.SyntheticSite, new(                                    // Model parameters fo synthetic data
                     etha: 0.9,
                     gamma: -0.005,
                     u0: 25,

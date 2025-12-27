@@ -18,6 +18,8 @@ namespace LEG.CoreLib.SampleData.SampleData
         public const string TestSite = nameof(TestSite);
         public const string Tof = nameof(Tof);
 
+        public const string SyntheticSite = nameof(SyntheticSite);
+
         internal static List<string> SitesList = [
             Bagnera, Bos_cha, Clozza, Ftan, Fuorcla, Guldenen, Kleiner, Liuns, Lotz, Senn, SennV, Studenrain, TestSite, Tof, "Manual"
         ];

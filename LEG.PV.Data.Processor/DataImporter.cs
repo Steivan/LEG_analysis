@@ -59,8 +59,8 @@ namespace LEG.PV.Data.Processor
             bool applySnowDays = true;
             bool applyFoggyDays = true;
             bool applyOutliers = true;
-   
-            var siteId = "SyntheticSite";
+
+            var siteId = ListSites.SyntheticSite;
             var minutesPerPeriod = 15;
             var periodsPerHour = 60 / minutesPerPeriod;
             var now = DateTime.UtcNow;
@@ -87,24 +87,20 @@ namespace LEG.PV.Data.Processor
         }
 
         // Import meteo history and merge with actual and calculated pvProduction data
-        public async Task<MeteoImportResult> ImportProductionAndMeteoHistory(int folder, int displayPeriod = 0)
+        public async Task<MeteoImportResult> ImportProductionAndMeteoHistory(string siteId, int displayPeriod = 0)
         {
             // Compute normalized weights
-            SetSelectedStationsWeightArrays(folder); // StationDictionary);
+            SetSelectedStationsWeightArrays(siteId); // StationDictionary);
 
             // Fetch pvProduction records
-            folder = 1 + (folder - 1) % 3;
-            var siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
             var pvDataRecords = new List<IPowerRecord>();
-            switch (folder)
+            switch (siteId)
             {
-                case 1:
-                case 2:
-                    siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
-                    pvDataRecords = E3DcLoadPeriodRecords.LoadPowerRecords(folder);
+                case ListSites.Senn:
+                case ListSites.SennV:
+                    pvDataRecords = E3DcLoadPeriodRecords.LoadPowerRecords(siteId);
                     break;
-                case 3:
-                    siteId = ListSites.Studenrain;
+                case ListSites.Studenrain:
                     pvDataRecords = FroniusLoadPeriodRecords.LoadPowerRecords(minutesShift: 20); // Shift to align with meteo data
                     break;
                 default:
@@ -119,7 +115,7 @@ namespace LEG.PV.Data.Processor
             var periodsPerHour = 60 / minutesPerPeriod;
 
             var firstTimestamp = firstImportTimestamp;
-            var lastTimestamp = displayPeriod==1 ? DateTime.Now : displayPeriod == 2 ? DateTime.Now.AddDays(10) : lastImportTimestamp;
+            var lastTimestamp = displayPeriod==1 ? DateTime.Now : displayPeriod == 2 ? DateTime.Now : lastImportTimestamp;
 
             // Fetch geometry factors
             var (timeStamps, geometryFactors, installedPower) = await PvProduction(siteId, firstTimestamp, lastTimestamp, minutesPerPeriod, shiftSupportTimeStamps: 0);
@@ -148,14 +144,14 @@ namespace LEG.PV.Data.Processor
                 var meteoParam = blendedWeatherData[i];
                 var weight = 1.0 / (1E-6 + meteoParam.RadiationVariance ?? (double.MaxValue - 1E-6));
                 double? solarProduction = i < countOfImportRecords ? pvDataRecords[i].SolarProduction : null;
-                if (!solarProduction.HasValue)
+                if (!solarProduction.HasValue || !geometryFactors[i].HasIrradiance)
                 {
                     weight = 0.0;
                 }
                 var age = (timeStamps[i] - firstImportTimestamp).TotalMinutes / minutesPerYear;
                 var pvRecord = new PvRecord(
                     timeStamps[i],
-                    recordIndex,                            // TODO: pvDataRecord.Index,
+                    recordIndex,       
                     geometryFactors[i],
                     meteoParam,
                     weight,
@@ -181,13 +177,11 @@ namespace LEG.PV.Data.Processor
 
         // Import meteo forecast and merge with calculated pvProduction data
         public async Task<MeteoImportResult> ImportMeteoForecastAndCalculatedProduction(
-            int folder,
+            string siteId,
             DateTime firstImportTimestamp,
             DateTime lastHistoryTimestamp,
             int forecastDays = 16)
         {
-            folder = 1 + (folder - 1) % 2;
-            var siteId = folder == 1 ? ListSites.Senn : ListSites.SennV;
             forecastDays = Math.Max(0, Math.Min(forecastDays, 16));
 
             const int minutesPerPeriod = 15;
@@ -235,16 +229,16 @@ namespace LEG.PV.Data.Processor
         }
 
         // Import history and computed data only
-        public async Task<(string siteId,
+        public async Task<(
             List<PvRecord> dataRecords,
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportProductionHistory(int folder, int displayPeriod = 0)      // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
+            ImportProductionHistory(string siteId, int displayPeriod = 0)      // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
         {
-            var (_, _, siteId, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportProductionAndMeteoHistory(folder, displayPeriod: displayPeriod);
+            var (_, _, _, dataRecords, validRecords, installedPower, periodsPerHour) = await ImportProductionAndMeteoHistory(siteId, displayPeriod: displayPeriod);
 
-            return (siteId, dataRecords, validRecords, installedPower, periodsPerHour);
+            return (dataRecords, validRecords, installedPower, periodsPerHour);
         }
 
         private void InjectDataRecords(
@@ -360,42 +354,40 @@ namespace LEG.PV.Data.Processor
 
         // Import history and computed data with selected meteo parameters
         public async Task<(
-            string siteId,
             List<PvRecordLists> dataRecords,
             PvRecordLabels dataRecordLabels,
             List<bool> validRecords,
             double installedPower,
             int periodsPerHour)>
-            ImportHistoryAndCalculated(int folder, int displayPeriod = 2)      // 0: downloaded meteo for PV history, 1: meteo PV history till now, 2: including meteo forecast
+            ImportHistoryAndCalculated(string siteId, int displayPeriod = 2)      // 0: downloaded meteo for PV history, 1: meteo PV history till now, 2: including meteo forecast
         {
-            var siteModelId = AvailableSitesIdList[folder];
-            var pvModelParams = PvModelParamsDictionary[siteModelId];
+            var pvModelParams = PvModelParamsDictionary[siteId];
 
             MeteoImportResult meteoImportResult = null;
-            switch (folder)
+            switch (siteId)
             {
-                case 0:
+                case ListSites.SyntheticSite:
                     displayPeriod = 0;   // synthetic meteo data is only available for the simulated period
                     meteoImportResult = GenerateSyntheticData(pvModelParams, simulationsPeriod: 5);
                     break;
-                case 1:
-                case 2:
+                case ListSites.Senn:
+                case ListSites.SennV:
                     // 1: Senn and 2: SennV site with E3Dc data
-                    meteoImportResult = await ImportProductionAndMeteoHistory(folder, displayPeriod: displayPeriod);
+                    meteoImportResult = await ImportProductionAndMeteoHistory(siteId, displayPeriod: displayPeriod);
                     break;
-                case 3:
+                case ListSites.Studenrain:
                     // Studenrain site with Fronius data
                     displayPeriod = 0; // data from 2011 till 2015 only
-                    meteoImportResult = await ImportProductionAndMeteoHistory(3, displayPeriod);
+                    meteoImportResult = await ImportProductionAndMeteoHistory(siteId, displayPeriod);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(folder), "Folder index out of range");
+                    throw new ArgumentOutOfRangeException(nameof(siteId), "Site Id is out of range");
             }
 
             // Extract pvProduction and meteo data
             var (perStationWeatherHistory, 
                 blendedWeatherHistory, 
-                siteId, 
+                _, 
                 dataRecordsHistory, 
                 validRecordsHistory, 
                 installedPower, 
@@ -435,7 +427,7 @@ namespace LEG.PV.Data.Processor
                     dataRecordsForecast, 
                     validRecordsForecast, 
                     _, 
-                    _) = await ImportMeteoForecastAndCalculatedProduction(folder, firstImportTimestamp, lHistoryTimestamp);
+                    _) = await ImportMeteoForecastAndCalculatedProduction(siteId, firstImportTimestamp, lHistoryTimestamp);
 
                 var (filteredRadiationForecastSeries, _,
                     filteredTemperatureForecastSeries, _,
@@ -468,7 +460,7 @@ namespace LEG.PV.Data.Processor
                 filteredSnowDepthLabels.Select(kv => kv.Key).ToList(),
                 filteredRelativeHumidityLabels.Select(kv => kv.Key).ToList());
 
-            return (siteId, listsDataRecords, dataRecordLabels, validListsDataRecords, installedPower, periodsPerHour);
+            return (listsDataRecords, dataRecordLabels, validListsDataRecords, installedPower, periodsPerHour);
         }
 
         // ***************************************************************************************************************************************************
@@ -1000,15 +992,15 @@ namespace LEG.PV.Data.Processor
         }
 
         // Helper method to get weight arrays for all selected stations
-        private void SetSelectedStationsWeightArrays(int folder) //Dictionary<string, WeightMeteoParameters> stationDictionary)
+        private void SetSelectedStationsWeightArrays(string siteId) //Dictionary<string, WeightMeteoParameters> stationDictionary)
         {
-            var folderList = SiteToProfilesDictionary.Keys.ToList();
-            if (!folderList.Contains(folder))
+            var profilesList = SiteToProfilesDictionary.Keys.ToList();
+            if (!profilesList.Contains(siteId))
             {
-                throw new Exception($"Folder {folder} not found in SiteToProfilesDictionary.");
+                throw new Exception($"Site ID {siteId} not found in SiteToProfilesDictionary.");
             }
 
-            var stationDictionary = ProfileToStationDictionary[SiteToProfilesDictionary[folder]];
+            var stationDictionary = ProfileToStationDictionary[SiteToProfilesDictionary[siteId]];
             SelectedStationsIdList = stationDictionary.Keys.ToList();
             var stationsCount = SelectedStationsIdList.Count;
 

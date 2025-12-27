@@ -1,5 +1,6 @@
-﻿using LEG.Common;
-using LEG.PvImport.Abstractions;
+﻿using LEG.PvImport.Abstractions;
+using System.Data;
+using LEG.Common;
 
 namespace LEG.PvImport.Clients.E3Dc.Client
 {
@@ -49,8 +50,9 @@ namespace LEG.PvImport.Clients.E3Dc.Client
             return periodRecords;
         }
 
-        public static List<IPowerRecord> LoadPowerRecords(int folderNumber, DateTime? startDateTime = null, DateTime? endDateTime = null)
+        public static List<IPowerRecord> LoadPowerRecords(string siteID, DateTime? startDateTime = null, DateTime? endDateTime = null)
         {
+            var folderNumber = siteID== "Senn" ? 1 : siteID == "SennV" ? 2 : 3;
             var periodRecords = LoadRecords(folderNumber, startDateTime, endDateTime);
             var powerRecords = periodRecords.Select(r => new IPowerRecord
             {

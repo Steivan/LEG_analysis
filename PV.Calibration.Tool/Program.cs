@@ -15,16 +15,16 @@ using static PV.Calibration.Tool.BayesianCalibrator;
 //    applyFoggyDays: true,
 //    applyOutliers: !true);
 
-await CalibrateProductionData(1, ListSites.Senn);
-await CalibrateProductionData(2, ListSites.SennV);
-await CalibrateProductionData(3, ListSites.Studenrain);
+await CalibrateProductionData(ListSites.Senn);
+await CalibrateProductionData(ListSites.SennV);
+await CalibrateProductionData(ListSites.Studenrain);
 
 //ProcessSyntheticModelData();
 
-async Task CalibrateProductionData(int folder, string label)
+async Task CalibrateProductionData(string siteId)
 {
     var dataImporter = new DataImporter();
-    var (siteId, pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportProductionHistory(folder); // meteoDataLag in multiples of 5 minutes
+    var (pvRecords, modelValidRecords, installedKwP, periodsPerHour) = await dataImporter.ImportProductionHistory(siteId); // meteoDataLag in multiples of 5 minutes
     var installedPower = installedKwP; // / periodsPerHour;
 
     var defaultPriors = new PvPriors();
@@ -75,7 +75,7 @@ void ProcessSyntheticModelData(
         bFog: 0.5,
         lambdaKFog: 2.0
         );
-    var siteId = "SyntheticModelSite";
+    var siteId = "SyntheticSite";
     var installedKwP = 10.0;      // [kWp]
     var installedPower = installedKwP * 1000;
 
