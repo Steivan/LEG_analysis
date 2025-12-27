@@ -105,7 +105,7 @@ namespace LEG.PV.Data.Processor
                     break;
                 case 3:
                     siteId = ListSites.Studenrain;
-                    pvDataRecords = FroniusLoadPeriodRecords.LoadPowerRecords();
+                    pvDataRecords = FroniusLoadPeriodRecords.LoadPowerRecords(minutesShift: 20); // Shift to align with meteo data
                     break;
                 default:
                     break;
@@ -165,6 +165,13 @@ namespace LEG.PV.Data.Processor
                 dataRecords.Add(pvRecord);
                 var validImport = solarProduction.HasValue && solarProduction.Value > 0.0;
                 validRecords.Add(pvRecord.SolarGeometry.HasIrradiance || validImport);
+
+                if (timeStamps[i].Year == 2012 && timeStamps[i].Month == 11 && timeStamps[i].Day >= 20 && timeStamps[i].Hour >= 16)
+                {
+                    var t = timeStamps[i];
+                    var residuals = pvRecord.GetPvResidualsRecord(PvModelParamsDictionary[siteId], installedPower, periodsPerHour);
+                    var debug = 0;
+                }
             }
 
             perStationWeatherData.Add(new StationMeteoData("Blended", blendedWeatherData));

@@ -283,12 +283,14 @@ namespace LEG.Common.Utils
                 double sunElevation,
                 RoofPoint2D horizontalLineOrigin,
                 double horizontalLineLength,
+                double lineElevation,
                 bool computeTotalArea = false)
         {
             // Get shadow vector from previous calculation
             var (sunIsVisible, shadowVector, baseLineVector, cosRoofAzi, sinRoofAzi, cosRoofEl) = CalculateRoofShadow(
                 roofAzimuth, roofElevation,
                 sunAzimuth, sunElevation,
+                lineElevation,
                 Vector3.Zero);
 
             var (totalArea, shadowedArea) = CalculateShadowedArea(

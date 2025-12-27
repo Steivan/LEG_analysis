@@ -19,59 +19,37 @@ namespace LEG.PV.Core.Models.MeteoCalibrationParameters
                     lambdaKFog: 2.0
                 ) },
                 { ListSites.Senn, new(
-                    etha: 0.525,
-                    gamma: -0.00665,
-                    u0: 200.0,
-                    u1: 20.0,
-                    lDegr: 0.0127,
-                    dSnow: 1.27,
-                    lambdaAFog: -0.252,
-                    bFog: 0.920,
-                    lambdaKFog: 1.03
+                    etha: 0.333,
+                    gamma: -0.00278,
+                    u0: 29.6,
+                    u1: 0.379,
+                    lDegr: 0.0129,
+                    dSnow: 16.7,
+                    lambdaAFog: 0.378,
+                    bFog: 1.04,
+                    lambdaKFog: 0.833
                 ) },
-                { ListSites.SennV, new(                                    // SennV: elevation 35° 
-                    etha: 0.467,
-                    gamma: -0.0,
+                { ListSites.SennV, new( 
+                    etha: 0.567,      // Calibrated value is too low
+                    gamma: -0.0176,
+                    u0: 200.0,
+                    u1: 0.001,
+                    lDegr: 0.0144,
+                    dSnow: 56.2,
+                    lambdaAFog: -0.660,
+                    bFog: 0.922,
+                    lambdaKFog: 1.78
+                ) },
+                { ListSites.Studenrain, new(
+                    etha: 0.834,
+                    gamma: -0.00,
                     u0: 5.0,
                     u1: 0.001,
-                    lDegr: 0.00797,
-                    dSnow: 1.09,
-                    lambdaAFog: 0.144,
-                    bFog: 1.20,
-                    lambdaKFog: 0.928
-                ) },
-                { ListSites.Studenrain, new(                           // SennV: elevation 35° 
-                    etha: 0.836,
-                    gamma: -0.00,
-                    u0: 47.0,
-                    u1: 0.491,
-                    lDegr: 0.00845,
-                    dSnow: 6.74,
-                    lambdaAFog: 0.0630,
-                    bFog: 2.01,
-                    lambdaKFog: 1.97
-                ) },
-                { "Senn_Initial", new(                          // initial calibration without Snow/Fog
-                    etha: 0.619,
-                    gamma: -0.00461,
-                    u0: 213.7,
-                    u1: 0.173,
-                    lDegr: 0.0139,
-                    dSnow: 15.0,
-                    lambdaAFog: 2.0,
-                    bFog: 1.0,
-                    lambdaKFog: 2.0
-                ) },
-            { "SennV_Initial", new(
-                    etha: 0.478,
-                    gamma: -0.00096,
-                    u0: 29.0,
-                    u1: 0.500,
-                    lDegr: 0.00631,
-                    dSnow: 2.0,
-                    lambdaAFog: 2.0,
-                    bFog: 1.0,
-                    lambdaKFog: 2.0
+                    lDegr: 0.0001,
+                    dSnow: 12.8,
+                    lambdaAFog: -0.904,
+                    bFog: 1.89,
+                    lambdaKFog: 2.10
                 ) },
         };
 

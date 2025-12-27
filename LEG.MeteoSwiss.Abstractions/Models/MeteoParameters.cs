@@ -184,7 +184,7 @@ namespace LEG.MeteoSwiss.Abstractions.Models
 
                 var directHorizontalRadiation = Math.Max(0, GlobalRadiation.Value - DiffuseRadiation.Value);
 
-                return directHorizontalRadiation / sinSunElevation;
+                return directHorizontalRadiation / sinSunElevation;             // TODO: Check for sinSunElevation ~ 0
             }
             public double GetDiffusePoa(bool hasDiffuseIrradiance)
             {

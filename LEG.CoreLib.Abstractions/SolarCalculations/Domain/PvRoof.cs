@@ -11,8 +11,8 @@ public record PvRoof(
     double Elev2,                               // 2nd elevation -> currently not used
     double Area,                                // Area of roof in [m^2]
     double Peak,                                // Installed power in [kWp]
-    PvPanelsPolygons? PanelsPolygons,           // Polygons defining panel areas on roof in 2D roof coordinates
-    PvHorizontalObstacles? HorizontalObstacles  // Horizontal obstacles defined by a line (origin point in 2D roof coordinates) and length [m]
+    PvRoofPanelsPolygons? PanelsPolygons,           // Polygons defining panel areas on roof in 2D roof coordinates
+    PvRoofObstacles? HorizontalObstacles  // Horizontal obstacles defined by a line (origin point in 2D roof coordinates) and length [m]
 )
 {
     public bool HasPanelsAndHorizontalObstacles => 

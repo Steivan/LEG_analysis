@@ -5,7 +5,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
 {
     internal class PvShadowCalculations
     {
-        public static double GetRoofPanelsArea(PvPanelsPolygons? panelsPolygonsList, double estimatedArea = 0.0)
+        public static double GetRoofPanelsArea(PvRoofPanelsPolygons? panelsPolygonsList, double estimatedArea = 0.0)
         {
             if (panelsPolygonsList == null || panelsPolygonsList.PanelPolygons.Count == 0)
                 return estimatedArea;
@@ -20,8 +20,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
         }
 
         public static double GetRoofShadowArea(
-            PvPanelsPolygons? panelsPolygonsList, 
-            PvHorizontalObstacles? horizontalObstaclesList,
+            PvRoofPanelsPolygons? panelsPolygonsList, 
+            PvRoofObstacles? horizontalObstaclesList,
             double roofAzimuth, double roofElevation,
             double sunAzimuth, double sunElevation)
         {
@@ -33,7 +33,7 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             foreach (var panelPolygon in panelsPolygonsList.PanelPolygons)
             {
                 var panelsShadowArea = 0.0;
-                foreach (var (lineOrigin, lineLength) in horizontalObstaclesList.HorizontalObstacles)
+                foreach (var (lineOrigin, lineLength, lineElevation) in horizontalObstaclesList.HorizontalObstacles)
                 {
                     var (_, lineShadowArea) = CalculateCompleteShadowAnalysis(
                             panelPolygon,
@@ -42,7 +42,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
                             sunAzimuth,
                             sunElevation,
                             lineOrigin,
-                            lineLength);
+                            lineLength,
+                            lineElevation);
                     panelsShadowArea = Math.Max(panelsShadowArea, lineShadowArea);
                 }
                 roofShadowArea += panelsShadowArea;

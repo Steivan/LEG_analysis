@@ -32,6 +32,7 @@ namespace LEG.Tests
             var eastLineOrigin = lukarnePolygon[5];
             var topLineLength = 4.22; // -lukarnePolygon[3].Y * cosRoofEl;
             var sideLineLength = 2.46; // (lukarnePolygon[1].Y - lukarnePolygon[2].Y) * cosRoofEl;
+            var lineElevation = 0.0;
 
             var panelWestPolygon = GetRoofPoints2DList(new List<(double x, double y)>
                 {
@@ -77,6 +78,7 @@ namespace LEG.Tests
                             sunElevation,
                             topLineOrigin,
                             topLineLength,
+                            lineElevation,
                             true);
                     var (_, shadowedWestWestArea) = CalculateCompleteShadowAnalysis(
                             panelWestPolygon,
@@ -85,7 +87,8 @@ namespace LEG.Tests
                             sunAzimuth,
                             sunElevation,
                             westLineOrigin,
-                            sideLineLength);
+                            sideLineLength,
+                            lineElevation);
                     var shadowAreaWest = Math.Max(shadowedTopWestArea, shadowedWestWestArea);
 
                     var (totalEastArea, shadowedTopEastArea) = CalculateCompleteShadowAnalysis(
@@ -96,6 +99,7 @@ namespace LEG.Tests
                             sunElevation,
                             topLineOrigin,
                             topLineLength,
+                            lineElevation,
                             true);
                     var (_, shadowedEastEastArea) = CalculateCompleteShadowAnalysis(
                             panelEastPolygon,
@@ -104,14 +108,15 @@ namespace LEG.Tests
                             sunAzimuth,
                             sunElevation,
                             eastLineOrigin,
-                            sideLineLength);
+                            sideLineLength,
+                            lineElevation);
                     var shadowAreaEast = Math.Max(shadowedTopEastArea, shadowedEastEastArea);
 
                     var totalArea = totalWestArea + totalEastArea;
                     var shadowedArea = shadowAreaWest + shadowAreaEast;
                     var shadowPercentage = totalArea > 0.0 ? shadowedArea / totalArea * 100.0 : 0.0;
 
-                    Assert.AreEqual(roofPanelsArea, totalArea,0.01);
+                    Assert.AreEqual(roofPanelsArea, totalArea, 0.01);
                     Assert.AreEqual(totalShadowArea, shadowedArea, 0.01);
                 }
             }

@@ -34,6 +34,8 @@ public class PvPowerJacobian                  // Base model: Radiation (direc, d
         var gDirectPoa = meteoParameters.GetDirectPoa(geometryFactors.HasDirectIrradiance, sinSunElevation);
         var gDiffusePoa = meteoParameters.GetDiffusePoa(geometryFactors.HasDiffuseIrradiance);
 
+        gDirectPoa = Math.Min(gDirectPoa, gDiffusePoa * maxDirectToDiffuseRatio);    // TODO: Limit direct POA to avoid extreme ratios if sinSunElevation is very low
+
         return (gDirectPoa, gDiffusePoa, directGeometryFactor, diffuseGeometryFactor, sinSunElevation, geometryFactors.HasIrradiance);
     }
 

@@ -15,8 +15,8 @@ using static PV.Calibration.Tool.BayesianCalibrator;
 //    applyFoggyDays: true,
 //    applyOutliers: !true);
 
-//await CalibrateProductionData(1, ListSites.Senn);
-//await CalibrateProductionData(2, ListSites.SennV);
+await CalibrateProductionData(1, ListSites.Senn);
+await CalibrateProductionData(2, ListSites.SennV);
 await CalibrateProductionData(3, ListSites.Studenrain);
 
 //ProcessSyntheticModelData();

@@ -2,8 +2,8 @@
 using static LEG.Common.Utils.ShadowCalculator;
 
 namespace LEG.CoreLib.Abstractions.SolarCalculations.Domain
-{    public record PvHorizontalObstacles(
+{    public record PvRoofPanelsPolygons(
         [property: Key] string SystemName,
-        List<(RoofPoint2D HorizontalLineOrigin, double HorizontalLineLength)> HorizontalObstacles
+        List<List<RoofPoint2D>> PanelPolygons
         );
 }

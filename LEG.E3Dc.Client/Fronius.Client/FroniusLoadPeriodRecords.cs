@@ -4,7 +4,7 @@ namespace LEG.PvImport.Clients.Fronius.Client
 {
     public class FroniusLoadPeriodRecords
     {
-        public static List<IPowerRecord> LoadPowerRecords(DateTime? startTime = null, DateTime? endTime = null, bool shiftToUtc = false)
+        public static List<IPowerRecord> LoadPowerRecords(DateTime? startTime = null, DateTime? endTime = null, bool shiftToUtc = false, int minutesShift = 0)
         {
             var hasStartTime = startTime.HasValue;
             var hasEndTime = endTime.HasValue;
@@ -29,7 +29,8 @@ namespace LEG.PvImport.Clients.Fronius.Client
                 var records = FromiusLoadRecords.ImportFroniusRecords(FroniusFileHelper.GetFilePath(year));
                 foreach (var record in records)
                 {
-                    var localDstTime = SyncedTimestamp(record.Timestamp, minutesPerPeriod);
+                    var shiftedTimestamp = record.Timestamp.AddMinutes(minutesShift);
+                    var localDstTime = SyncedTimestamp(shiftedTimestamp, minutesPerPeriod);
                     var recordTime = TimeZoneInfo.ConvertTimeToUtc(localDstTime, cetZone) + utcToSeriesTime;
                     if (recordTime < startTimeValue || recordTime > endTimeValue)
                     {

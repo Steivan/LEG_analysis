@@ -52,13 +52,20 @@ namespace LEG.Common.Utils
             double roofElevation,
             double sunAzimuth,
             double sunElevation,
+            double lineElevation,
             Vector3 P)
         {
+            if (lineElevation >= roofElevation)
+            {
+                throw new InvalidOperationException("Elevation of obstacle line must be less than roof elevation.");
+            }
+
             // Convert degrees to radians and proceed with float calculations
             var roofAzRad = (float)(roofAzimuth * GradToRat);
             var roofElRad = (float)(roofElevation * GradToRat);
             var sunAzRad = (float)(sunAzimuth * GradToRat);
             var sunElRad = (float)(sunElevation * GradToRat);
+            var lineElRad = (float)(lineElevation * GradToRat);
 
             var cosRoofAz = MathF.Cos(roofAzRad);
             var sinRoofAz = MathF.Sin(roofAzRad);
@@ -71,15 +78,17 @@ namespace LEG.Common.Utils
             var cosSunEl = MathF.Cos(sunElRad);
             var sinSunEl = MathF.Sin(sunElRad);
 
-            // 1. Horizontal line direction (pointing in roof azimuth direction)
+            var tanLineEl = MathF.Tan(lineElRad);
+
+            // 1. Horizontal unit vector (pointing in roof azimuth direction), lowered towards roof
             // Azimuth from South: 0° = South, positive = West, negative = East
             // In standard coords: South = -Y, West = -X, East = +X, North = +Y
             Vector3 horizontalLine = new Vector3(
                 -sinRoofAz,                 // West component
                 -cosRoofAz,                 // South component
-                0                           // Horizontal
+                -tanLineEl                  // Horizontal
             );
-            // vertical projection of horizontal line to roof
+            // vertical projection of line to roof
             Vector3 baseLineVector = new Vector3(
                 horizontalLine.X,           // West component
                 horizontalLine.Y,           // South component
@@ -128,21 +137,21 @@ namespace LEG.Common.Utils
             return (sunIsVisible, shadowVector, baseLineVector, cosRoofAz, sinRoofAz, cosRoofEl);
         }
 
-        /// <summary>
-        /// Alternative method that returns the shadow as point + direction
-        /// </summary>
-        public static (Vector3 Origin, Vector3 Direction) GetShadowLine(
-            double roofAzimuth,
-            double roofElevation,
-            double sunAzimuth,
-            double sunElevation,
-            Vector3 P)
-        {
-            var (sunIsVisible, shadowVector, baseLineVector, _,_,_) = CalculateRoofShadow(
-                roofAzimuth, roofElevation,
-                sunAzimuth, sunElevation, P);
+        ///// <summary>
+        ///// Alternative method that returns the shadow as point + direction
+        ///// </summary>
+        //public static (Vector3 Origin, Vector3 Direction) GetShadowLine(
+        //    double roofAzimuth,
+        //    double roofElevation,
+        //    double sunAzimuth,
+        //    double sunElevation,
+        //    Vector3 P)
+        //{
+        //    var (sunIsVisible, shadowVector, baseLineVector, _,_,_) = CalculateRoofShadow(
+        //        roofAzimuth, roofElevation,
+        //        sunAzimuth, sunElevation, P);
 
-            return (P, Vector3.Normalize(shadowVector));
-        }
+        //    return (P, Vector3.Normalize(shadowVector));
+        //}
     }
 }

@@ -7,10 +7,29 @@ namespace LEG.CoreLib.SampleData.SampleData
 {
     public static class DictionaryPvRoofObstacles
     {
-        internal static readonly Dictionary<string, PvPanelsPolygons> PvRoofPanelPolygons =
+        internal static readonly Dictionary<string, PvRoofPanelsPolygons> PvRoofPanelPolygons =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                [Studenrain + "_1"] = new PvPanelsPolygons(
+                [Senn + "_1"] = new PvRoofPanelsPolygons(
+                    SystemName: Senn + "_1",
+                    PanelPolygons: new List<List<RoofPoint2D>>
+                    {
+                        GetRoofPoints2DList(new List<(double x, double y)>
+                        {
+                            (-5.83,  2.34),
+                            (-5.83, -5.52),
+                            (-0.73, -5.52),
+                            (-0.73,  2.34)
+                        }),
+                        GetRoofPoints2DList(new List<(double x, double y)>
+                        {
+                            ( 5.48,  2.34),
+                            ( 5.48, -5.52),
+                            (10.58, -5.52),
+                            (10.58,  2.34)
+                        })
+                    }),
+                [Studenrain + "_1"] = new PvRoofPanelsPolygons(
                     SystemName: Studenrain + "_1",
                     PanelPolygons: new List<List<RoofPoint2D>>
                     {
@@ -41,16 +60,23 @@ namespace LEG.CoreLib.SampleData.SampleData
                     })
             };
 
-            internal static readonly Dictionary<string, PvHorizontalObstacles> PvRoofHorizontalObstacles =
+            internal static readonly Dictionary<string, PvRoofObstacles> PvRoofHorizontalObstacles =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                [Studenrain + "_1"] = new PvHorizontalObstacles(
-                    SystemName: Studenrain + "_1",
-                    HorizontalObstacles: new List<(RoofPoint2D, double)> 
+                [Senn + "_1"] = new PvRoofObstacles(
+                    SystemName: Senn + "_1",
+                    HorizontalObstacles: new List<(RoofPoint2D, double, double)>
                     {
-                        (new RoofPoint2D( 0.00,  0.00), 4.22),      // Top line: length = -(-5.15) * cos(35°) = 4.22
-                        (new RoofPoint2D(-1.81, -2.15), 2.46),      // West side line: length = ( -2.15 - -5.15) * cos(35°) = 2.46
-                        (new RoofPoint2D( 1.81, -2.15), 2.46)       // East side line: length = ( -2.15 - -5.15) * cos(35°) = 2.46
+                        (new RoofPoint2D(0.00, 0.00), 2.36, 10.00),     // Western end of Lukarne: slope of 10° is a guess
+                        (new RoofPoint2D(4.62, 0.00), 2.36, 10.00)      // Eastern end of Lukarne: slope of 10° is a guess
+                    }),
+                [Studenrain + "_1"] = new PvRoofObstacles(
+                    SystemName: Studenrain + "_1",
+                    HorizontalObstacles: new List<(RoofPoint2D, double, double)> 
+                    {
+                        (new RoofPoint2D( 0.00,  0.00), 4.22, 0.0),      // Top line: length = -(-5.15) * cos(35°) = 4.22
+                        (new RoofPoint2D(-1.81, -2.15), 2.46, 0.0),      // West side line: length = ( -2.15 - -5.15) * cos(35°) = 2.46
+                        (new RoofPoint2D( 1.81, -2.15), 2.46, 0.0)       // East side line: length = ( -2.15 - -5.15) * cos(35°) = 2.46
                     })
             };
 
@@ -88,7 +114,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                 foreach (var panelPolygon in PvRoofPanelPolygons[roofId].PanelPolygons)
                 {
                     var panelShadowArea = 0.0;
-                    foreach (var (lineOrigin, lineLength) in PvRoofHorizontalObstacles[roofId].HorizontalObstacles)
+                    foreach (var (lineOrigin, lineLength, lineElevation) in PvRoofHorizontalObstacles[roofId].HorizontalObstacles)
                     {
                         var (_, lineShadowArea) = CalculateCompleteShadowAnalysis(
                                 panelPolygon,
@@ -97,7 +123,8 @@ namespace LEG.CoreLib.SampleData.SampleData
                                 sunAzimuth,
                                 sunElevation,
                                 lineOrigin,
-                                lineLength);
+                                lineLength,
+                                lineElevation);
                         panelShadowArea = Math.Max(panelShadowArea, lineShadowArea);
                     }
                     shadowArea += panelShadowArea;
