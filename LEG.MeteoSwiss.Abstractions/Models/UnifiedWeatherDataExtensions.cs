@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 namespace LEG.MeteoSwiss.Abstractions.Models
 {
     public static class UnifiedWeatherDataExtensions

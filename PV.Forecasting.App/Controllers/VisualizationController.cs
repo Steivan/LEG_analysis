@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Core.Models.PvConstants;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoConstants;
-using LEG.CoreLib.SampleData.ReferenceData;
 using LEG.CoreLib.SampleData.SampleData;
 
 namespace PV.Forecasting.App.Controllers
@@ -21,11 +20,13 @@ namespace PV.Forecasting.App.Controllers
 
         // *****************************************************************************************************************
 
-        const int siteIdIndex = 1;           // <<<<< ==== Choose site 0 -3 here
+        const int siteIdIndex = 2;           // <<<<< ==== Choose site 0 -3 here
 
         const int displayPeriod = 2;        // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
 
         // ******************************************************************************************************************
+
+        public static List<string> SelectedStationsIdList = new List<string>();
 
         const string PowerGroup = "Power";
         const string ResidualsGroup = "Residuals";
@@ -130,7 +131,7 @@ namespace PV.Forecasting.App.Controllers
                 if (group == PowerGroup || group == ResidualsGroup)
                     groupLocations[group] = new List<string> { "PV Site" };
                 else
-                    groupLocations[group] = MeteoStationProfile.SelectedStationsIdList; // or filter as needed
+                    groupLocations[group] = SelectedStationsIdList; // or filter as needed
             }
 
             // 2. Set up default checked groups, variables, and locations (step 2)

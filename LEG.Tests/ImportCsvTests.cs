@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using LEG.Common;
+﻿using LEG.Common;
 using LEG.PvImport.Clients.E3Dc.Client;
 
 namespace LEG.Tests

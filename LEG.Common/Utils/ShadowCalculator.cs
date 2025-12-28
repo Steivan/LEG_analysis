@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Numerics;
 using static LEG.Common.Utils.RoofGeometry;
 
 namespace LEG.Common.Utils

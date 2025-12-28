@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace LEG.Common.Utils
 {
     public readonly record struct Dms(int Deg, int Min, double Sec);

@@ -1,6 +1,5 @@
 ﻿using LEG.MeteoSwiss.Abstractions;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LEG.Tests
 {

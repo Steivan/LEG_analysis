@@ -7,8 +7,8 @@ namespace LEG.CoreLib.SolarCalculations.Domain
         PvSite pvSite,
         IReadOnlyCollection<Inverter> inverters,
         IReadOnlyDictionary<string, PvRoof[]> roofsPerInverter,
-        IReadOnlyCollection<Consumer> consumers,
-        MeteoProfile meteoProfile) : IPvSiteModel
+        IReadOnlyCollection<Consumer> consumers
+        ) : IPvSiteModel
     {
         private static readonly List<RecordRoofProperties> recordRoofProperties = [];
 
@@ -20,7 +20,6 @@ namespace LEG.CoreLib.SolarCalculations.Domain
         public IReadOnlyCollection<Inverter> Inverters { get; set; } = inverters;
         public IReadOnlyDictionary<string, PvRoof[]> RoofsPerInverter { get; set; } = roofsPerInverter;
         public IReadOnlyCollection<Consumer> Consumers { get; set; } = consumers;
-        public MeteoProfile MeteoProfile { get; set; } = meteoProfile;
 
         // Explicit implementation for the interface properties
         object? IPvSiteModel.MaddBuildingProperties => this.MaddBuildingProperties;

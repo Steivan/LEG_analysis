@@ -2,11 +2,8 @@
 
 namespace LEG.PV.Core.Models
 {
-
     public record PvModelParams
     {
-
-
         public PvModelParams(double etha, double gamma, double u0, double u1, double lDegr,
             double dSnow = PvPriorConfig.meanDSnow,
             double lambdaAFog = PvPriorConfig.meanLambdaAFog, double bFog = PvPriorConfig.meanBFog, double lambdaKFog = PvPriorConfig.meanLambdaKFog)

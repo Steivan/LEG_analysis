@@ -1,8 +1,6 @@
 ﻿using LEG.Common;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.PvImport.Abstractions.E3Dc.Abstractions;
-using System;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace LEG.PvImport.Clients.E3Dc.Client
 {

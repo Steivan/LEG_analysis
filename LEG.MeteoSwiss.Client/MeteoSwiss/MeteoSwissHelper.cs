@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Runtime.Intrinsics.Arm;
-using System.Runtime.Intrinsics.X86;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Text.RegularExpressions;
+using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 
 namespace LEG.MeteoSwiss.Client.MeteoSwiss
 {
@@ -21,41 +14,41 @@ namespace LEG.MeteoSwiss.Client.MeteoSwiss
             set => _validGroundStations = value ?? [];
         }
 
-        private static readonly string[] AG = ["BEZ", "BUS", "LEI", "MOE", "PSI"];
-        private static readonly string[] AI = ["SAE"];
+        private static readonly string[] AG = [BEZ, BUS, LEI, MOE, PSI];
+        private static readonly string[] AI = [SAE];
         private static readonly string[] AR = [];
-        private static readonly string[] BE = ["ABO", "BAN", "BER", "BOL", "BRZ", "CHA", "COY", "FRU", "GRH", "INT", "KOP", "LAG", "MER", "MUB", "NAP", "THU", "WYN"];
-        private static readonly string[] BL = ["BAS", "RUE"];
-        private static readonly string[] BS = ["STC"];
-        private static readonly string[] FL = ["VAD"];
-        private static readonly string[] FR = ["GRA", "MAS", "MLS", "PLF"];
-        private static readonly string[] GE = ["GVE"];
-        private static readonly string[] GL = ["ELM", "GLA"];
-        private static readonly string[] GR = ["AND", "ARO", "BEH", "BIV", "BUF", "CHU", "CMA", "COV", "DAV", "DIS", "GRO", "ILZ", "LAT", "NAS", "PMA", "ROB", "SAM", "SBE", "SCU", "SIA", "SMM", "SRS", "VAB", "VIO", "VLS", "WFJ"];
-        private static readonly string[] JU = ["DEM", "FAH"];
-        private static readonly string[] LU = ["EGO", "FLU", "LUZ", "MOA", "SPF"];
-        private static readonly string[] NE = ["BRL", "CDF", "CHM", "CRM", "NEU"];
+        private static readonly string[] BE = [ABO, BAN, BER, BOL, BRZ, CHA, COY, FRU, GRH, INT, KOP, LAG, MER, MUB, NAP, THU, WYN];
+        private static readonly string[] BL = [BAS, RUE];
+        private static readonly string[] BS = [STC];
+        private static readonly string[] FL = [VAD];
+        private static readonly string[] FR = [GRA, MAS, MLS, PLF];
+        private static readonly string[] GE = [GVE];
+        private static readonly string[] GL = [ELM, GLA];
+        private static readonly string[] GR = [AND, ARO, BEH, BIV, BUF, CHU, CMA, COV, DAV, DIS, GRO, ILZ, LAT, NAS, PMA, ROB, SAM, SBE, SCU, SIA, SMM, SRS, VAB, VIO, VLS, WFJ];
+        private static readonly string[] JU = [DEM, FAH];
+        private static readonly string[] LU = [EGO, FLU, LUZ, MOA, SPF];
+        private static readonly string[] NE = [BRL, CDF, CHM, CRM, NEU];
         private static readonly string[] NW = [];
-        private static readonly string[] OW = ["ENG", "GIH", "PIL", "TIT"];
-        private static readonly string[] SG = ["ARH", "EBK", "OBR", "QUI", "RAG", "SCM", "STG"];
-        private static readonly string[] SH = ["HLL", "SHA"];
-        private static readonly string[] SO = ["GOE", "GRE"];
-        private static readonly string[] SZ = ["EIN", "GES", "LAC", "SAG"];
-        private static readonly string[] TG = ["BIZ", "GUT", "HAI", "STK", "TAE"];
-        private static readonly string[] TI = ["BIA", "CEV", "CIM", "COM", "GEN", "LUG", "MAG", "MTR", "OTL", "PIO", "ROE", "SBO"];
-        private static readonly string[] UR = ["ALT", "ANT", "GOS", "GUE"];
-        private static readonly string[] VD = ["AIG", "BIE", "CDM", "CGI", "CHB", "CHD", "DIA", "DOL", "FRE", "MAH", "ORO", "PAY", "PRE", "PUY", "VEV", "VIT"];
-        private static readonly string[] VS = ["ATT", "BIN", "BLA", "BOU", "EGH", "EVI", "EVO", "GOR", "GRC", "GSB", "JUN", "MAR", "MOB", "MTE", "MVE", "SIM", "SIO", "ULR", "VIS", "ZER"];
-        private static readonly string[] ZG = ["AEG", "CHZ"];
-        private static readonly string[] ZH = ["HOE", "KLO", "LAE", "PFA", "REH", "SMA", "UEB", "WAE"];
+        private static readonly string[] OW = [ENG, GIH, PIL, TIT];
+        private static readonly string[] SG = [ARH, EBK, OBR, QUI, RAG, SCM, STG];
+        private static readonly string[] SH = [HLL, SHA];
+        private static readonly string[] SO = [GOE, GRE];
+        private static readonly string[] SZ = [EIN, GES, LAC, SAG];
+        private static readonly string[] TG = [BIZ, GUT, HAI, STK, TAE];
+        private static readonly string[] TI = [BIA, CEV, CIM, COM, GEN, LUG, MAG, MTR, OTL, PIO, ROE, SBO];
+        private static readonly string[] UR = [ALT, ANT, GOS, GUE];
+        private static readonly string[] VD = [AIG, BIE, CDM, CGI, CHB, CHD, DIA, DOL, FRE, MAH, ORO, PAY, PRE, PUY, VEV, VIT];
+        private static readonly string[] VS = [ATT, BIN, BLA, BOU, EGH, EVI, EVO, GOR, GRC, GSB, JUN, MAR, MOB, MTE, MVE, SIM, SIO, ULR, VIS, ZER];
+        private static readonly string[] ZG = [AEG, CHZ];
+        private static readonly string[] ZH = [HOE, KLO, LAE, PFA, REH, SMA, UEB, WAE];
 
         private static readonly string[] AllGroundStations = [
             ..AG, ..AI, ..BE, ..BL, ..BS, ..FL, ..FR, ..GE, ..GL, ..GR, ..JU, ..LU, ..NE, 
             ..OW, ..SG, ..SH, ..SO, ..SZ, ..TG, ..TI, ..UR, ..VD, ..VS, ..ZG, ..ZH
             ];
 
-        private static readonly string[] BaselineGroundStations = [ "AEG", "AIG", "ALT", "AND", "ANT", "ARH", "ARO", "ATT", "BAN", "PSI", "STC", "UEB", "KUE", "GIN", "SMA", "SCU", "ABO" ]; // Added ABO
-        private static readonly string[] ValidTowerStations = [ "BAN", "PSI", "STC", "UEB" ];
+        private static readonly string[] BaselineGroundStations = [ AEG, AIG, ALT, AND, ANT, ARH, ARO, ATT, BAN, PSI, STC, UEB, SMA, SCU, ABO ]; // Added ABO
+        private static readonly string[] ValidTowerStations = [ BAN, PSI, STC, UEB ];
         private static readonly string[] ValidGranularity = [ "t", "h", "d" ];
 
 

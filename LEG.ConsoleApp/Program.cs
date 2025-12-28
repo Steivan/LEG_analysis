@@ -1,11 +1,8 @@
 ﻿//Login "Felix.senn@ggaweb.ch", "Verena1955"
 //stationIds =  "481826002490", "702003001860" 
 
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace E3DC_DataDownloader
 {

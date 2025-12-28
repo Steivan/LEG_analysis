@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-
+﻿
 namespace LEG.CoreLib.Abstractions.SolarCalculations.Domain
 {
     public interface IPvSiteModel
@@ -13,7 +11,6 @@ namespace LEG.CoreLib.Abstractions.SolarCalculations.Domain
         IReadOnlyCollection<Inverter> Inverters { get; }
         IReadOnlyDictionary<string, PvRoof[]> RoofsPerInverter { get; }
         IReadOnlyCollection<Consumer> Consumers { get; }
-        MeteoProfile MeteoProfile { get; }
 
         Task FetchBuildingPropertiesAsync(object buildingFinder, object coordinateTransformer);
     }

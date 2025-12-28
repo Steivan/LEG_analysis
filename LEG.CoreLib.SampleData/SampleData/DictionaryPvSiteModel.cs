@@ -1,12 +1,12 @@
 ﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
-using LEG.CoreLib.SampleData.ReferenceData;
+using LEG.CoreLib.MeteoModels;
 using LEG.CoreLib.SolarCalculations.Domain;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvConsumers;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvInverters;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvRoofData;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvSiteData;
 using static LEG.CoreLib.SampleData.SampleData.SiteNamesList;
-using static LEG.CoreLib.SampleData.ReferenceData.StationNamesList;
+using static LEG.CoreLib.MeteoModels.StationNamesList;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {
@@ -24,8 +24,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Bagnera + "_1", [PvRoofDataDict[Bagnera + "_1"], PvRoofDataDict[Bagnera + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Bagnera + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Bagnera].MeteoId]
+                    consumers: [PvConsumerDataDict[Bagnera + "_1"]]
                 ),
 
                 [Bos_cha] = new PvSiteModel(
@@ -35,8 +34,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Bos_cha + "_1", [PvRoofDataDict[Bos_cha + "_1"], PvRoofDataDict[Bos_cha + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Bos_cha + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Bos_cha].MeteoId]
+                    consumers: [PvConsumerDataDict[Bos_cha + "_1"]]
                 ),
 
                 [Clozza] = new PvSiteModel(
@@ -46,8 +44,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Clozza + "_1", [PvRoofDataDict[Clozza + "_1"], PvRoofDataDict[Clozza + "_2"], PvRoofDataDict[Clozza + "_3"]] }
                     },
-                    consumers: [PvConsumerDataDict[Clozza + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Clozza].MeteoId]
+                    consumers: [PvConsumerDataDict[Clozza + "_1"]]
                 ),
 
                 [Ftan] = new PvSiteModel(
@@ -57,8 +54,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Ftan + "_1", [PvRoofDataDict[Ftan + "_1"], PvRoofDataDict[Ftan + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Ftan + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Ftan].MeteoId]
+                    consumers: [PvConsumerDataDict[Ftan + "_1"]]
                 ),
 
                 [Fuorcla] = new PvSiteModel(
@@ -68,8 +64,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Fuorcla + "_1", [PvRoofDataDict[Fuorcla + "_1"]] }
                     },
-                    consumers: [PvConsumerDataDict[Fuorcla + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Fuorcla].MeteoId]
+                    consumers: [PvConsumerDataDict[Fuorcla + "_1"]]
                 ),
 
                 [Guldenen] = new PvSiteModel(
@@ -81,8 +76,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     },
                     consumers: [PvConsumerDataDict[Guldenen + "_1"], PvConsumerDataDict[Guldenen + "_2"], PvConsumerDataDict[Guldenen + "_3"],
                                 PvConsumerDataDict[Guldenen + "_4"], PvConsumerDataDict[Guldenen + "_5"], PvConsumerDataDict[Guldenen + "_6"],
-                                PvConsumerDataDict[Guldenen + "_7"], PvConsumerDataDict[Guldenen + "_8"], PvConsumerDataDict[Guldenen + "_9"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Guldenen].MeteoId]
+                                PvConsumerDataDict[Guldenen + "_7"], PvConsumerDataDict[Guldenen + "_8"], PvConsumerDataDict[Guldenen + "_9"]]
                 ),
 
                 [Kleiner] = new PvSiteModel(
@@ -92,8 +86,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Kleiner + "_1", [PvRoofDataDict[Kleiner + "_1"], PvRoofDataDict[Kleiner + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Kleiner + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Kleiner].MeteoId]
+                    consumers: [PvConsumerDataDict[Kleiner + "_1"]]
                 ),
 
                 [Liuns] = new PvSiteModel(
@@ -103,8 +96,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Liuns + "_1", [PvRoofDataDict[Liuns + "_1"], PvRoofDataDict[Liuns + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Liuns + "_1"], PvConsumerDataDict[Liuns + "_2"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Liuns].MeteoId]
+                    consumers: [PvConsumerDataDict[Liuns + "_1"], PvConsumerDataDict[Liuns + "_2"]]
                 ),
 
                 [Lotz] = new PvSiteModel(
@@ -114,8 +106,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Lotz + "_1", [PvRoofDataDict[Lotz + "_1"]] }
                     },
-                    consumers: [PvConsumerDataDict[Lotz + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Lotz].MeteoId]
+                    consumers: [PvConsumerDataDict[Lotz + "_1"]]
                 ),
 
                 [Senn] = new PvSiteModel(
@@ -125,8 +116,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Senn + "_1", [PvRoofDataDict[Senn + "_1"], PvRoofDataDict[Senn + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Senn + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Senn].MeteoId]
+                    consumers: [PvConsumerDataDict[Senn + "_1"]]
                 ),
 
                 [SennV] = new PvSiteModel(
@@ -136,8 +126,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { SennV + "_1", [PvRoofDataDict[SennV + "_1"]] }
                     },
-                    consumers: [PvConsumerDataDict[SennV + "_1"], PvConsumerDataDict[SennV + "_2"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[SennV].MeteoId]
+                    consumers: [PvConsumerDataDict[SennV + "_1"], PvConsumerDataDict[SennV + "_2"]]
                 ),
 
                 [Studenrain] = new PvSiteModel(
@@ -147,8 +136,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Studenrain + "_1", [PvRoofDataDict[Studenrain + "_1"]] }
                     },
-                    consumers: [PvConsumerDataDict[Studenrain + "_1"], PvConsumerDataDict[Studenrain + "_2"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Studenrain].MeteoId]
+                    consumers: [PvConsumerDataDict[Studenrain + "_1"], PvConsumerDataDict[Studenrain + "_2"]]
                 ),
 
                 [TestSite] = new PvSiteModel(
@@ -158,8 +146,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { TestSite + "_1", [PvRoofDataDict[TestSite + "_1"], PvRoofDataDict[TestSite + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[TestSite + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[TestSite].MeteoId]
+                    consumers: [PvConsumerDataDict[TestSite + "_1"]]
                 ),
 
                 [Tof] = new PvSiteModel(
@@ -169,8 +156,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     {
                         { Tof + "_1", [PvRoofDataDict[Tof + "_1"], PvRoofDataDict[Tof + "_2"]] }
                     },
-                    consumers: [PvConsumerDataDict[Tof + "_1"]],
-                    meteoProfile: MeteoProfiles.MeteoDict[PvSiteDataDict[Tof].MeteoId]
+                    consumers: [PvConsumerDataDict[Tof + "_1"]]
                 ),
 
                 [Manual] = new PvSiteModel(
@@ -242,8 +228,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                             DailyProfileId: "TestDailyProfile",
                             HourlyProfileId: "TestHourlyProfile"
                         )
-                    ],
-                    meteoProfile: MeteoProfiles.MeteoDict[TestProfile]
+                    ]
                 ),
             };
     }

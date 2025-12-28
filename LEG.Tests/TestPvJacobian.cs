@@ -1,9 +1,6 @@
 ﻿
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.PvPriorConfig;
 using static LEG.PV.Core.Models.PvPowerJacobian;
-using LEG.MeteoSwiss.Abstractions.Models;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.Tests

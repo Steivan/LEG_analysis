@@ -1,7 +1,7 @@
 ﻿using LEG.Common.Utils;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.CoreLib.HorizonProfiles;
-using LEG.CoreLib.SolarCalculations.Calculations;
+using LEG.CoreLib.MeteoModels;
 using LEG.CoreLib.SolarCalculations.Utilities;
 using LEG.HorizonProfiles.Abstractions;
 using static LEG.CoreLib.SolarCalculations.Calculations.PvShadowCalculations;
@@ -10,6 +10,9 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
 {
     public static class SolarCalculate
     {
+
+        private static readonly DictionaryMeteoProfiles MeteoProfiles = new();
+
         public static (double[] azi, double[] elev, double[] elev2, double[] size, double[] peak, bool[] hasPanelsAndObstacles) GetRoofArrays(
                 List<PvRoof> roofRecords)
         // Extract roof data from List of PvRoof records and return as 1D arrays per attribute
@@ -71,7 +74,8 @@ namespace LEG.CoreLib.SolarCalculations.Calculations
             var nrRoofs = roofsList.Count;
 
             var (azi, elev, elev2, size, peak, hasPanelsAndObstacles) = GetRoofArrays(roofsList);
-            var (_, _, factorModel) = FourierHelpers.GetFourierMeteo(pvSiteModel.MeteoProfile);
+            var meteoProfile = MeteoProfiles.MeteoDict[pvSiteModel.PvSite.MeteoId];
+            var (_, _, factorModel) = FourierHelpers.GetFourierMeteo(meteoProfile);
             var peakSum = peak.Sum();
 
             var countPerMonth = new int[13];

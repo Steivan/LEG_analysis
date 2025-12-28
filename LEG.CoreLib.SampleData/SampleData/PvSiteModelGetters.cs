@@ -1,7 +1,7 @@
 ﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.SwissTopo.Client.SwissTopo;
-using static LEG.CoreLib.SampleData.ReferenceData.MeteoStationProfile;
+using LEG.CoreLib.MeteoModels;
 using static LEG.CoreLib.SampleData.SampleData.DictionaryPvSiteModel;
 using static LEG.CoreLib.SampleData.SampleData.DictionarySiteCoordinates;
 using static LEG.CoreLib.SampleData.SampleData.DictionarySiteHorizonControls;
@@ -11,6 +11,10 @@ namespace LEG.CoreLib.SampleData.SampleData
 {
     public class PvSiteModelGetters
     {
+        private static readonly DictionaryMeteoProfiles MeteoProfiles = new();
+
+        private static readonly MeteoStationProfile StationProfiles = new();
+
         public static List<string> GetSitesList() => SitesList;
 
         public static IPvSiteModel GetSiteDataModel(string siteId)
@@ -49,17 +53,18 @@ namespace LEG.CoreLib.SampleData.SampleData
             return horizonControls;
         }
 
+        public static MeteoProfile GetSiteMeteoProfile(string siteId) => MeteoProfiles.MeteoDict[GetSiteDataModel(siteId).PvSite.MeteoId];
 
         public static Dictionary<string, WeightMeteoParameters> GetSiteMeteoGroup(string siteId)
         {
             var meteoGroup = GetSiteDataModel(siteId).PvSite.MeteoGroupId ?? "";
-            var validMeteoGroup = ProfileToStationDictionary.Keys.Contains(meteoGroup);
+            var validMeteoGroup = StationProfiles.ProfileToStationDictionary.Keys.Contains(meteoGroup);
             if (meteoGroup == "" || !validMeteoGroup)
             {
                 throw new Exception($"No MeteoGroup has been assigned to Site ID {siteId}");
             }
 
-            return ProfileToStationDictionary[meteoGroup];
+            return StationProfiles.ProfileToStationDictionary[meteoGroup];
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿
 using LEG.MeteoSwiss.Client.Forecast;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using LEG.PV.Data.Processor.Helpers;
 

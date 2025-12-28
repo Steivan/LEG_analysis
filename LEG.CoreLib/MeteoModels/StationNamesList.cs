@@ -1,4 +1,4 @@
-﻿namespace LEG.CoreLib.SampleData.ReferenceData
+﻿namespace LEG.CoreLib.MeteoModels
 {
     public class StationNamesList
     {

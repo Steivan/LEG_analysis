@@ -12,8 +12,7 @@ using LEG.PvImport.Abstractions;
 using LEG.PvImport.Clients.E3Dc.Client;
 using LEG.PvImport.Clients.Fronius.Client;
 using System.Data;
-using static LEG.CoreLib.SampleData.ReferenceData.MeteoStationProfile;
-using static LEG.CoreLib.SampleData.ReferenceData.MeteoParameterTypes;
+using static LEG.CoreLib.MeteoModels.MeteoParameterTypes;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
@@ -30,12 +29,16 @@ namespace LEG.PV.Data.Processor
         double InstalledPower,
         int PeriodsPerHour
         );
+
+
     public class DataImporter
     {
         const double maxGroundIrradiance = 1000.0;                                                 // [W/m²]
         const double radiationNoise = maxGroundIrradiance / 100.0;                                 // [W/m²]      Fluctuation of 1% of max irradiance
         const double radiationBaselineVariance = radiationNoise * radiationNoise;                  // [(W/m²)²]
         const double radiationVarianceMaxVariance = maxGroundIrradiance * maxGroundIrradiance / 4;        // [(W/m²)²]   Bernoulli distribution with p=0.5
+
+        public static List<string> SelectedStationsIdList = new List<string>();
 
         // see also file: C:\code\LEG_analysis\Data\MeteoData\StationsData\klo_sma_hoe_ueb_recent_16.11.2025.xlsx
         const int meteoDataOffset = 60;           // Timestamps are UTC values

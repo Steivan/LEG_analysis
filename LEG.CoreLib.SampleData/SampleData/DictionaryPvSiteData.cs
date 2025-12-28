@@ -3,7 +3,7 @@ using static LEG.CoreLib.SampleData.SampleData.DictionarySiteCoordinates;
 using static LEG.MeteoSwiss.Abstractions.ReferenceData.MeteoStations;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using static LEG.CoreLib.Abstractions.ReferenceData.SiteStatus;
-using static LEG.CoreLib.SampleData.ReferenceData.StationNamesList;
+using static LEG.CoreLib.MeteoModels.StationNamesList;
 
 namespace LEG.CoreLib.SampleData.SampleData
 {
