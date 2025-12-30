@@ -67,5 +67,10 @@ namespace LEG.PvImport.Clients.E3Dc.Client
             }
             throw new FormatException($"Invalid timestamp format: {timestamp}");
         }
+
+        public static bool IsNewPortalFormat(string headerLine)
+        {
+            return headerLine.Contains("State of charge [%]") || headerLine.Contains("Solar production [W]");
+        }
     }
 }

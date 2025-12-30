@@ -259,7 +259,7 @@ namespace LEG.PvImport.Clients.E3Dc.Client
             bool initializeStart = false)
         {
             var fileName = E3DcFileHelper.FileName(year, month);
-            var records = ImportCsv.ImportFromFile<E3DcRecord>(folderName + fileName, ";");
+            var records = E3DcCsvImporter.ImportE3DcRecords(folderName + fileName, ";");
             var countOfRecords = records.Count;
 
             double batteryChargingSum = 0, batteryDischargingSum = 0, batterySocSum = 0;

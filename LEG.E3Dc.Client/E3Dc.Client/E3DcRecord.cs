@@ -8,7 +8,7 @@ namespace LEG.PvImport.Clients.E3Dc.Client
     // timestamp;Battery SOC;Battery (charging);Battery (discharging);NetIn;NetOut;Solar production tracker 1;Solar production tracker 2;Solar production;House consumption
     // 2021-09-13 13:30;33;0;0;0;1294;0;0;0;1294
 
-    public class E3DcRecord : IE3DcRecord
+    public partial class E3DcRecord : IE3DcRecord
     {
         [Name("timestamp")] public string Timestamp { get; set; } = string.Empty;
 

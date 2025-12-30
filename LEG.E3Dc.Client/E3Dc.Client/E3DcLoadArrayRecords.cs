@@ -20,7 +20,7 @@ namespace LEG.PvImport.Clients.E3Dc.Client
                     var filePath = folder + E3DcFileHelper.FileName(shortYear, month);
                     if (File.Exists(filePath))
                     {
-                        var records = ImportCsv.ImportFromFile<E3DcRecord>(filePath, ";");
+                        var records = E3DcCsvImporter.ImportE3DcRecords(filePath, ";");
                         foreach (var record in records) arrayRecords.LoadE3DcRecord(record);
                     }
                 }

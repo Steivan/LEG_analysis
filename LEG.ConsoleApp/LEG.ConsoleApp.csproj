@@ -26,7 +26,12 @@
 		<PackageReference Include="Selenium.WebDriver" Version="4.38.0" />
 		<PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="130.0.6723.5800" />
 		<PackageReference Include="Selenium.Support" Version="4.38.0" />
-	</ItemGroup>	
+	</ItemGroup>
+
+	<ItemGroup>
+	    <PackageReference Include="AM.E3dc.Rscp" Version="1.1.0" />
+	    <PackageReference Include="AM.E3dc.Rscp.Data" Version="1.1.0" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LEG.Common\LEG.Common.csproj" />
@@ -40,6 +45,10 @@
     <ProjectReference Include="..\LEG.MeteoSwiss.Client\LEG.MeteoSwiss.Client.csproj" />
     <ProjectReference Include="..\LEG.SwissTopo.Abstractions\LEG.SwissTopo.Abstractions.csproj" />
     <ProjectReference Include="..\LEG.SwissTopo.Client\LEG.SwissTopo.Client.csproj" />
+  </ItemGroup>	
+
+  <ItemGroup>
+    <Folder Include="Client\" />
   </ItemGroup>
 
 </Project>

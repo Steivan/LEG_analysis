@@ -23,7 +23,7 @@ namespace LEG.Tests
                 return;
             }
 
-            var records = ImportCsv.ImportFromFile<E3DcRecord>(dataFile, ";");
+            var records = E3DcCsvImporter.ImportE3DcRecords(dataFile, ";");
             var actual = records.Count;
             var expected = E3DcFileHelper.GetDaysInMonth(year, month) * 96;
             if (actual != expected)
@@ -157,6 +157,157 @@ namespace LEG.Tests
         }
 
         [TestMethod]
+        public void ImportFromFile_HandlesAllE3DCFormats()
+        {
+            // Dummy file paths - replace with actual test file names
+            var testFolder = "C:\\code\\LEG_analysis\\Data\\E3Dc_TestData\\";
+            var oldS10EFile = testFolder + "S10E_old_Export_25.12.csv";
+            var oldS10EProFile = testFolder + "S10EPRO_old_Export_25.12.csv";
+            var newS10EFile = testFolder + "S10E_new_Export_25.12.csv";
+            var newS10EProFile = testFolder + "S10EPRO_new_Export_25.12.csv";
+
+            var newS10EFileMinimal = testFolder + "S10E_new_minimal.csv";
+
+            var files = new[] { oldS10EFile, oldS10EProFile, newS10EFile, newS10EProFile };
+
+            //files = new[] { newS10EFileMinimal };
+
+            foreach (var file in files)
+            {
+                Assert.IsTrue(File.Exists(file), $"Test file not found: {file}");
+
+                var records = E3DcCsvImporter.ImportE3DcRecords(file, ";");
+                Assert.IsNotNull(records, $"Records should not be null for {file}");
+                Assert.IsTrue(records.Count > 0, $"No records loaded from {file}");
+                // Optionally, check a few fields for expected non-default values
+                Assert.IsFalse(records.All(r => string.IsNullOrWhiteSpace(r.Timestamp)), $"All timestamps are empty in {file}");
+            }
+        }
+
+        [TestMethod]
+        public void CompareRecordCounts_OldVsNewFormat()
+        {
+            var testFolder = "C:\\code\\LEG_analysis\\Data\\E3Dc_TestData\\";
+            var oldS10EFile = testFolder + "S10E_old_Export_25.12.csv";
+            var newS10EFile = testFolder + "S10E_new_Export_25.12.csv";
+
+            Assert.IsTrue(File.Exists(oldS10EFile), $"Old file not found: {oldS10EFile}");
+            Assert.IsTrue(File.Exists(newS10EFile), $"New file not found: {newS10EFile}");
+
+            var oldRecords = E3DcCsvImporter.ImportE3DcRecords(oldS10EFile, ";");
+            var newRecords = E3DcCsvImporter.ImportE3DcRecords(newS10EFile, ";");
+
+            Console.WriteLine($"Old file records: {oldRecords.Count}");
+            Console.WriteLine($"New file records: {newRecords.Count}");
+
+            // Assert that both files have the same number of records
+            Assert.AreEqual(oldRecords.Count, newRecords.Count, "Record count mismatch between old and new files");
+        }
+
+        [TestMethod]
+        public void CompareRelevantAttributes_OldVsNewFormat_S10E()
+        {
+            var testFolder = "C:\\code\\LEG_analysis\\Data\\E3Dc_TestData\\";
+            var oldS10EFile = testFolder + "S10E_old_Export_25.12.csv";
+            var newS10EFile = testFolder + "S10E_new_Export_25.12.csv";
+
+            Assert.IsTrue(File.Exists(oldS10EFile), $"Old file not found: {oldS10EFile}");
+            Assert.IsTrue(File.Exists(newS10EFile), $"New file not found: {newS10EFile}");
+
+            var oldRecords = E3DcCsvImporter.ImportE3DcRecords(oldS10EFile, ";");
+            var newRecords = E3DcCsvImporter.ImportE3DcRecords(newS10EFile, ";");
+
+            Assert.AreEqual(oldRecords.Count, newRecords.Count, "Record count mismatch between old and new files");
+
+            // Tolerance for integer/double rounding
+            int tolerance = 1;
+
+            for (int i = 0; i < oldRecords.Count; i++)
+            {
+                var oldRec = oldRecords[i];
+                var newRec = newRecords[i];
+
+                // Compare SolarProduction
+                if (oldRec.SolarProduction > 0 && newRec.SolarProduction > 0)
+                {
+                    Assert.IsTrue(Math.Abs(oldRec.SolarProduction - newRec.SolarProduction) <= tolerance,
+                    $"SolarProduction mismatch at row {i}: old={oldRec.SolarProduction}, new={newRec.SolarProduction}");
+                }
+
+                // Compare HouseConsumption
+                Assert.IsTrue(Math.Abs(oldRec.HouseConsumption - newRec.HouseConsumption) <= tolerance,
+                    $"HouseConsumption mismatch at row {i}: old={oldRec.HouseConsumption}, new={newRec.HouseConsumption}");
+
+                // Compare BatteryCharging
+                Assert.IsTrue(Math.Abs(oldRec.BatteryCharging - newRec.BatteryCharging) <= tolerance,
+                    $"BatteryCharging mismatch at row {i}: old={oldRec.BatteryCharging}, new={newRec.BatteryCharging}");
+
+                // Compare BatteryDischarging
+                Assert.IsTrue(Math.Abs(oldRec.BatteryDischarging - newRec.BatteryDischarging) <= tolerance,
+                    $"BatteryDischarging mismatch at row {i}: old={oldRec.BatteryDischarging}, new={newRec.BatteryDischarging}");
+
+                // Add more attribute comparisons as needed, skipping those missing in new files
+            }
+        }
+
+        [TestMethod]
+        public void CompareRelevantAttributes_OldVsNewFormat_S10EPRO()
+        {
+            var testFolder = "C:\\code\\LEG_analysis\\Data\\E3Dc_TestData\\";
+            var oldS10EProFile = testFolder + "S10EPRO_old_Export_25.12.csv";
+            var newS10EProFile = testFolder + "S10EPRO_new_Export_25.12.csv";
+
+            Assert.IsTrue(File.Exists(oldS10EProFile), $"Old file not found: {oldS10EProFile}");
+            Assert.IsTrue(File.Exists(newS10EProFile), $"New file not found: {newS10EProFile}");
+
+            var oldRecords = E3DcCsvImporter.ImportE3DcRecords(oldS10EProFile, ";");
+            var newRecords = E3DcCsvImporter.ImportE3DcRecords(newS10EProFile, ";");
+
+            Assert.AreEqual(oldRecords.Count, newRecords.Count, "Record count mismatch between old and new files");
+
+            // Tolerance for integer/double rounding
+            int tolerance = 1;
+
+            for (int i = 0; i < oldRecords.Count; i++)
+            {
+                var oldRec = oldRecords[i];
+                var newRec = newRecords[i];
+
+                // Compare SolarProduction
+                if (oldRec.SolarProduction > 0 && newRec.SolarProduction > 0)
+                {
+                    Assert.IsTrue(Math.Abs(oldRec.SolarProduction - newRec.SolarProduction) <= tolerance,
+                        $"SolarProduction mismatch at row {i}: old={oldRec.SolarProduction}, new={newRec.SolarProduction}");
+                }
+
+                // Compare HouseConsumption
+                Assert.IsTrue(Math.Abs(oldRec.HouseConsumption - newRec.HouseConsumption) <= tolerance,
+                    $"HouseConsumption mismatch at row {i}: old={oldRec.HouseConsumption}, new={newRec.HouseConsumption}");
+
+                // Compare BatteryCharging
+                Assert.IsTrue(Math.Abs(oldRec.BatteryCharging - newRec.BatteryCharging) <= tolerance,
+                    $"BatteryCharging mismatch at row {i}: old={oldRec.BatteryCharging}, new={newRec.BatteryCharging}");
+
+                // Compare BatteryDischarging
+                Assert.IsTrue(Math.Abs(oldRec.BatteryDischarging - newRec.BatteryDischarging) <= tolerance,
+                    $"BatteryDischarging mismatch at row {i}: old={oldRec.BatteryDischarging}, new={newRec.BatteryDischarging}");
+
+                // Add more attribute comparisons as needed, skipping those missing in new files
+                // For S10EPRO, you may want to compare WallBoxTotalChargingPower and SigmaConsumption if present in both
+                if (oldRec.WallBoxTotalChargingPower > 0 && newRec.WallBoxTotalChargingPower > 0)
+                {
+                    Assert.IsTrue(Math.Abs(oldRec.WallBoxTotalChargingPower - newRec.WallBoxTotalChargingPower) <= tolerance,
+                        $"WallBoxTotalChargingPower mismatch at row {i}: old={oldRec.WallBoxTotalChargingPower}, new={newRec.WallBoxTotalChargingPower}");
+                }
+                if (oldRec.SigmaConsumption > 0 && newRec.SigmaConsumption > 0)
+                {
+                    Assert.IsTrue(Math.Abs(oldRec.SigmaConsumption - newRec.SigmaConsumption) <= tolerance,
+                        $"SigmaConsumption mismatch at row {i}: old={oldRec.SigmaConsumption}, new={newRec.SigmaConsumption}");
+                }
+            }
+        }
+
+        [TestMethod]
         public void ImportFromFile_ValidCsv_ReturnsCorrectData()
         {
             // Arrange
@@ -170,7 +321,7 @@ namespace LEG.Tests
                 var result = ImportCsv.ImportFromFile<Person>(tempFile);
 
                 // Assert
-                Assert.AreEqual(2, result.Count);
+                Assert.HasCount(2, result);
                 Assert.AreEqual("Alice", result[0].Name);
                 Assert.AreEqual(30, result[0].Age);
                 Assert.AreEqual("Bob", result[1].Name);

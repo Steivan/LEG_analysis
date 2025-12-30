@@ -6,7 +6,7 @@ namespace LEG.Common
 {
     public class ImportCsv
     {
-        public static List<T> ImportFromFile<T>(string filePath, string delimiter = ",")
+        public static List<T> ImportFromFile<T>(string filePath, string delimiter = ",", Action<CsvReader>? configure = null)
         {
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("File path must not be null or empty.", nameof(filePath));
@@ -19,11 +19,15 @@ namespace LEG.Common
                 Delimiter = delimiter,
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
+                PrepareHeaderForMatch = args => args.Header.Trim('\"')
             };
 
             using var reader = new StreamReader(filePath);
             using var csv = new CsvReader(reader, config);
+
+            configure?.Invoke(csv);
+
             var records = new List<T>(csv.GetRecords<T>());
             return records;
         }

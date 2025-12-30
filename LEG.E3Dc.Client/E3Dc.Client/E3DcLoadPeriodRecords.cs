@@ -1,6 +1,5 @@
 ﻿using LEG.PvImport.Abstractions;
 using System.Data;
-using LEG.Common;
 
 namespace LEG.PvImport.Clients.E3Dc.Client
 {
@@ -14,8 +13,56 @@ namespace LEG.PvImport.Clients.E3Dc.Client
                 return [];
             }
 
-            return ImportCsv.ImportFromFile<E3DcRecord>(dataFile, ";");
+            using var fileStream = new FileStream(dataFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var reader = new StreamReader(fileStream);
+            var headerLine = reader.ReadLine();
+
+            fileStream.Position = 0;
+            reader.DiscardBufferedData();
+
+            using var csv = new CsvHelper.CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)
+            {
+                Delimiter = ";",
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null,
+                PrepareHeaderForMatch = args => args.Header.Trim('\"')
+            });
+
+            bool isNewFormat = E3DcFileHelper.IsNewPortalFormat(headerLine);
+            if (isNewFormat)
+            {
+                csv.Context.RegisterClassMap<E3DcRecordNewMap>();
+            }
+            else
+            {
+                csv.Context.RegisterClassMap<E3DcRecordOldMap>();
+            }
+
+            var records = csv.GetRecords<E3DcRecord>().ToList();
+
+            // Apply conversion for new-format records
+            if (isNewFormat)
+            {
+                foreach (var record in records)
+                {
+                    record.ConvertPowerFieldsToWh();
+                }
+            }
+
+            return records;
         }
+
+        //private static List<E3DcRecord> LoadE3DCRecordsForMonth(string folderName, int year, int month)
+        //{
+        //    var dataFile = folderName + E3DcFileHelper.FileName(year, month);
+        //    if (!File.Exists(dataFile))
+        //    {
+        //        return [];
+        //    }
+
+        //    return E3DcCsvImporter.ImportE3DcRecords(dataFile, ";");
+        //}
 
         public static List<E3DcRecord> LoadRecords(int folderNumber, DateTime? startDateTime = null, DateTime? endDateTime = null)
         {
