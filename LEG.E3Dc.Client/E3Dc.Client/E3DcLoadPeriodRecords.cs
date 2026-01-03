@@ -109,5 +109,16 @@ namespace LEG.PvImport.Clients.E3Dc.Client
 
             return powerRecords;
         }
+        public static Dictionary<DateTime, double> LoadConsumptionDictionary(string siteID, DateTime? startDateTime = null, DateTime? endDateTime = null)
+        {
+            var folderNumber = siteID == "Senn" ? 1 : siteID == "SennV" ? 2 : 3;
+            var periodRecords = LoadRecords(folderNumber, startDateTime, endDateTime);
+            var consumptionDictionary = periodRecords.ToDictionary(
+                r => E3DcFileHelper.ParseTimestamp(r.Timestamp),
+                r => (double)r.HouseConsumption
+            );
+
+            return consumptionDictionary ?? new Dictionary<DateTime, double>();
+        }
     }
 }

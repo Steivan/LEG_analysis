@@ -88,34 +88,72 @@ namespace LEG.MeteoSwiss.Abstractions.Models
                 double? Dr = directRadiation;
                 double? Df = diffuseRadiation;
                 double? G = globalRadiation;
-                if (G.HasValue && !(Dr.HasValue && Df.HasValue))            // G is known, but Dr or Df is missing
+
+                if (G.HasValue && Dr.HasValue && Df.HasValue)            // All three values are known, but might be inconsistent
+                {
+                    Dr = Math.Max(Dr.Value, 0.0);
+                    Df = Math.Max(Df.Value, 0.0);
+                    G = Math.Max(G.Value, Dr.Value + Df.Value);
+
+                    if (G.Value == 0.0)
+                    {
+                        return (0.0, 0.0, 0.0);
+                    }
+
+                    if (Dr.Value == 0.0 && Df.Value > 0.0)
+                    {
+                        return (G.Value - Df.Value, Df, G);
+                    }
+
+                    if (Dr.Value > 0.0 && Df.Value == 0.0)
+                    {
+                        return (Dr, G.Value - Dr.Value, G);
+                    }
+
+                    double scalingFactor = G.Value / (Dr.Value + Df.Value);
+                    return (Dr.Value * scalingFactor, Df.Value * scalingFactor, G);
+                }
+
+                if (G.HasValue)            // G is known (might be 0), but Dr and/or Df is missing
                 {
                     if (Dr.HasValue)
                     {
-                        Df = G.Value - Dr.Value;
+                        Dr = Math.Max(Dr.Value, 0.0);
+                        G = Math.Max(G.Value, Dr.Value);
+                        return (Dr, G.Value - Dr.Value, G);
                     }
-                    else if (Df.HasValue)
+
+                    if (Df.HasValue)
                     {
-                        Dr = G.Value - Df.Value;
+                        Df = Math.Max(Df.Value, 0.0);
+                        G = Math.Max(G.Value, Df.Value);
+                        return (G.Value - Df.Value, Df, G);
                     }
-                    else
-                    {
-                        // Assume clear sky with 80% direct radiation
-                        Dr = 0.8 * G.Value;
-                        Df = 0.2 * G.Value;
-                    }
+
+                    Dr = G.Value * 0.8;      // Assume clear sky with 80% direct radiation
+                    return (Dr, G.Value - Dr.Value, G);
                 }
-                else if (!G.HasValue && (Dr.HasValue || Df.HasValue))       // G is missing, but Dr or Df is known
+
+                if (Dr.HasValue || Df.HasValue)       // G is missing, but Dr or Df is known
                 {
-                    if (Dr.HasValue && !Df.HasValue)
+                    if (Dr.HasValue && Df.HasValue)
                     {
-                        Df = Dr.Value / 4.0;
+                        Dr = Math.Max(Dr.Value, 0.0);
+                        Df = Math.Max(Df.Value, 0.0);
+                        return (Dr, Df, Dr.Value + Df.Value);
                     }
-                    else if (!Dr.HasValue && Df.HasValue)
+
+                    if (Dr.HasValue)
                     {
-                        Dr = Df.Value * 4.0;
+                        Dr = Math.Max(Dr.Value, 0.0);
+                        return (Dr, 0.0, Dr);
                     }
-                    G = Dr.Value + Df.Value;
+
+                    if (Df.HasValue)
+                    {
+                        Df = Math.Max(Df.Value, 0.0);
+                        return (0.0, Df, Df);
+                    }
                 }
 
                 return (Dr, Df, G);

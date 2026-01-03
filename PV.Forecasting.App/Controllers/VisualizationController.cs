@@ -290,7 +290,7 @@ namespace PV.Forecasting.App.Controllers
             return period switch
             {
                 PeriodDay => (date.Date, date.Date.AddDays(1)),
-                PeriodWeek => (GetStartOfWeek(date), GetStartOfWeek(date).AddDays(7)),
+                PeriodWeek => (GetMondayOfWeek(date), GetMondayOfWeek(date).AddDays(7)),
                 PeriodMonth => (new DateTime(date.Year, date.Month, 1), new DateTime(date.Year, date.Month, 1).AddMonths(1)),
                 PeriodYear => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 1, 1).AddYears(1)),
                 PeriodAll => (minDate, maxDate.AddDays(1)),
@@ -298,7 +298,7 @@ namespace PV.Forecasting.App.Controllers
             };
         }
 
-        private DateTime GetStartOfWeek(DateTime date)
+        private DateTime GetMondayOfWeek(DateTime date)
         {
             int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
             return date.AddDays(-1 * diff).Date;

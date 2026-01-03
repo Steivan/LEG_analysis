@@ -242,7 +242,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 35.0,
                     Elev2: 0.0,
                     Area: 80.0,
-                    Peak: 16.0,
+                    Peak: 15.0,
                     null,
                     null
                 ),
@@ -255,7 +255,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Elev: 9.0,
                     Elev2: 0.0,
                     Area: 80.0,
-                    Peak: 16.0,
+                    Peak: 15.0,
                     null,
                     null
                 ),

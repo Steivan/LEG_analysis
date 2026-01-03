@@ -19,7 +19,7 @@ namespace LEG.PV.Core.Models.MeteoCalibrationParameters
                     lambdaKFog: 2.0
                 ) },
                 { SiteNamesList.Senn, new(
-                    etha: 0.333,
+                    etha: 0.355,
                     gamma: -0.00278,
                     u0: 29.6,
                     u1: 0.379,
@@ -30,7 +30,7 @@ namespace LEG.PV.Core.Models.MeteoCalibrationParameters
                     lambdaKFog: 0.833
                 ) },
                 { SiteNamesList.SennV, new( 
-                    etha: 0.567,      // Calibrated value is too low
+                    etha: 0.605,      // Calibrated value is too low
                     gamma: -0.0176,
                     u0: 200.0,
                     u1: 0.001,

@@ -1,11 +1,11 @@
-﻿using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
-
-using LEG.CoreLib.SolarCalculations.Calculations;
-using LEG.HorizonProfiles.Client;
+﻿using CalibrationApp.Consumption;
+using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.CoreLib.SampleData;
 using LEG.CoreLib.SampleData.SampleData;
-using LEG.PvImport.Clients.E3Dc.Client;
+using LEG.CoreLib.SolarCalculations.Calculations;
+using LEG.HorizonProfiles.Client;
 using LEG.PvImport.Abstractions.E3Dc.Abstractions;
+using LEG.PvImport.Clients.E3Dc.Client;
 
 namespace CalibrationApp
 {
@@ -13,15 +13,30 @@ namespace CalibrationApp
     {
         static async Task Main()
         {
+            //await ProcessE3Dc();
+
+            // Analyze E3DC consumption data
+            var siteId = "Senn";
+            var consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);       
+            
+            var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
+            PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+
+            var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
+            PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
+
+        }
+
+        public static async Task ProcessE3Dc()
+        {
 
             await ProcessE3DcData(1);
             await ProcessE3DcData(2);
-       
+
             // Run E3DC aggregation
             E3DcAggregator.RunE3DcAggregation();
 
-            await Task.CompletedTask;
-        }
+            await Task.CompletedTask;        }
 
         public static async Task ProcessE3DcData(int modelNr)
         {

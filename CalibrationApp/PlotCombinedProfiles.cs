@@ -19,7 +19,7 @@ namespace CalibrationApp
                 (maximaRelativeYearMonthLists,
                 referenceMaximaAbsoluteMonthList,
                 productionMaximaAbsoluteMonthMeanList,
-                productionMaximaAbsoluteMonthMinLis,
+                productionMaximaAbsoluteMonthMinList,
                 productionMaximaAbsoluteMonthMaxList),
 
                 (effectiveRelativeYearMonthLists,
@@ -137,7 +137,7 @@ namespace CalibrationApp
 
                 // Plot Ranges in lower panel
                 context.AddAreaToPanel(1, month - 1,
-                    hourSupport, productionMaximaAbsoluteMonthMaxList[month - 1], productionMaximaAbsoluteMonthMinLis[month - 1],
+                    hourSupport, productionMaximaAbsoluteMonthMaxList[month - 1], productionMaximaAbsoluteMonthMinList[month - 1],
                     OxyColors.LightSteelBlue, strokeColor: null, strokeThickness: 1, label: "");
                 context.AddAreaToPanel(1, month - 1,
                     hourSupport, productionEffectiveAbsoluteMonthMaxList[month - 1], productionEffectiveAbsoluteMonthMinList[month - 1],
