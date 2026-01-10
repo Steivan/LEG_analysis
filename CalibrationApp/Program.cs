@@ -6,6 +6,7 @@ using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.HorizonProfiles.Client;
 using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 using LEG.PvImport.Clients.E3Dc.Client;
+using CalibrationApp.Helpers;
 
 namespace CalibrationApp
 {
@@ -20,11 +21,23 @@ namespace CalibrationApp
             var consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);       
             
             var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
-            PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+            //PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
             var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
-            PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
+            //PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
 
+            var dataList = new List<double[]>();
+            for (var i=0; i<13; i++)
+            {
+                var data = new double[96];
+                for (var j = 0; j < 96; j++)
+                {
+                    var index = i * 96 + j;
+                    data[j] = diurnalStats[index].Mean;
+                }
+                dataList.Add(data);
+                var (smoothedData, peaksList) = PeakDetector.ExtractAllSpikes(data, minAmplitudeRatio: 0.25, maxSigma: 3.0, minDelta: 2);
+            }
         }
 
         public static async Task ProcessE3Dc()
