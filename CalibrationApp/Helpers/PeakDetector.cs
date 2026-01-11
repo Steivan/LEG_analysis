@@ -2,8 +2,15 @@
 {
     internal class PeakDetector
     {
-        internal static List<(double PeakValue, int PeakIndex, int loIndex, int hiIndex)> FindAllPeaks(double[] data, double peakThresholdRatio = 0.25, bool smoothingTrue=true)
+        internal static List<(double PeakValue, int PeakIndex, int loIndex, int hiIndex)> FindAllPeaks(double[] data, double peakThresholdRatio = 0.25, bool smoothingTrue=true, double epsilon=0.001)
         {
+            int GetSign(double value)
+            {
+                if (value > epsilon) return 1;
+                if (value < -epsilon) return -1;
+                return 0;
+            }
+
             if (data == null || data.Length == 0)
             {
                 throw new ArgumentException("Data array cannot be null or empty.");
@@ -20,12 +27,13 @@
             List<(double value, int index)> maximaList = new List<(double value, int index)>();
             var priorIndex = - 1;
             var priorValue = smoothedData[HelperFunctions.ModuloIndex(priorIndex, data.Length)];
-            var priorDirection = Math.Sign(priorValue - smoothedData[HelperFunctions.ModuloIndex(priorIndex - 1, data.Length)]);
+            var priorDirection = GetSign(priorValue - smoothedData[HelperFunctions.ModuloIndex(priorIndex - 1, data.Length)]);
             var newIndex = 0;
             while (newIndex < spanLength)
             {
                 var newValue = smoothedData[newIndex];
-                var newDirection = Math.Sign(newValue - priorValue);
+                var newDirection = GetSign(newValue - priorValue);
+                if (newDirection == 0) newDirection = priorDirection;
 
                 if (priorDirection != newDirection )
                 {
@@ -79,7 +87,7 @@
             return peaksList;
         }
 
-        internal static (double[] smoothedData, List<(int peakIndex, double a, double mu, double variance)> peaks) ExtractAllSpikes(double[] data, double minAmplitudeRatio = 0.2, double maxSigma = 5.0, int minDelta = 2)
+        internal static (double[] smoothedData, List<(int peakIndex, double a, double mu, double variance)> peaks) ExtractAllSpikes(double[] data, double minAmplitudeRatio = 0.2, double maxSigma = 5.0)
         {
             var allPeaks = FindAllPeaks(data);
             var peaks = new List<(int peakIndex, double a, double mu, double sigma)>();
@@ -103,12 +111,9 @@
 
                 if (a >= minAmplitude && variance <= maxVariance)
                 {
-                    //var denom = 2 * sigma * sigma;
                     for (var i = 0; i < smoothedData.Length; i++)
                     {
                         var valuePeak = GaussianFitter.EvaluateGaussian(i, a, mu, variance);
-                        //var diff = (double)i - mu;
-                        //var valuePeak = a * Math.Exp(-diff * diff / denom);
                         smoothedData[i] = valuePeak < smoothedData[i] ? smoothedData[i] - valuePeak : 0.0;
                     }
                     peaks.Add((peakIndex, a, mu, variance));
@@ -119,10 +124,8 @@
         }
         private static (int max, int lo, int hi) ConfineRange(ReadOnlySpan<double> span, int peak, int lo, int hi)
         {
-            var moduloLo = HelperFunctions.ModuloIndex(lo, span.Length);
-            var moduloHi = HelperFunctions.ModuloIndex(hi, span.Length);
-            var gLo = span[moduloLo];
-            var gHi = span[moduloHi];
+            var gLo = span[HelperFunctions.ModuloIndex(lo, span.Length)];
+            var gHi = span[HelperFunctions.ModuloIndex(hi, span.Length)];
             var max = peak;
             var gTrend = (gHi - gLo) / (hi - lo);
 

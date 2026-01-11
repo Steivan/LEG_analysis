@@ -23,21 +23,32 @@ namespace CalibrationApp
             var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
             //PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
-            var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
+            //var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
             //PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
 
             var dataList = new List<double[]>();
-            for (var i=0; i<13; i++)
+            for (var i = 0; i < 13; i++)
             {
                 var data = new double[96];
                 for (var j = 0; j < 96; j++)
                 {
                     var index = i * 96 + j;
-                    data[j] = diurnalStats[index].Mean;
+                    data[j] = diurnalStats[index].P50;
                 }
-                dataList.Add(data);
-                var (smoothedData, peaksList) = PeakDetector.ExtractAllSpikes(data, minAmplitudeRatio: 0.25, maxSigma: 3.0, minDelta: 2);
+                var (smoothedData, peaksList) = PeakDetector.ExtractAllSpikes(data, minAmplitudeRatio: 0.2, maxSigma: 3.5);
+                dataList.Add(smoothedData);
             }
+            for (var i = 0; i <13; i++)
+            {
+                var smoothedData = dataList[i];
+                for (var j = 0; j < 96; j++)
+                {
+                    var index = i * 96 + j;
+                    diurnalStats[index].Mean = smoothedData[j];
+                }
+            }
+            PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+
         }
 
         public static async Task ProcessE3Dc()
