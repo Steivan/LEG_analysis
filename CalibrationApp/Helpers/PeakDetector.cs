@@ -1,4 +1,6 @@
-﻿namespace CalibrationApp.Helpers
+﻿using System.Reflection.Metadata.Ecma335;
+
+namespace CalibrationApp.Helpers
 {
     internal class PeakDetector
     {
@@ -87,7 +89,7 @@
             return peaksList;
         }
 
-        internal static (double[] smoothedData, List<(int peakIndex, double a, double mu, double variance)> peaks) ExtractAllSpikes(double[] data, double minAmplitudeRatio = 0.2, double maxSigma = 5.0)
+        internal static (double[] smoothedData, List<(int peakIndex, double a, double mu, double variance)> peaks) ExtractAllSpikes(string label, double[] data, double minAmplitudeRatio = 0.2, double maxSigma = 5.0, double thresholdRatio = 0.1)
         {
             var allPeaks = FindAllPeaks(data);
             var peaks = new List<(int peakIndex, double a, double mu, double sigma)>();
@@ -100,17 +102,24 @@
             var smoothedData = data.Select(v => v).ToArray();
             var minAmplitude = smoothedData.Max() * minAmplitudeRatio;
             var maxVariance = maxSigma * maxSigma;
+            var maxDelta = (int)Math.Ceiling(maxSigma * Math.Sqrt(-2.0 * Math.Log(thresholdRatio)));
+            Console.WriteLine($"- Analysis for {label}: minAmplitude={minAmplitude:F1}, maxVariance={maxVariance:F1}, maxDelta={maxDelta}");
 
             foreach (var (_, peakIndex, loIndex, hiIndex) in allPeaks)
             {
-                var gaussianParameters = GaussianFitter.FitGaussian(smoothedData, loIndex, peakIndex, hiIndex, maxIterations: 10);
+                var lo = Math.Max(peakIndex - maxDelta, loIndex);
+                var hi = Math.Min(peakIndex + maxDelta, hiIndex);
+
+                var gaussianParameters = GaussianFitter.FitGaussian(smoothedData, peakIndex, lo, hi, maxIterations: 10, thresholdRatio: thresholdRatio);
 
                 var a = gaussianParameters.A;
                 var mu = gaussianParameters.Mu;
                 var variance = gaussianParameters.Variance;
 
+                Console.WriteLine($"  - Peak Candidate at index {peakIndex}: range {loIndex}-{hiIndex}, confined to {lo}-{hi}, a={a:F2}, mu={mu:F2}, variance={variance:F2}");
                 if (a >= minAmplitude && variance <= maxVariance)
                 {
+                    Console.WriteLine($"    => Added to peaks");
                     for (var i = 0; i < smoothedData.Length; i++)
                     {
                         var valuePeak = GaussianFitter.EvaluateGaussian(i, a, mu, variance);
@@ -119,6 +128,10 @@
                     peaks.Add((peakIndex, a, mu, variance));
                 }
             }
+
+
+            var kernel = new double[] { 0.025, 0.05, 0.09, 0.11, 0.14, 0.17, 0.14, 0.11, 0.09, 0.05, 0.025 };
+            smoothedData = Convolution.ConvoluteCircular(smoothedData, kernel, centered: true);
 
             return (smoothedData, peaks);
         }

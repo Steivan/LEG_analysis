@@ -1,4 +1,5 @@
 ﻿using CalibrationApp.Consumption;
+using CalibrationApp.Helpers;
 using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 using LEG.CoreLib.SampleData;
 using LEG.CoreLib.SampleData.SampleData;
@@ -6,7 +7,6 @@ using LEG.CoreLib.SolarCalculations.Calculations;
 using LEG.HorizonProfiles.Client;
 using LEG.PvImport.Abstractions.E3Dc.Abstractions;
 using LEG.PvImport.Clients.E3Dc.Client;
-using CalibrationApp.Helpers;
 
 namespace CalibrationApp
 {
@@ -14,6 +14,8 @@ namespace CalibrationApp
     {
         static async Task Main()
         {
+            //AnalyzeConfinedGaussianVariance(0.1);
+
             //await ProcessE3Dc();
 
             // Analyze E3DC consumption data
@@ -21,34 +23,79 @@ namespace CalibrationApp
             var consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);       
             
             var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
-            //PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+            PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
             //var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
             //PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
 
-            var dataList = new List<double[]>();
+            var p90List = new List<double[]>();
+            var p75List = new List<double[]>();
+            var p50List = new List<double[]>();
+            var p25List = new List<double[]>();
+            var meanList = new List<double[]>();
+            for (var i = 0; i < 13; i++)
+            { Console.WriteLine($"Processing period {i + 1}/13");
+                var p90Data = new double[96];
+                var p75Data = new double[96];
+                var p50Data = new double[96];
+                var p25Data = new double[96];
+                var meanData = new double[96];
+                for (var j = 0; j < 96; j++)
+                {
+                    var index = i * 96 + j;
+                    p90Data[j] = diurnalStats[index].P90;
+                    p75Data[j] = diurnalStats[index].P75;
+                    p50Data[j] = diurnalStats[index].P50;
+                    p25Data[j] = diurnalStats[index].P25;
+                    meanData[j] = diurnalStats[index].Mean;
+                }
+                var (smoothedP90, p90PeaksList) = PeakDetector.ExtractAllSpikes("P90", p90Data, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
+                p90List.Add(smoothedP90);
+                var (smoothedP75, p75PeaksList) = PeakDetector.ExtractAllSpikes("P75", p75Data, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
+                p75List.Add(smoothedP75);
+                var (smoothedP50, p50PeaksList) = PeakDetector.ExtractAllSpikes("P50", p50Data, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
+                p50List.Add(smoothedP50);
+                var (smoothedP25, p25PeaksList) = PeakDetector.ExtractAllSpikes("P25", p25Data, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
+                p25List.Add(smoothedP25);
+                var (smoothedMean, meanPeaksList) = PeakDetector.ExtractAllSpikes("Mean", meanData, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
+                meanList.Add(smoothedMean);
+            }
             for (var i = 0; i < 13; i++)
             {
-                var data = new double[96];
+                var smoothedP90 = p90List[i];
+                var smoothedP75 = p75List[i];
+                var smoothedP50 = p50List[i];
+                var smoothedP25 = p25List[i];
+                var smoothedMean = meanList[i];
                 for (var j = 0; j < 96; j++)
                 {
                     var index = i * 96 + j;
-                    data[j] = diurnalStats[index].P50;
-                }
-                var (smoothedData, peaksList) = PeakDetector.ExtractAllSpikes(data, minAmplitudeRatio: 0.2, maxSigma: 3.5);
-                dataList.Add(smoothedData);
-            }
-            for (var i = 0; i <13; i++)
-            {
-                var smoothedData = dataList[i];
-                for (var j = 0; j < 96; j++)
-                {
-                    var index = i * 96 + j;
-                    diurnalStats[index].Mean = smoothedData[j];
+                    diurnalStats[index].P90 = smoothedP90[j];
+                    diurnalStats[index].P75 = smoothedP75[j];
+                    diurnalStats[index].P50 = smoothedP50[j];
+                    diurnalStats[index].P25 = smoothedP25[j];
+                    diurnalStats[index].Mean = smoothedMean[j];
                 }
             }
             PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+        }
 
+        public static void AnalyzeConfinedGaussianVariance(double threshold, int steps=20)
+        {
+
+            var sigmaList = new List<double> { 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0 };
+            var count = 0;
+            var sumRatioAll = 0.0;
+            var sumRatioConfined = 0.0;
+            foreach (var sigma in sigmaList)
+            {
+                var (ratioAll, ratioConfined) = GaussianFitter.DiscreteVarianceRatios(steps, sigma, threshold: threshold);
+                count++;
+                sumRatioAll += ratioAll;
+                sumRatioConfined += ratioConfined;
+                Console.WriteLine($"Sigma: {sigma:F1}, ErrorAll: {ratioAll - 1.0:E4}, RatioConfined: {ratioConfined:F4}");
+            }
+            Console.WriteLine($"Averages:   ErrorAll: {sumRatioAll / count - 1.0:E4}, RatioConfined: {sumRatioConfined / count:F4}");
         }
 
         public static async Task ProcessE3Dc()
