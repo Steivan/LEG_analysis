@@ -1,4 +1,5 @@
-﻿using static CalibrationApp.Consumption.ConsumptionAnalytics;
+﻿using NPOI.SS.Formula.Functions;
+using static CalibrationApp.Consumption.ConsumptionAnalytics;
 
 namespace CalibrationApp.Consumption
 {
@@ -20,7 +21,7 @@ namespace CalibrationApp.Consumption
 
         public static List<TimeSlotStats> AnalyzeSeasonalConsistency(Dictionary<DateTime, double> data)
         {
-            return data
+            var timeSlotStats = data
                 .Where(kvp => Get13x4Period(kvp.Key) > 0)
                 .GroupBy(kvp => new {
                     Period = Get13x4Period(kvp.Key),
@@ -45,6 +46,8 @@ namespace CalibrationApp.Consumption
                 })
                 .OrderBy(x => x.Period13x4).ThenBy(x => x.TimeOfDay)
                 .ToList();
+
+            return timeSlotStats;
         }
     }
 }

@@ -23,10 +23,14 @@ namespace CalibrationApp
             var consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);       
             
             var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
-            PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+            //PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
             //var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
             //PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
+
+            var lagSinus = 3.0;
+            var lagPeaks = new double[] { 8.0, 14.0, 20.0};
+            var variancePeaks = new double[] { 5.0, 5.0, 5.0};
 
             var p90List = new List<double[]>();
             var p75List = new List<double[]>();
@@ -59,7 +63,16 @@ namespace CalibrationApp
                 p25List.Add(smoothedP25);
                 var (smoothedMean, meanPeaksList) = PeakDetector.ExtractAllSpikes("Mean", meanData, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
                 meanList.Add(smoothedMean);
+
+                BaselineDecomposer.DecomposeSeries(smoothedMean, lagSinus, lagPeaks, variancePeaks);
             }
+
+
+            var p90Aggregate = new double[96];
+            var p75Aggregate = new double[96];
+            var p50Aggregate = new double[96];
+            var p25Aggregate = new double[96];
+            var meanAggregate = new double[96];
             for (var i = 0; i < 13; i++)
             {
                 var smoothedP90 = p90List[i];
@@ -75,9 +88,17 @@ namespace CalibrationApp
                     diurnalStats[index].P50 = smoothedP50[j];
                     diurnalStats[index].P25 = smoothedP25[j];
                     diurnalStats[index].Mean = smoothedMean[j];
+
+                    p90Aggregate[j] += smoothedP90[j] / 13;
+                    p75Aggregate[j] += smoothedP75[j] / 13;
+                    p50Aggregate[j] += smoothedP50[j] / 13;
+                    p25Aggregate[j] += smoothedP25[j] / 13;
+                    meanAggregate[j] += smoothedMean[j] / 13;
                 }
             }
             PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+
+            PlotAggregateConsumptionProfile.PlotDiurnalProfiles(siteId, p90Aggregate, p75Aggregate, p50Aggregate, p25Aggregate, meanAggregate);
         }
 
         public static void AnalyzeConfinedGaussianVariance(double threshold, int steps=20)

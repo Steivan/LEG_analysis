@@ -198,6 +198,60 @@ namespace LEG.OxyPlotHelper
                 plotModel.Series.Add(scatter);
             }
         }
+        public void FillTwoCurves(
+            double[] x, double[] y1, double[] y2,
+            OxyColor color,
+            byte alpha = 128, // 0=transparent, 255=opaque
+            string fillLabel = "",
+            bool addOutline = false,
+            OxyColor? outlineColor = null,
+            double outlineWidth = 1,
+            LineStyle outlineLineStyle = LineStyle.Solid, // <-- Add this parameter
+            bool addMarkers = false,
+            OxyColor? markerColor = null,
+            MarkerType markerType = MarkerType.Circle,
+            double markerSize = 4,
+            string markerLabel = "")
+        {
+            if (x.Length != y1.Length || x.Length != y2.Length || x.Length < 2)
+                throw new ArgumentException("x, y1, and y2 must have the same length and at least 2 points.");
+            var points1 = new List<DataPoint>();
+            var points2 = new List<DataPoint>();
+            for (int i = 0; i < x.Length; i++)
+            {
+                points1.Add(new DataPoint(x[i], y1[i]));
+                points2.Add(new DataPoint(x[i], y2[i]));
+            }
+            var fillColor = OxyColor.FromAColor(alpha, color);
+            var areaSeries = new AreaSeries
+            {
+                Color = outlineColor ?? color,
+                StrokeThickness = addOutline ? outlineWidth : 0,
+                LineStyle = addOutline ? outlineLineStyle : LineStyle.None, // <-- Set the outline style
+                Fill = fillColor,
+                Title = fillLabel
+            };
+            areaSeries.Points.AddRange(points1);
+            areaSeries.Points2.AddRange(points2);
+            plotModel.Series.Add(areaSeries);
+            // Optionally add markers
+            if (addMarkers)
+            {
+                var scatter = new ScatterSeries
+                {
+                    MarkerType = markerType,
+                    MarkerFill = markerColor ?? color,
+                    MarkerSize = markerSize,
+                    Title = markerLabel.Length > 0 ? markerLabel : null
+                };
+                foreach (var pt in points1)
+                    scatter.Points.Add(new ScatterPoint(pt.X, pt.Y));
+                foreach (var pt in points2)
+                    scatter.Points.Add(new ScatterPoint(pt.X, pt.Y));
+                plotModel.Series.Add(scatter);
+            }
+        }
+
         public void AddTextBox(
             double x, double y,
             string text,

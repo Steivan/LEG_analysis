@@ -46,6 +46,7 @@ namespace CalibrationApp.Consumption
             }
 
             // Define plot axes styles
+            var maxMax = max.Max2D();
             var maxPower = p90.Max2D();
             var powerMaxScale = maxPower * 1.1;
             var (majorTickSizer, minorTickSize, nDecimals) = GetAxisTickSizes(powerMaxScale);
@@ -106,12 +107,12 @@ namespace CalibrationApp.Consumption
                     hourSupport, Convert2DArray.GetRow(p75, period, quartersPerDay), Convert2DArray.GetRow(p25, period, quartersPerDay),
                     OxyColors.LightSteelBlue, strokeColor: null, strokeThickness: 1, label: period == 0 ? "P25-P75" : "");
 
+                //context.AddCurveToPanel(0, period, hourSupport, Convert2DArray.GetRow(max, period, quartersPerDay),
+                //    OxyColors.Black, lineWidth: 1, lineStyle: LineStyle.Dash, label: period == 0 ? "Max" : "", filterZeros: false);
+
                 // Plot 90% percentile, median and mean 
                 context.AddCurveToPanel(0, period, hourSupport, Convert2DArray.GetRow(p90, period, quartersPerDay),
                     OxyColors.Red, lineWidth: 1, lineStyle: LineStyle.Dot, label: period==0 ? "P90" : "", filterZeros: false);
-
-                //context.AddCurveToPanel(0, period, hourSupport, GetRow(p75, period, quartersPerDay),
-                //    OxyColors.Gray, lineWidth: 1, lineStyle: LineStyle.Dash, label: period == 0 ? "P75" : "", filterZeros: false);
 
                 context.AddCurveToPanel(0, period, hourSupport, Convert2DArray.GetRow(p50, period, quartersPerDay),
                     OxyColors.Blue, lineWidth: 2, lineStyle: LineStyle.Solid, label: period == 0 ? "Median" : "", filterZeros: false);
