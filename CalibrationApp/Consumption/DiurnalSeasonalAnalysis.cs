@@ -1,4 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
+﻿using MathNet.Numerics.Statistics;
 using static CalibrationApp.Consumption.ConsumptionAnalytics;
 
 namespace CalibrationApp.Consumption
@@ -11,6 +11,7 @@ namespace CalibrationApp.Consumption
             public TimeSpan TimeOfDay { get; set; }
             public int Count { get; set; }
             public double Mean { get; set; }
+            public double StdDev { get; set; }
             public double Max { get; set; }
             public double P25 { get; set; } // 25th percentile
             public double P50 { get; set; }
@@ -37,6 +38,7 @@ namespace CalibrationApp.Consumption
                         TimeOfDay = g.Key.Time,
                         Count = count,
                         Mean = values.Average(),
+                        StdDev = values.StandardDeviation(),
                         Max = values.Max(),
                         P25 = values[(int)(count * 0.25)],
                         P50 = values[count / 2],

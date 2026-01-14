@@ -23,20 +23,22 @@ namespace CalibrationApp
             var consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);       
             
             var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
-            //PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
+            PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
-            //var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
-            //PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
+            var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
+            PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
 
-            var lagSinus = 3.0;
             var lagPeaks = new double[] { 8.0, 14.0, 20.0};
             var variancePeaks = new double[] { 5.0, 5.0, 5.0};
+            var countPeaks = lagPeaks.Length;
 
             var p90List = new List<double[]>();
             var p75List = new List<double[]>();
             var p50List = new List<double[]>();
             var p25List = new List<double[]>();
             var meanList = new List<double[]>();
+            var stdList = new List<double[]>();
+            var meanAmplitudesArray = new double[1 + countPeaks, 13];
             for (var i = 0; i < 13; i++)
             { Console.WriteLine($"Processing period {i + 1}/13");
                 var p90Data = new double[96];
@@ -44,6 +46,7 @@ namespace CalibrationApp
                 var p50Data = new double[96];
                 var p25Data = new double[96];
                 var meanData = new double[96];
+                var stdData = new double[96];
                 for (var j = 0; j < 96; j++)
                 {
                     var index = i * 96 + j;
@@ -52,6 +55,7 @@ namespace CalibrationApp
                     p50Data[j] = diurnalStats[index].P50;
                     p25Data[j] = diurnalStats[index].P25;
                     meanData[j] = diurnalStats[index].Mean;
+                    stdData[j] = diurnalStats[index].StdDev;
                 }
                 var (smoothedP90, p90PeaksList) = PeakDetector.ExtractAllSpikes("P90", p90Data, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
                 p90List.Add(smoothedP90);
@@ -63,16 +67,73 @@ namespace CalibrationApp
                 p25List.Add(smoothedP25);
                 var (smoothedMean, meanPeaksList) = PeakDetector.ExtractAllSpikes("Mean", meanData, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
                 meanList.Add(smoothedMean);
+                var (smoothedStd, stdPeaksList) = PeakDetector.ExtractAllSpikes("StdDev", stdData, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
+                stdList.Add(smoothedStd);
 
-                BaselineDecomposer.DecomposeSeries(smoothedMean, lagSinus, lagPeaks, variancePeaks);
+                var (baseline, meanAmplitudes) = BaselineDecomposer.DecomposeSeries(smoothedMean, lagPeaks, variancePeaks);
+                meanAmplitudesArray[0, i] = baseline;
+                for (var kk = 0; kk < countPeaks; kk++)
+                {
+                    meanAmplitudesArray[1 + kk, i] = meanAmplitudes[kk];
+                }
             }
 
+            var fourierPeriod = 365.25;
+            var fourierTerms = 4;
+            var support13 = (new double[13]).Select((v,i) => (double)(14 + i * 28)).ToArray();
+            var support365 = (new double[365]).Select((v, i) => (0.5 + i)).ToArray();
+            var meanFourierAmplitudesArray365 = new double[1 + countPeaks, 365];
+            var fourierList = new List<FourierSeries>();
+            for (var k = 0; k <= countPeaks; k++)
+            {
+                var meanAmplitudes = new double[13];
+                for (var i = 0; i < 13; i++)
+                {
+                    meanAmplitudes[i] = meanAmplitudesArray[k, i];
+                }
+                var fourierSeries = FourierSeries.FourierSeriesFromData(support13, meanAmplitudes, fourierPeriod, fourierTerms);
+                fourierList.Add(fourierSeries);
+                var fourierAmplitudes = fourierSeries.EvaluateArray(support365, fourierPeriod);
+                for (var i = 0; i < 365; i++)
+                {
+                    meanFourierAmplitudesArray365[k, i] = fourierAmplitudes[i];
+                }
+            }
 
+            PlotAggregateConsumptionProfile.Plot13x4Amplitudes(siteId, countPeaks, 
+                support13, meanAmplitudesArray, 
+                support365, meanFourierAmplitudesArray365);
+
+            var fourierMean = new double[96];
+            var amplitude_k = new double[1 + countPeaks];
+            for (var day = 0; day < 365; day++)
+            {
+                for (var k = 0; k <= countPeaks; k++)
+                {
+                    amplitude_k[k] = fourierList[k].Evaluate(day, fourierPeriod);
+                }
+                var background = amplitude_k[0];
+                for (var interval = 0; interval < 96; interval++)
+                {
+                    fourierMean[interval] += background;
+                    for (var kk = 0; kk < countPeaks; kk++)
+                    {
+                        var x = (double)interval / 4.0;
+                        fourierMean[interval] += BaselineDecomposer.CyclicGaussian(x, amplitude_k[1+kk], lagPeaks[kk], variancePeaks[kk]);
+                    }
+                }
+            }
+            for (var interval = 0; interval < 96; interval++)
+            {
+                fourierMean[interval] /= 365;
+            }
+            
             var p90Aggregate = new double[96];
             var p75Aggregate = new double[96];
             var p50Aggregate = new double[96];
             var p25Aggregate = new double[96];
             var meanAggregate = new double[96];
+            var stdAggregate = new double[96];
             for (var i = 0; i < 13; i++)
             {
                 var smoothedP90 = p90List[i];
@@ -80,6 +141,7 @@ namespace CalibrationApp
                 var smoothedP50 = p50List[i];
                 var smoothedP25 = p25List[i];
                 var smoothedMean = meanList[i];
+                var smoothedStd = stdList[i];
                 for (var j = 0; j < 96; j++)
                 {
                     var index = i * 96 + j;
@@ -88,17 +150,31 @@ namespace CalibrationApp
                     diurnalStats[index].P50 = smoothedP50[j];
                     diurnalStats[index].P25 = smoothedP25[j];
                     diurnalStats[index].Mean = smoothedMean[j];
+                    diurnalStats[index].StdDev = smoothedStd[j];
 
                     p90Aggregate[j] += smoothedP90[j] / 13;
                     p75Aggregate[j] += smoothedP75[j] / 13;
                     p50Aggregate[j] += smoothedP50[j] / 13;
                     p25Aggregate[j] += smoothedP25[j] / 13;
                     meanAggregate[j] += smoothedMean[j] / 13;
+                    stdAggregate[j] += smoothedStd[j] / 13;
                 }
             }
+
+            var a = new double[countPeaks];
+            for (var i = 0; i < 13; i++)
+            {
+                var period = i + 1;
+                for (var k = 0; k < countPeaks; k++)
+                { 
+                    a[k] = meanAmplitudesArray[k, i];
+                }
+                Console.WriteLine($"Period {period,3}: Amplitudes: {string.Join(", ", a.Select(a => $"{a,6:F1}"))}");
+            }
+
             PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
-            PlotAggregateConsumptionProfile.PlotDiurnalProfiles(siteId, p90Aggregate, p75Aggregate, p50Aggregate, p25Aggregate, meanAggregate);
+            PlotAggregateConsumptionProfile.PlotDiurnalProfiles(siteId, p90Aggregate, p75Aggregate, p50Aggregate, p25Aggregate, meanAggregate, stdAggregate, fourierMean);
         }
 
         public static void AnalyzeConfinedGaussianVariance(double threshold, int steps=20)
