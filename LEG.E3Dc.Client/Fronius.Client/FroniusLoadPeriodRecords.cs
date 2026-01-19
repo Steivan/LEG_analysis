@@ -49,7 +49,11 @@ namespace LEG.PvImport.Clients.Fronius.Client
             for (var time = startTimeValue; time <= endTimeValue; time += interval)
             {
                 var solarProduction = periodDictionary.ContainsKey(time) ? periodDictionary[time] * hoursPerPeriod : 0.0;   // Convert from intensity [W] to power [Wh]
-                periodRecordsList.Add(new IPowerRecord { Timestamp = time, SolarProduction = solarProduction }); 
+                periodRecordsList.Add(new IPowerRecord 
+                { 
+                    Timestamp = time, 
+                    SolarProduction = solarProduction
+                }); 
             }
 
             return periodRecordsList;

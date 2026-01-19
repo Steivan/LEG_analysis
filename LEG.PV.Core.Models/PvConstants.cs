@@ -20,7 +20,10 @@
             return vmpS / mpSPerKmh;
         }
 
-        // Power keys
+        // Consumption power keys
+        public const string ConsumedPower = "ConsumedPower";
+
+        // Production power keys
         public const string MeasuredPower = "MeasuredPower";
         public const string PowerGR = "PowerGR";
         public const string PowerGRTW = "PowerGRTW";

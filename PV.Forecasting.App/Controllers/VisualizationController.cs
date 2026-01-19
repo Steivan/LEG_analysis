@@ -28,7 +28,8 @@ namespace PV.Forecasting.App.Controllers
 
         public static List<string> SelectedStationsIdList = new List<string>();
 
-        const string PowerGroup = "Power";
+        const string ConsumptionGroup = "Consumption";
+        const string ProductionGroup = "Production";
         const string ResidualsGroup = "Residuals";
         const string RadiationGroup = "Radiation";
         const string TemperatureGroup = "Temperature";
@@ -70,7 +71,7 @@ namespace PV.Forecasting.App.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> Index(
             List<string> SelectedTimeSeries,
-            List<string> SelectedGroups, 
+            List<string> SelectedGroups,
             string SelectedPeriod = PeriodAll,
             DateTime? SelectedDate = null,
             string SelectedView = IntervalWeeklyName,
@@ -80,7 +81,7 @@ namespace PV.Forecasting.App.Controllers
             if (_pvRecords is null)
             {
                 var dataImporter = new DataImporter();
-                var (pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) = 
+                var (pvRecords, pvRecordLabels, modelValidRecords, installedKwP, periodsPerHour) =
                     await dataImporter.ImportHistoryAndCalculated(siteIds[siteIdIndex], displayPeriod: displayPeriod);
                 _pvRecords = pvRecords;
 
@@ -88,34 +89,36 @@ namespace PV.Forecasting.App.Controllers
                 {
                     _pvRecordLabels = new Dictionary<string, List<string>>
                     {
-                        { PowerGroup, pvRecordLabels.PowerLabels },
-                        { ResidualsGroup, pvRecordLabels.ResidualsLabels },
-                        { RadiationGroup, pvRecordLabels.RadiationLabels },
-                        { TemperatureGroup, pvRecordLabels.TemperatureLabels },
-                        { WindspeedGroup, pvRecordLabels.WindSpeedLabels },
-                        { SnowDepthGroup, pvRecordLabels.SnowDepthLabels },
-                        { HumidityGroup, pvRecordLabels.RelativeHumidityLabels }
+                        { ConsumptionGroup, pvRecordLabels.ConsumptionLabels ?? new List<string>() },
+                        { ProductionGroup, pvRecordLabels.ProductionLabels ?? new List<string>() },
+                        { ResidualsGroup, pvRecordLabels.ResidualsLabels ?? new List<string>() },
+                        { RadiationGroup, pvRecordLabels.RadiationLabels ?? new List<string>() },
+                        { TemperatureGroup, pvRecordLabels.TemperatureLabels ?? new List<string>() },
+                        { WindspeedGroup, pvRecordLabels.WindSpeedLabels ?? new List<string>() },
+                        { SnowDepthGroup, pvRecordLabels.SnowDepthLabels ?? new List<string>() },
+                        { HumidityGroup, pvRecordLabels.RelativeHumidityLabels ?? new List<string>() }
                     };
                 }
-            }
 
-            if (_pvRecords is null || !_pvRecords.Any())
-            {
-                ViewBag.ErrorMessage = "No data available to display.";
-                return View(new VisualizationViewModel
+                if (_pvRecords is null || !_pvRecords.Any())
                 {
-                    ViewOptions = GetFilteredViewOptions(SelectedPeriod),
-                    PeriodOptions = GetPeriodOptions(),
-                    SelectedPeriod = SelectedPeriod,
-                    SelectedView = SelectedView,
-                    SelectedDate = SelectedDate ?? DateTime.Today,
-                });
+                    ViewBag.ErrorMessage = "No data available to display.";
+                    return View(new VisualizationViewModel
+                    {
+                        ViewOptions = GetFilteredViewOptions(SelectedPeriod),
+                        PeriodOptions = GetPeriodOptions(),
+                        SelectedPeriod = SelectedPeriod,
+                        SelectedView = SelectedView,
+                        SelectedDate = SelectedDate ?? DateTime.Today,
+                    });
+                }
             }
 
             // 1. Build parameterGroups (already in your code)
             var parameterGroups = new Dictionary<string, List<string>>
             {
-                { PowerGroup, new List<string> { MeasuredPower, PowerGR, PowerGRTW, PowerGRTWSF } },
+                { ConsumptionGroup, new List<string> { ConsumedPower } },
+                { ProductionGroup, new List<string> { MeasuredPower, PowerGR, PowerGRTW, PowerGRTWSF } },
                 { ResidualsGroup, new List<string> { Reference, UflGR, UflGRTW, UflGRTWSF } },
                 { RadiationGroup, new List<string> { GlobalRadiation, DiffuseRadiation } },
                 { TemperatureGroup, new List<string> { Temperature, DewPoint } },
@@ -128,15 +131,15 @@ namespace PV.Forecasting.App.Controllers
             var groupLocations = new Dictionary<string, List<string>>();
             foreach (var group in parameterGroups.Keys)
             {
-                if (group == PowerGroup || group == ResidualsGroup)
+                if (group == ConsumptionGroup || group == ProductionGroup || group == ResidualsGroup)
                     groupLocations[group] = new List<string> { "PV Site" };
                 else
                     groupLocations[group] = SelectedStationsIdList; // or filter as needed
             }
 
             // 2. Set up default checked groups, variables, and locations (step 2)
-            var defaultCheckedGroups = new HashSet<string> 
-            { PowerGroup, ResidualsGroup, RadiationGroup, TemperatureGroup, WindspeedGroup, SnowDepthGroup, HumidityGroup };
+            var defaultCheckedGroups = new HashSet<string>
+            { ConsumptionGroup, ProductionGroup, ResidualsGroup, RadiationGroup, TemperatureGroup, WindspeedGroup, SnowDepthGroup, HumidityGroup };
 
             var defaultCheckedVariables = new Dictionary<string, HashSet<string>>
             {
@@ -181,12 +184,16 @@ namespace PV.Forecasting.App.Controllers
                 SelectedPeriod = PeriodAll;
                 SelectedDate = DateTime.Today;
                 viewOptions = GetFilteredViewOptions(SelectedPeriod);
-                SelectedView = IntervalWeekly; 
+                SelectedView = IntervalWeekly;
                 SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
             }
             else if (SelectedTimeSeries is null || !SelectedTimeSeries.Any())
             {
-                SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
+                //SelectedTimeSeries = _pvRecordLabels?.SelectMany(g => g.Value).ToList() ?? new List<string>();
+                SelectedTimeSeries = _pvRecordLabels?
+                    .Where(g => g.Value != null)
+                    .SelectMany(g => g.Value)
+                    .ToList() ?? new List<string>();
                 viewOptions = GetFilteredViewOptions(SelectedPeriod);
             }
             else
@@ -230,7 +237,7 @@ namespace PV.Forecasting.App.Controllers
                 var allGroupLabels = _pvRecordLabels ?? new Dictionary<string, List<string>>();
                 var selectedTimeSeriesSet = SelectedTimeSeries.ToHashSet();
 
-                if (selectedGroups.Contains(groupChanged) && allGroupLabels.TryGetValue(groupChanged, out var labels))
+                if (selectedGroups.Contains(groupChanged) && allGroupLabels.TryGetValue(groupChanged, out var labels) && labels != null)
                 {
                     // If none of the group's series are selected, select all
                     if (!labels.Any(label => selectedTimeSeriesSet.Contains(label)))
@@ -271,7 +278,7 @@ namespace PV.Forecasting.App.Controllers
                 MaxYear = maxDate.Year,    // ... existing properties ...
                 ParameterGroupsByUnit = parameterGroups,
                 //SelectedParameters = SelectedParameters // You may need to add logic to set this list
-                                                        // ... other properties ...
+                // ... other properties ...
             };
 
             // Update GroupChecked based on user selection
@@ -350,7 +357,7 @@ namespace PV.Forecasting.App.Controllers
                     var timeSeriesName = timeSeriesInGroup[j];
                     if (!selectedTimeSeries.Contains(timeSeriesName)) continue;
 
-                    bool isSum = groupName is PowerGroup or RadiationGroup;
+                    bool isSum = groupName is ConsumptionGroup or ProductionGroup or RadiationGroup;
                     Func<IEnumerable<double?>, double?> aggregationFunc = isSum ? Enumerable.Sum : Enumerable.Average;
                     var data = AggregateData(records, viewName, r => GetValueFromRecord(r, groupName, timeSeriesName), aggregationFunc);
                     var plotColor = GetColorForTimeSeries(timeSeriesName, groupName, j);
@@ -405,7 +412,15 @@ namespace PV.Forecasting.App.Controllers
         private Color GetColorForTimeSeries(string timeSeriesName, string groupName, int seriesIndex)
         {
             // Power group has fixed, named colors
-            if (groupName == PowerGroup)
+            if (groupName == ConsumptionGroup)
+            {
+                return timeSeriesName switch
+                {
+                    ConsumedPower => Colors.Red,
+                    _ => Colors.Gray
+                };
+            }
+            if (groupName == ProductionGroup)
             {
                 return timeSeriesName switch
                 {
@@ -481,7 +496,8 @@ namespace PV.Forecasting.App.Controllers
         {
             return groupName switch
             {
-                PowerGroup => record.Power.TryGetValue(label, out var value) ? value : null,
+                ConsumptionGroup => record.Consumption.TryGetValue(label, out var value) ? value : null,
+                ProductionGroup => record.Production.TryGetValue(label, out var value) ? value : null,
                 ResidualsGroup => record.Residuals.TryGetValue(label, out var value) ? value : null,
                 RadiationGroup => record.Radiation.TryGetValue(label, out var value) ? value : null,
                 TemperatureGroup => record.Temperature.TryGetValue(label, out var value) ? value : null,

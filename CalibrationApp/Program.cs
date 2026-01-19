@@ -19,7 +19,7 @@ namespace CalibrationApp
             //await ProcessE3Dc();
 
             // Analyze E3DC consumption data
-            var siteId = "Senn";
+            var siteId = "SennV";
             var consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);       
             
             var diurnalStats = DiurnalSeasonalAnalysis.AnalyzeSeasonalConsistency(consumptionDictionary);
@@ -38,6 +38,7 @@ namespace CalibrationApp
             var p25List = new List<double[]>();
             var meanList = new List<double[]>();
             var stdList = new List<double[]>();
+            var cvList = new List<double[]>();
             var meanAmplitudesArray = new double[1 + countPeaks, 13];
             for (var i = 0; i < 13; i++)
             { Console.WriteLine($"Processing period {i + 1}/13");
@@ -47,6 +48,7 @@ namespace CalibrationApp
                 var p25Data = new double[96];
                 var meanData = new double[96];
                 var stdData = new double[96];
+                var cvData = new double[96];
                 for (var j = 0; j < 96; j++)
                 {
                     var index = i * 96 + j;
@@ -56,6 +58,7 @@ namespace CalibrationApp
                     p25Data[j] = diurnalStats[index].P25;
                     meanData[j] = diurnalStats[index].Mean;
                     stdData[j] = diurnalStats[index].StdDev;
+                    cvData[j] = stdData[j] / meanData[j];
                 }
                 var (smoothedP90, p90PeaksList) = PeakDetector.ExtractAllSpikes("P90", p90Data, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
                 p90List.Add(smoothedP90);
@@ -69,6 +72,8 @@ namespace CalibrationApp
                 meanList.Add(smoothedMean);
                 var (smoothedStd, stdPeaksList) = PeakDetector.ExtractAllSpikes("StdDev", stdData, minAmplitudeRatio: 0.25, maxSigma: 5.0, thresholdRatio: 0.1);
                 stdList.Add(smoothedStd);
+
+                cvList.Add(cvData);
 
                 var (baseline, meanAmplitudes) = BaselineDecomposer.DecomposeSeries(smoothedMean, lagPeaks, variancePeaks);
                 meanAmplitudesArray[0, i] = baseline;
@@ -169,7 +174,8 @@ namespace CalibrationApp
                 { 
                     a[k] = meanAmplitudesArray[k, i];
                 }
-                Console.WriteLine($"Period {period,3}: Amplitudes: {string.Join(", ", a.Select(a => $"{a,6:F1}"))}");
+                var cv = cvList[i].Average();
+                Console.WriteLine($"Period {period,3}: Amplitudes: {string.Join(", ", a.Select(a => $"{a,6:F1}"))} Average CV {cv:F3}");
             }
 
             PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
@@ -244,9 +250,9 @@ namespace CalibrationApp
                 );
 
                 Console.WriteLine($"      EvaluationYear: {aggregationRecord.Year}, Records: {aggregationRecord.RecordingEndIndex + 1 - aggregationRecord.RecordingStartIndex}, " +
-                                    $"Start: {aggregationRecord.RecordingStartTime}, " +
-                                    $"End: {aggregationRecord.RecordingEndTime}, " +
-                                    $"Complete: {aggregationRecord.RecordingPeriodIsComplete()}");
+                    $"Start: {aggregationRecord.RecordingStartTime}, " +
+                    $"End: {aggregationRecord.RecordingEndTime}, " +
+                    $"Complete: {aggregationRecord.RecordingPeriodIsComplete()}");
             }
 
             var mergedSolarProduction = MergeSolarProduction.MergeSolarProductionAggregateResults(solarProductionList);

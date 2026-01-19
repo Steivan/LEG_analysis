@@ -19,14 +19,14 @@ namespace LEG.CoreLib.MeteoModels
                     { SMA, new WeightMeteoParameters { Weights = ThreeOneWeights } },
                     { KLO, new WeightMeteoParameters { Weights = OneOneWeights } },
                     { HOE, new WeightMeteoParameters { Weights = OneZeroOneWeights } },   // Radiation and SnowDept
-                    { UEB, new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
+                    //{ UEB, new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
                 }
             },
             { BinzGroup, new Dictionary<string, WeightMeteoParameters>
                 {
                     { SMA, new WeightMeteoParameters { Weights = ThreeOneWeights } },
                     { HOE, new WeightMeteoParameters { Weights = OneZeroOneWeights } },   // Radiation and SnowDepth
-                    { UEB, new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
+                    //{ UEB, new WeightMeteoParameters { Weights = OneZeroWeights } }       // Radiation only
                 }
             }
             // Add more profiles as needed

@@ -81,8 +81,23 @@ namespace CalibrationApp.Consumption
             double[] support365, double[,] meanFourierAmplitudes365
             )
         {
+            int[] daysOfMonths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
             // Prepare data
-            var maxAmplitude = meanAmplitudes.Max2D() * 1.1;
+            var aggregate13 = new double[support13.Length];
+            var aggregate365 = new double[support365.Length];
+            for (var peakIdx = 0; peakIdx <= countPeaks; peakIdx++)
+            {
+                for (var i = 0; i < support13.Length; i++)
+                {
+                    aggregate13[i] += meanAmplitudes[peakIdx, i];
+                }
+                for (var i = 0; i < support365.Length; i++)
+                {
+                    aggregate365[i] += meanFourierAmplitudes365[peakIdx, i];
+                }
+            }
+            var maxAmplitude = aggregate365.Max() * 1.1;
 
             // Create the plot helper
             var plotHelper = new OxyPlotHelper(
@@ -96,13 +111,14 @@ namespace CalibrationApp.Consumption
             // After creating plotHelper
             plotHelper.ShowLegend(OxyPlot.Legends.LegendPosition.TopLeft);
 
+            var color = OxyColors.Black;
+            var y_prior = 0.0;
             for (var peakIdx = 0; peakIdx <= countPeaks; peakIdx++)
             {
-                var color = OxyColor.FromHsv((double)peakIdx / (1 + countPeaks), 1.0, 1.0);
-
+                color = OxyColor.FromHsv((double)peakIdx / (1 + countPeaks), 1.0, 1.0);
 
                 var meanValues = Enumerable.Range(0, support13.Length).Select(i => meanAmplitudes[peakIdx, i]).ToArray();
-                var y_prior = meanValues[^1];
+                y_prior = meanValues[^1];
                 for (var i = 0; i < support13.Length; i++)
                 {
                     var label = i == 0 ? (peakIdx == 0 ? "Mean baseline" : $"Mean Peak {peakIdx}") : "";
@@ -125,9 +141,38 @@ namespace CalibrationApp.Consumption
                     color, lineWidth: 1, lineStyle: LineStyle.Dash, curveLabel: peakIdx == 0 ? "Fourier baseline" : $"Fourier Peak {peakIdx}");
             }
 
+            color = OxyColors.Black;
+            y_prior = aggregate13[^1];
+            for (var i = 0; i < support13.Length; i++)
+            {
+                var label = i == 0 ?  "Mean aggregate" : "";
+                var x1 = support13[i] - 14;
+                var x2 = support13[i] + 14;
+                var y = aggregate13[i];
+                //plotHelper.AddCurve([x1, x1], [y_prior, y],
+                //    OxyColors.Gray, lineWidth: 1, lineStyle: LineStyle.Dot, curveLabel: "");
+                plotHelper.AddCurve([x1, x2], [y, y],
+                    color, lineWidth: 2, lineStyle: LineStyle.Solid, curveLabel: label);
+                y_prior = y;
+
+            }
+
+            plotHelper.AddMarkers(support13, aggregate13,
+                color, markerType: MarkerType.Circle, markerSize: 4, markerLabel: "");
+
+            plotHelper.AddCurve(support365, aggregate365,
+                color, lineWidth: 1, lineStyle: LineStyle.Dash, curveLabel: "Fourier aggregate");
+
+            var dayOfYear = 0;
+            foreach (var daysOfMonth in daysOfMonths)
+            {
+                plotHelper.AddCurve([dayOfYear, dayOfYear], [0, maxAmplitude],
+                    OxyColors.Black, lineWidth: 1, lineStyle: LineStyle.Solid, curveLabel: "");
+                dayOfYear += daysOfMonth;
+            }
+
             // Show the plot in a dialog window
             plotHelper.ShowPlot(width: 800, height: 600);
-
         }
     }
 }

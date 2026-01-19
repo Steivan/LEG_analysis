@@ -102,7 +102,7 @@ namespace LEG.PV.Data.Processor
             {
                 case SiteNamesList.Senn:
                 case SiteNamesList.SennV:
-                    pvDataRecords = E3DcLoadPeriodRecords.LoadPowerRecords(siteId);
+                    pvDataRecords = E3DcLoadPeriodRecords.LoadPowerRecords(siteId);  
                     break;
                 case SiteNamesList.Studenrain:
                     pvDataRecords = FroniusLoadPeriodRecords.LoadPowerRecords(minutesShift: 20); // Shift to align with meteo data
@@ -257,7 +257,8 @@ namespace LEG.PV.Data.Processor
             Dictionary<string, List<double?>> filteredSnowDepthSeries,
             Dictionary<string, List<double?>> filteredRelativeHumiditySeries,
             List<PvRecordLists> listsDataRecords,
-            List<bool> validListsDataRecords
+            List<bool> validListsDataRecords,
+            Dictionary<DateTime, double> consumptionDictionary = null
             )
         {
             var countOfListsDataRecords = listsDataRecords.Count;
@@ -296,7 +297,12 @@ namespace LEG.PV.Data.Processor
                 var hasCalculated = pvDataRecord.HasCalculated;
 
                 // Build dictionaries for the current record, including the base series and the valid reference series
-                var powerDict = new Dictionary<string, double?>
+                var consumptionDict = new Dictionary<string, double?>
+                {
+                    { PvConstants.ConsumedPower, consumptionDictionary != null && consumptionDictionary.ContainsKey(record.Timestamp) ? consumptionDictionary[record.Timestamp] : (double?)null }
+                };
+
+                var productionDict = new Dictionary<string, double?>
                 {
                     { PvConstants.MeasuredPower, record.MeasuredPower },
                     { PvConstants.PowerGR, computedPower.PowerGR },
@@ -341,7 +347,8 @@ namespace LEG.PV.Data.Processor
                 var listsDataRecord = new PvRecordLists(
                     record.Timestamp,
                     record.Index,
-                    powerDict,
+                    consumptionDict,
+                    productionDict,
                     residualsDict,
                     radiationDict,
                     temperatureDict,
@@ -382,10 +389,21 @@ namespace LEG.PV.Data.Processor
                 case SiteNamesList.Studenrain:
                     // Studenrain site with Fronius data
                     displayPeriod = 0; // data from 2011 till 2015 only
-                    meteoImportResult = await ImportProductionAndMeteoHistory(siteId, displayPeriod);
+                    meteoImportResult = await ImportProductionAndMeteoHistory(siteId, displayPeriod: displayPeriod);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(siteId), "Site Id is out of range");
+            }
+
+            var consumptionDictionary = new Dictionary<DateTime, double>();
+            switch (siteId)
+            {
+                case SiteNamesList.Senn:
+                case SiteNamesList.SennV:
+                    consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);
+                    break;
+                default:
+                    break;
             }
 
             // Extract pvProduction and meteo data
@@ -417,7 +435,8 @@ namespace LEG.PV.Data.Processor
                 filteredSnowDepthSeries,
                 filteredRelativeHumiditySeries,
                 listsDataRecords,
-                validListsDataRecords
+                validListsDataRecords,
+                consumptionDictionary
                 );
 
             // If forecast is requested, extend data with forecast values
@@ -451,11 +470,13 @@ namespace LEG.PV.Data.Processor
                     filteredSnowDepthForecastSeries,
                     filteredRelativeHumidityForecastSeries,
                     listsDataRecords,
-                    validListsDataRecords
+                    validListsDataRecords,
+                    null
                     );
             }
 
             var dataRecordLabels = new PvRecordLabels(
+                [ PvConstants.ConsumedPower ],
                 [PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF],
                 [PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF],
                 filteredRadiationLabels.Select(kv => kv.Key).ToList(),

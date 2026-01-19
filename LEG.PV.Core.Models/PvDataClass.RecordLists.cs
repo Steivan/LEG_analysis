@@ -6,7 +6,8 @@ namespace LEG.PV.Core.Models
         public record PvRecordLists
         {
             public PvRecordLists(DateTime timestamp, int index,
-                Dictionary<string, double?> power,
+                Dictionary<string, double?> consumption,
+                Dictionary<string, double?> production,
                 Dictionary<string, double?> residuals,
                 Dictionary<string, double?> radiation,
                 Dictionary<string, double?> temperature,
@@ -16,7 +17,8 @@ namespace LEG.PV.Core.Models
             {
                 Timestamp = timestamp;
                 Index = index;
-                Power = power;
+                Consumption = consumption;
+                Production = production;
                 Residuals = residuals;
                 Radiation = radiation;
                 Temperature = temperature;
@@ -27,7 +29,8 @@ namespace LEG.PV.Core.Models
 
             public DateTime Timestamp { get; init; }                        // Timestamp [YYYY-MM-DD HH:MM:SS]
             public int Index { get; init; }                                 // Index [unitless]
-            public Dictionary<string, double?> Power { get; }               // P [W]
+            public Dictionary<string, double?> Consumption { get; }         // P [W]
+            public Dictionary<string, double?> Production { get; }          // P [W]
             public Dictionary<string, double?> Residuals { get; }
             public Dictionary<string, double?> Radiation { get;}            // G_POA [W/m²]
             public Dictionary<string, double?> Temperature { get;}          // T [°C]
@@ -48,14 +51,17 @@ namespace LEG.PV.Core.Models
         public record PvRecordLabels
         {
             public PvRecordLabels(
-                List<string> powerLabels, List<string> residualsLabels,
+                List<string> consumptionLabels,
+                List<string> productionLabels, 
+                List<string> residualsLabels,
                 List<string> radiationLabels, 
                 List<string> temperatureLabels, 
                 List<string> windSpeedLabels,
                 List<string> snowDepthLabels,
                 List<string> relativeHumidityLabels)
             {
-                PowerLabels = powerLabels;
+                ConsumptionLabels = consumptionLabels;
+                ProductionLabels = productionLabels;
                 ResidualsLabels = residualsLabels;
                 RadiationLabels = radiationLabels;
                 TemperatureLabels = temperatureLabels;
@@ -63,7 +69,8 @@ namespace LEG.PV.Core.Models
                 SnowDepthLabels = snowDepthLabels;
                 RelativeHumidityLabels = relativeHumidityLabels;
             }
-            public List<string> PowerLabels { get; init; }
+            public List<string> ConsumptionLabels { get; init; }
+            public List<string> ProductionLabels { get; init; }
             public List<string> ResidualsLabels { get; init; }
             public List<string> RadiationLabels { get; init; }
             public List<string> TemperatureLabels { get; init; }
