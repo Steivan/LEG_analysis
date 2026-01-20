@@ -1,4 +1,6 @@
-﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+﻿using LEG.PV.Core.Models.PvProductionModel;
+using LEG.PV.Core.Models.Structures;
+using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.PV.Core.Models
 {

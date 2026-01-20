@@ -1,5 +1,6 @@
 ﻿
 using LEG.CoreLib.SampleData.SampleData;
+using LEG.PV.Core.Models.Structures;
 
 namespace LEG.PV.Core.Models.MeteoCalibrationParameters
 {

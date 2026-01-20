@@ -1,5 +1,4 @@
-﻿
-using LEG.PV.Core.Models;
+﻿using LEG.PV.Core.Models.PvProductionModel;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Simulator

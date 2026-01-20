@@ -1,7 +1,7 @@
-﻿using LEG.PV.Core.Models;
+﻿using LEG.PV.Core.Models.Structures;
 using LEG.PV.Data.Processor.Interfaces;
 using static LEG.PV.Core.Models.PvDataClass;
-using static LEG.PV.Core.Models.PvPowerJacobian;
+using static LEG.PV.Core.Models.PvProductionModel.PvPowerJacobian;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
 
 namespace LEG.PV.Data.Processor.Simulator

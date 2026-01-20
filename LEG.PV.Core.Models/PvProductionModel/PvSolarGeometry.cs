@@ -1,5 +1,4 @@
-﻿
-namespace LEG.PV.Core.Models
+﻿namespace LEG.PV.Core.Models.PvProductionModel
 {
     public record PvSolarGeometry
     {

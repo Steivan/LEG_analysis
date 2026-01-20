@@ -1,4 +1,4 @@
-﻿using LEG.PV.Core.Models;
+﻿using LEG.PV.Core.Models.Structures;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Data.Processor.Simulator.PvProductionSimulator;
 

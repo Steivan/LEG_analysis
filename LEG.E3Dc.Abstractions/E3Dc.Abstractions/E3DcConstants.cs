@@ -10,8 +10,8 @@ namespace LEG.PvImport.Abstractions.E3Dc.Abstractions
         public const string SubFolder1 = @"Felix_Senn_48-2490\";
         public const int FirstYear1 = 18;
         public const int FirstMonth1 = 10;
-        public const int LastYear1 = 25;
-        public const int LastMonth1 = 12;
+        public const int LastYear1 = 26;
+        public const int LastMonth1 = 1;
         public const string SubFolder2 = @"Felix_Senn_70-1860\";
         public const int FirstYear2 = 21;
         public const int FirstMonth2 = 9;

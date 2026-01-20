@@ -1,6 +1,6 @@
-﻿using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.PvDataClass;
+﻿using static LEG.PV.Core.Models.PvDataClass;
 using System.ComponentModel;
+using LEG.PV.Core.Models.Structures;
 
 
 namespace LEG.PV.Data.Processor

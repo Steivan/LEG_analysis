@@ -1,4 +1,4 @@
-﻿using LEG.PV.Core.Models;
+﻿using LEG.PV.Core.Models.Structures;
 using MathNet.Numerics;
 using static LEG.PV.Core.Models.PvDataClass;
 

@@ -26,7 +26,7 @@ namespace CalibrationApp
             PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
             var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
-            PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);
+            PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);                     // Print and plot weekday statistics
 
             var lagPeaks = new double[] { 8.0, 14.0, 20.0};
             var variancePeaks = new double[] { 5.0, 5.0, 5.0};
@@ -104,6 +104,16 @@ namespace CalibrationApp
                     meanFourierAmplitudesArray365[k, i] = fourierAmplitudes[i];
                 }
             }
+
+            for (var k = 0; k <= countPeaks; k++)
+            { 
+                var fourierCoefficients = fourierList[k].GetCoefficients();
+                var label = k == 0 ? "Baseline" : $"Peak {k} at {lagPeaks[k-1]:F1} , variance {variancePeaks[k-1]:F1}";
+                Console.WriteLine($"Fourier coefficients for {label}");
+                Console.WriteLine($" - a: {fourierCoefficients.a.Select(v => v.ToString("F1")).Aggregate((x, y) => x + ", " + y)}");
+                Console.WriteLine($" - b: {fourierCoefficients.b.Select(v => v.ToString("F1")).Aggregate((x, y) => x + ", " + y)}");
+            }
+            Console.WriteLine();
 
             PlotAggregateConsumptionProfile.Plot13x4Amplitudes(siteId, countPeaks, 
                 support13, meanAmplitudesArray, 

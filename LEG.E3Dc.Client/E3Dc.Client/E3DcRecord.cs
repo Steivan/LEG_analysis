@@ -1,6 +1,7 @@
 ﻿using CsvHelper.Configuration.Attributes;
 using LEG.Common;
 using LEG.PvImport.Abstractions.E3Dc.Abstractions;
+using LEG.PV.Core.Models.Structures;
 
 namespace LEG.PvImport.Clients.E3Dc.Client
 {
@@ -65,5 +66,17 @@ namespace LEG.PvImport.Clients.E3Dc.Client
 
         [Name("Î£ Consumption"), TypeConverter(typeof(Int32DefaultZeroConverter))]
         public int SigmaConsumption { get; set; } = 0;
-    }
+
+        public ConsumptionRecord GetConsumptionRecord()
+        {
+            return new ConsumptionRecord(
+                Solar: SolarProduction,
+                Consumers: -HouseConsumption,
+                WallBox: -WallBoxTotalChargingPower,
+                Battery: -BatteryCharging + BatteryDischarging,
+                Grid: -NetIn + NetOut,
+                Residual: (HouseConsumption + WallBoxTotalChargingPower + BatteryCharging + NetIn) - (SolarProduction + BatteryDischarging + NetOut)
+            );
+        }
+    };
 }

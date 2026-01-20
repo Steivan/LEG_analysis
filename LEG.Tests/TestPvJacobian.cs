@@ -1,6 +1,7 @@
 ﻿
-using LEG.PV.Core.Models;
-using static LEG.PV.Core.Models.PvPowerJacobian;
+using LEG.PV.Core.Models.Structures;
+using LEG.PV.Core.Models.PvProductionModel;
+using static LEG.PV.Core.Models.PvProductionModel.PvPowerJacobian;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
 
 namespace LEG.Tests

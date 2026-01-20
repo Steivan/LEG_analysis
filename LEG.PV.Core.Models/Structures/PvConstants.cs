@@ -1,4 +1,4 @@
-﻿namespace LEG.PV.Core.Models
+﻿namespace LEG.PV.Core.Models.Structures
 {
     public class PvConstants
     {
@@ -22,6 +22,10 @@
 
         // Consumption power keys
         public const string ConsumedPower = "ConsumedPower";
+        public const string WallBox = "WallBox";
+        public const string Battery = "Battery";
+        public const string Grid = "Grid";
+        public const string Residual = "Residual";
 
         // Production power keys
         public const string MeasuredPower = "MeasuredPower";

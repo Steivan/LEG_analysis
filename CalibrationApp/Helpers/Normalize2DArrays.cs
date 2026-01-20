@@ -5,7 +5,7 @@ namespace CalibrationApp.Helpers
 {
     internal class Normalize2DArrays
     {
-        internal static double[,] GetModelArray(double[,] mean)
+        internal static (double[] weekdayFactors, double[,] modelArray) GetModelArray(double[,] mean)
         { 
             int dim0 = mean.GetLength(0);
             int dim1 = mean.GetLength(1);
@@ -33,7 +33,7 @@ namespace CalibrationApp.Helpers
                 }
             }
 
-            return modelArray;
+            return (normalizedAggregatePattern, modelArray);
         }
     
     }

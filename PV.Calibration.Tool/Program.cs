@@ -1,12 +1,12 @@
 ﻿using LEG.CoreLib.SampleData.SampleData;
-using LEG.PV.Core.Models;
+using LEG.PV.Core.Models.Structures;
 using LEG.PV.Data.Processor;
 using LEG.PV.Data.Processor.Interfaces;
 using MathNet.Numerics.Distributions;
 using PV.Calibration.Tool;
 using static LEG.PV.Core.Models.PvDataClass;
-using static LEG.PV.Core.Models.PvModelParamsMetaData;
-using static LEG.PV.Core.Models.PvPriorConfig;
+using static LEG.PV.Core.Models.Structures.PvModelParamsMetaData;
+using static LEG.PV.Core.Models.PvProductionModel.PvPriorConfig;
 using static PV.Calibration.Tool.BayesianCalibrator;
 
 //ProcessSyntheticModelData(

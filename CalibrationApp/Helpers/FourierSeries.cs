@@ -16,6 +16,8 @@ namespace CalibrationApp.Helpers
             _b = b;
         }
 
+        public (double[] a, double[] b) GetCoefficients() => (_a, _b);
+
         public static FourierSeries FourierSeriesFromData(double[] support, double[] values, double period, int terms)
         {
             var samplePoints = support.Length;

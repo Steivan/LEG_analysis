@@ -1,8 +1,9 @@
 ﻿using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
-using static LEG.PV.Core.Models.PvConstants;
-using static LEG.PV.Core.Models.PvModelParamsMetaData;
+using static LEG.PV.Core.Models.Structures.PvConstants;
+using static LEG.PV.Core.Models.Structures.PvModelParamsMetaData;
+using LEG.PV.Core.Models.Structures;
 
-namespace LEG.PV.Core.Models;
+namespace LEG.PV.Core.Models.PvProductionModel;
 
 public class PvPowerJacobian                  // Base model: Radiation (direc, diffuse), Temperature, Windspeed, Age
 {

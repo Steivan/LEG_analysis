@@ -1,8 +1,9 @@
-﻿using LEG.PV.Core.Models;
+﻿using LEG.PV.Core.Models.PvProductionModel;
+using LEG.PV.Core.Models.Structures;
 using LEG.PV.Data.Processor;
 using MathNet.Numerics.LinearAlgebra;
 using static LEG.PV.Core.Models.PvDataClass;
-using static LEG.PV.Core.Models.PvPriorConfig;
+using static LEG.PV.Core.Models.PvProductionModel.PvPriorConfig;
 
 namespace PV.Calibration.Tool
 {

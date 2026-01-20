@@ -1,5 +1,6 @@
-﻿using LEG.PvImport.Abstractions;
-using System.Data;
+﻿using System.Data;
+using LEG.PvImport.Abstractions;
+using LEG.PV.Core.Models.Structures;
 
 namespace LEG.PvImport.Clients.E3Dc.Client
 {
@@ -109,6 +110,7 @@ namespace LEG.PvImport.Clients.E3Dc.Client
 
             return powerRecords;
         }
+
         public static Dictionary<DateTime, double> LoadConsumptionDictionary(string siteID, DateTime? startDateTime = null, DateTime? endDateTime = null)
         {
             var folderNumber = siteID == "Senn" ? 1 : siteID == "SennV" ? 2 : 3;
@@ -120,5 +122,17 @@ namespace LEG.PvImport.Clients.E3Dc.Client
 
             return consumptionDictionary ?? new Dictionary<DateTime, double>();
         }
+        public static Dictionary<DateTime, ConsumptionRecord> LoadConsumersDictionary(string siteID, DateTime? startDateTime = null, DateTime? endDateTime = null)
+        {
+            var folderNumber = siteID == "Senn" ? 1 : siteID == "SennV" ? 2 : 3;
+            var periodRecords = LoadRecords(folderNumber, startDateTime, endDateTime);
+            var consumptionDictionary = periodRecords.ToDictionary(
+                r => E3DcFileHelper.ParseTimestamp(r.Timestamp),
+                r => r.GetConsumptionRecord()
+            );
+
+            return consumptionDictionary ?? new Dictionary<DateTime, ConsumptionRecord>();
+        }
+
     }
 }

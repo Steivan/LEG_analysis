@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static LEG.PV.Core.Models.PvDataClass;
-using static LEG.PV.Core.Models.PvConstants;
+using static LEG.PV.Core.Models.Structures.PvConstants;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoConstants;
 using LEG.CoreLib.SampleData.SampleData;
 
@@ -117,7 +117,7 @@ namespace PV.Forecasting.App.Controllers
             // 1. Build parameterGroups (already in your code)
             var parameterGroups = new Dictionary<string, List<string>>
             {
-                { ConsumptionGroup, new List<string> { ConsumedPower } },
+                { ConsumptionGroup, new List<string> { MeasuredPower, ConsumedPower, WallBox, Battery, Grid, Residual } },
                 { ProductionGroup, new List<string> { MeasuredPower, PowerGR, PowerGRTW, PowerGRTWSF } },
                 { ResidualsGroup, new List<string> { Reference, UflGR, UflGRTW, UflGRTWSF } },
                 { RadiationGroup, new List<string> { GlobalRadiation, DiffuseRadiation } },
@@ -416,7 +416,12 @@ namespace PV.Forecasting.App.Controllers
             {
                 return timeSeriesName switch
                 {
-                    ConsumedPower => Colors.Red,
+                    MeasuredPower => Colors.Red,
+                    ConsumedPower => Colors.Green,
+                    WallBox => Colors.Purple,
+                    Battery => Colors.Blue,
+                    Grid => Colors.Orange,
+                    Residual => Colors.Magenta,
                     _ => Colors.Gray
                 };
             }

@@ -1,6 +1,6 @@
-﻿using LEG.PV.Core.Models;
-using static LEG.PV.Data.Processor.Simulator.SolarGeometryRecordSimulator;
+﻿using static LEG.PV.Data.Processor.Simulator.SolarGeometryRecordSimulator;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
+using LEG.PV.Core.Models.PvProductionModel;
 
 namespace LEG.PV.Data.Processor.Simulator
 {

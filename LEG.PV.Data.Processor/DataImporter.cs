@@ -5,7 +5,8 @@ using LEG.HorizonProfiles.Client;
 using LEG.MeteoSwiss.Abstractions.Models;
 using LEG.MeteoSwiss.Client.Forecast;
 using LEG.MeteoSwiss.Client.MeteoSwiss;
-using LEG.PV.Core.Models;
+using LEG.PV.Core.Models.PvProductionModel;
+using LEG.PV.Core.Models.Structures;
 using LEG.PV.Data.Processor.Helpers;
 using LEG.PV.Data.Processor.Interfaces;
 using LEG.PvImport.Abstractions;
@@ -14,9 +15,10 @@ using LEG.PvImport.Clients.Fronius.Client;
 using System.Data;
 using static LEG.CoreLib.MeteoModels.MeteoParameterTypes;
 using static LEG.MeteoSwiss.Abstractions.Models.MeteoParameterTypes;
+using static LEG.PV.Core.Models.MeteoCalibrationParameters.MeteoCalibrationParameters;
+using static LEG.PV.Core.Models.ConsumptionModel.ConsumptionSimulator;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
-using static LEG.PV.Core.Models.MeteoCalibrationParameters.MeteoCalibrationParameters;
 
 namespace LEG.PV.Data.Processor
 {
@@ -258,7 +260,7 @@ namespace LEG.PV.Data.Processor
             Dictionary<string, List<double?>> filteredRelativeHumiditySeries,
             List<PvRecordLists> listsDataRecords,
             List<bool> validListsDataRecords,
-            Dictionary<DateTime, double> consumptionDictionary = null
+            Dictionary<DateTime, ConsumptionRecord> consumptionDictionary = null
             )
         {
             var countOfListsDataRecords = listsDataRecords.Count;
@@ -297,10 +299,26 @@ namespace LEG.PV.Data.Processor
                 var hasCalculated = pvDataRecord.HasCalculated;
 
                 // Build dictionaries for the current record, including the base series and the valid reference series
-                var consumptionDict = new Dictionary<string, double?>
+                var consumptionDict = new Dictionary<string, double?> { };
+                if (consumptionDictionary != null && consumptionDictionary.ContainsKey(record.Timestamp))
+                { 
+                    var r = consumptionDictionary[record.Timestamp];
+                    consumptionDict[PvConstants.MeasuredPower] = r.Solar;
+                    consumptionDict[PvConstants.ConsumedPower] = r.Consumers;
+                    consumptionDict[PvConstants.WallBox] = r.WallBox;
+                    consumptionDict[PvConstants.Battery] = r.Battery;
+                    consumptionDict[PvConstants.Grid] = r.Grid;
+                    consumptionDict[PvConstants.Residual] = r.Residual;
+                }
+                else
                 {
-                    { PvConstants.ConsumedPower, consumptionDictionary != null && consumptionDictionary.ContainsKey(record.Timestamp) ? consumptionDictionary[record.Timestamp] : (double?)null }
-                };
+                    consumptionDict[PvConstants.MeasuredPower] = record.MeasuredPower;
+                    consumptionDict[PvConstants.ConsumedPower] = null;
+                    consumptionDict[PvConstants.WallBox] = null;
+                    consumptionDict[PvConstants.Battery] = null;
+                    consumptionDict[PvConstants.Grid] = null;
+                    consumptionDict[PvConstants.Residual] = null;
+                }
 
                 var productionDict = new Dictionary<string, double?>
                 {
@@ -395,12 +413,12 @@ namespace LEG.PV.Data.Processor
                     throw new ArgumentOutOfRangeException(nameof(siteId), "Site Id is out of range");
             }
 
-            var consumptionDictionary = new Dictionary<DateTime, double>();
+            var consumptionDictionary = new Dictionary<DateTime, ConsumptionRecord>();
             switch (siteId)
             {
                 case SiteNamesList.Senn:
                 case SiteNamesList.SennV:
-                    consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumptionDictionary(siteId);
+                    consumptionDictionary = E3DcLoadPeriodRecords.LoadConsumersDictionary(siteId);
                     break;
                 default:
                     break;
@@ -452,6 +470,11 @@ namespace LEG.PV.Data.Processor
                     _, 
                     _) = await ImportMeteoForecastAndCalculatedProduction(siteId, firstImportTimestamp, lHistoryTimestamp);
 
+                var minutesPerPeriod = 60 / periodsPerHour;
+                var simulationStartDateTime = dataRecordsHistory[^1].Timestamp.AddMinutes(minutesPerPeriod);
+                var simulationEndDateTime = dataRecordsForecast[^1].Timestamp;
+                var simulatedConsumptionDictionary = SimulateConsumption(siteId, simulationStartDateTime, simulationEndDateTime, minutesPerPeriod: minutesPerPeriod);
+
                 var (filteredRadiationForecastSeries, _,
                     filteredTemperatureForecastSeries, _,
                     filteredWindSpeedForecastSeries, _,
@@ -471,14 +494,14 @@ namespace LEG.PV.Data.Processor
                     filteredRelativeHumidityForecastSeries,
                     listsDataRecords,
                     validListsDataRecords,
-                    null
+                    simulatedConsumptionDictionary
                     );
             }
 
             var dataRecordLabels = new PvRecordLabels(
-                [ PvConstants.ConsumedPower ],
-                [PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF],
-                [PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF],
+                [ PvConstants.MeasuredPower, PvConstants.ConsumedPower, PvConstants.WallBox, PvConstants.Battery, PvConstants.Grid, PvConstants.Residual ],
+                [ PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF ],
+                [ PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF ],
                 filteredRadiationLabels.Select(kv => kv.Key).ToList(),
                 filteredTemperatureLabels.Select(kv => kv.Key).ToList(),
                 filteredWindSpeedLabels.Select(kv => kv.Key).ToList(),

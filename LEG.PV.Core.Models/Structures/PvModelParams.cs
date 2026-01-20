@@ -1,6 +1,7 @@
-﻿using static LEG.PV.Core.Models.PvModelParamsMetaData;
+﻿using LEG.PV.Core.Models.PvProductionModel;
+using static LEG.PV.Core.Models.Structures.PvModelParamsMetaData;
 
-namespace LEG.PV.Core.Models
+namespace LEG.PV.Core.Models.Structures
 {
     public record PvModelParams
     {

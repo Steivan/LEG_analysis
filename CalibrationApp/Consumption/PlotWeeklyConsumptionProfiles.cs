@@ -35,7 +35,9 @@ namespace CalibrationApp.Consumption
                 hiRange[p13, i] = mean[p13, i] + stdDev;
                 loRange[p13, i] = mean[p13, i] - stdDev;
             }
-            var modelMeans = Normalize2DArrays.GetModelArray(mean);
+            var (weekdayFactors, modelMeans) = Normalize2DArrays.GetModelArray(mean);
+            Console.WriteLine($"Weekday factors: {string.Join(", ", weekdayFactors.Select(f => f.ToString("F3")))}");
+            Console.WriteLine();
 
             // Define plot axes styles
             var maxPower = hiRange.Max2D();

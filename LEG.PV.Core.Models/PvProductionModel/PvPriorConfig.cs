@@ -1,6 +1,7 @@
-﻿using static LEG.PV.Core.Models.PvModelParamsMetaData;
+﻿using LEG.PV.Core.Models.Structures;
+using static LEG.PV.Core.Models.Structures.PvModelParamsMetaData;
 
-namespace LEG.PV.Core.Models
+namespace LEG.PV.Core.Models.PvProductionModel
 {
     public class PvPriorConfig
     {
