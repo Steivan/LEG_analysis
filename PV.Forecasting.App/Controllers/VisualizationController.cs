@@ -20,7 +20,7 @@ namespace PV.Forecasting.App.Controllers
 
         // *****************************************************************************************************************
 
-        const int siteIdIndex = 2;           // <<<<< ==== Choose site 0 -3 here
+        const int siteIdIndex = 1;           // <<<<< ==== Choose site 0 -3 here
 
         const int displayPeriod = 2;        // 0: downloaded history, 1: meteo history till now, 2: including meteo forecast
 

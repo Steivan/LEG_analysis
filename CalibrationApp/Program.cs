@@ -12,6 +12,92 @@ namespace CalibrationApp
 {
     public class Program
     {
+        const double fourierPeriod = 365.25;
+        const double omega = 2 * Math.PI / fourierPeriod;
+
+        static double FourierValue(double angle0, double[] a, double[] b)
+        {
+            double result = 0.0;
+            for (int n = 0; n < a.Length; n++)
+            {
+                var angle = angle0 * n;
+                result += a[n] * Math.Cos(angle) + b[n] * Math.Sin(angle);
+            }
+            return result;
+        }
+
+        static double GetDailyMeanConsumption(
+            DateTime dateTime, DateTime yearStart,
+            double[] peakHours, double[] variancePeaks,
+            List<FourierSeries> fourierList,     // 0: Baseline, 1..: Peaks
+            Dictionary<DayOfWeek, double> weekdayFactors)
+        {
+            var lagInDays = (dateTime - yearStart).TotalDays + 0.5;
+            var dayOfWeek = dateTime.DayOfWeek;
+            var hoursOfDay = (double)dateTime.Hour + dateTime.Minute / 60.0;
+
+            var angle0 = omega * lagInDays;
+            var fourierCoefficients = fourierList[0].GetCoefficients();
+            var baselineConsumption = FourierValue(angle0, fourierCoefficients.a, fourierCoefficients.b) * weekdayFactors[dayOfWeek];
+
+            var variableConsumption = 0.0;
+            for (int i = 0; i < peakHours.Length; i++)
+            {
+                fourierCoefficients = fourierList[1+i].GetCoefficients();
+                var hourDiff = hoursOfDay - peakHours[i];
+                var amplitude = FourierValue(angle0, fourierCoefficients.a, fourierCoefficients.b);
+                variableConsumption += amplitude * Math.Exp(-(hourDiff * hourDiff) / 2 / variancePeaks[i]);
+            }
+            variableConsumption *= weekdayFactors[dayOfWeek];
+
+            return baselineConsumption + variableConsumption;
+        }
+
+        static double GetWeigthAutoRegression(
+            Dictionary<DateTime, double> consumptionDictionary,
+            double[] peakHours, double[] variancePeaks,
+            List<FourierSeries> fourierList,     // 0: Baseline, 1..: Peaks
+            double[] dayOfWeekFactors)
+        {
+            var weekdayFactors = new Dictionary<DayOfWeek, double>
+            {
+                { DayOfWeek.Sunday, dayOfWeekFactors[0] },
+                { DayOfWeek.Monday, dayOfWeekFactors[1] },
+                { DayOfWeek.Tuesday, dayOfWeekFactors[2] },
+                { DayOfWeek.Wednesday, dayOfWeekFactors[3] },
+                { DayOfWeek.Thursday, dayOfWeekFactors[4] },
+                { DayOfWeek.Friday, dayOfWeekFactors[5] },
+                { DayOfWeek.Saturday, dayOfWeekFactors[6] }
+            };
+            var isFirst = true;
+            var priorConsumption = 0.0;
+            var sumNominator = 0.0;
+            var sumDenominator = 0.0;
+            var yearStart = new DateTime(consumptionDictionary.Keys.Min().Year, 1, 1);
+            foreach (var entry in consumptionDictionary.OrderBy(kvp => kvp.Key))
+            {
+                var timestamp = entry.Key;
+                var currentConsumption = entry.Value;
+                if (!isFirst)
+                {
+                    var expectedConsumption = GetDailyMeanConsumption(
+                        timestamp, yearStart,
+                        peakHours, variancePeaks,
+                        fourierList,
+                        weekdayFactors);
+
+                    var priorResidual = priorConsumption - expectedConsumption;
+                    var currentResidual = currentConsumption - expectedConsumption;
+                    sumNominator += priorResidual * currentResidual;
+                    sumDenominator += priorResidual * priorResidual;
+                }
+
+                isFirst = false;
+                priorConsumption = currentConsumption;
+            }
+
+            return sumNominator / sumDenominator;
+        }
         static async Task Main()
         {
             //AnalyzeConfinedGaussianVariance(0.1);
@@ -26,7 +112,7 @@ namespace CalibrationApp
             PlotDiurnalConsumptionProfiles.Plot13x4DiurnalProfiles(siteId, diurnalStats);
 
             var weekdayStats = WeekdaySeasonalAnalysis.AnalyzeWeekdaySeasonality(consumptionDictionary);
-            PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);                     // Print and plot weekday statistics
+            var dayOfWeekFactors = PlotWeeklyConsumptionProfiles.Plot13x4WeeklyProfiles(siteId, weekdayStats);                     // Print and plot weekday statistics
 
             var lagPeaks = new double[] { 8.0, 14.0, 20.0};
             var variancePeaks = new double[] { 5.0, 5.0, 5.0};
@@ -83,7 +169,6 @@ namespace CalibrationApp
                 }
             }
 
-            var fourierPeriod = 365.25;
             var fourierTerms = 4;
             var support13 = (new double[13]).Select((v,i) => (double)(14 + i * 28)).ToArray();
             var support365 = (new double[365]).Select((v, i) => (0.5 + i)).ToArray();
@@ -105,6 +190,8 @@ namespace CalibrationApp
                 }
             }
 
+            var autoRegressionWeight = GetWeigthAutoRegression(consumptionDictionary, lagPeaks, variancePeaks, fourierList, dayOfWeekFactors);
+
             for (var k = 0; k <= countPeaks; k++)
             { 
                 var fourierCoefficients = fourierList[k].GetCoefficients();
@@ -112,6 +199,7 @@ namespace CalibrationApp
                 Console.WriteLine($"Fourier coefficients for {label}");
                 Console.WriteLine($" - a: {fourierCoefficients.a.Select(v => v.ToString("F1")).Aggregate((x, y) => x + ", " + y)}");
                 Console.WriteLine($" - b: {fourierCoefficients.b.Select(v => v.ToString("F1")).Aggregate((x, y) => x + ", " + y)}");
+                Console.WriteLine($"Weight autoregression: {autoRegressionWeight:F3}");
             }
             Console.WriteLine();
 

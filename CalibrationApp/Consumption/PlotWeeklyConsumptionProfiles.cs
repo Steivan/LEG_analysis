@@ -8,7 +8,7 @@ namespace CalibrationApp.Consumption
 {
     public class PlotWeeklyConsumptionProfiles
     {
-        internal static void Plot13x4WeeklyProfiles(string siteId, List<WeekdayStats> timeSlotStats)
+        internal static double[] Plot13x4WeeklyProfiles(string siteId, List<WeekdayStats> timeSlotStats)
         {
             const int periods13x4 = 13;
             const int daysPerWeek = 7;
@@ -118,6 +118,8 @@ namespace CalibrationApp.Consumption
 
             // Optionally, save the plot as a PNG
             context.SavePlot("plot.png", width: 800, height: 600);
+
+            return weekdayFactors;
         }
 
     }
