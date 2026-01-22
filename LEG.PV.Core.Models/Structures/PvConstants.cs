@@ -21,6 +21,7 @@
         }
 
         // Consumption power keys
+        public const string SolarPower = "SolarPower";
         public const string ConsumedPower = "ConsumedPower";
         public const string WallBox = "WallBox";
         public const string Battery = "Battery";

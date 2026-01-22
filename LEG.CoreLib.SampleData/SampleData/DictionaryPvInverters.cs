@@ -15,6 +15,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -25,6 +26,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -35,6 +37,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 1
                 ),
 
@@ -45,6 +48,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -55,6 +59,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 1
                 ),
 
@@ -65,6 +70,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 1
                 ),
 
@@ -75,6 +81,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -85,6 +92,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -95,6 +103,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 1
                 ),
 
@@ -102,9 +111,10 @@ namespace LEG.CoreLib.SampleData.SampleData
                     SystemName: Senn + "_1",
                     Site: Senn,
                     HasBattery: true,
-                    Capacity: 16.0,
-                    MaxLoad: 3.0,
+                    Capacity: 7.5,          // kWh capacity 45% - 100%
+                    MaxLoad: 3.0,           // => 750Wh / 0.25h = 3kW max load
                     MaxDrain: 3.0,
+                    LossPortion: 0.053,      // Portion of energy lost in conversion
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -112,9 +122,10 @@ namespace LEG.CoreLib.SampleData.SampleData
                     SystemName: SennV + "_1",
                     Site: SennV,
                     HasBattery: true,
-                    Capacity: 16.0,
-                    MaxLoad: 8.0,
+                    Capacity: 10.5,         // kWh capacity 10% - 100%
+                    MaxLoad: 8.0,           // => 2000Wh / 0.25h = 8kW max load
                     MaxDrain: 8.0,
+                    LossPortion: 0.033,      // Portion of energy lost in conversion
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -125,6 +136,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 1
                 ),
 
@@ -135,6 +147,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
 
@@ -145,6 +158,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                     Capacity: 0.0,
                     MaxLoad: 0.0,
                     MaxDrain: 0.0,
+                    LossPortion: 0.0,
                     IndicativeNrOfRoofs: 2
                 ),
             };

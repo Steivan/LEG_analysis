@@ -185,6 +185,7 @@ namespace LEG.CoreLib.SampleData.SampleData
                             Capacity: 0.0,
                             MaxLoad: 0.0,
                             MaxDrain: 0.0,
+                            LossPortion: 0.0,
                             IndicativeNrOfRoofs: 2
                         )
                     ],

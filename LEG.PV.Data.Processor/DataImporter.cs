@@ -19,6 +19,7 @@ using static LEG.PV.Core.Models.MeteoCalibrationParameters.MeteoCalibrationParam
 using static LEG.PV.Core.Models.ConsumptionModel.ConsumptionSimulator;
 using static LEG.PV.Core.Models.PvDataClass;
 using static LEG.PV.Data.Processor.Simulator.SimulatorParameters;
+using LEG.CoreLib.Abstractions.SolarCalculations.Domain;
 
 namespace LEG.PV.Data.Processor
 {
@@ -248,6 +249,7 @@ namespace LEG.PV.Data.Processor
         }
 
         private void InjectDataRecords(
+            Inverter pvSiteInverter,
             PvModelParams pvModelParams,
             double installedPower,
             int periodsPerHour,
@@ -260,7 +262,8 @@ namespace LEG.PV.Data.Processor
             Dictionary<string, List<double?>> filteredRelativeHumiditySeries,
             List<PvRecordLists> listsDataRecords,
             List<bool> validListsDataRecords,
-            Dictionary<DateTime, ConsumptionRecord> consumptionDictionary = null
+            Dictionary<DateTime, ConsumptionRecord> consumptionDictionary = null,
+            bool isForecast = false
             )
         {
             var countOfListsDataRecords = listsDataRecords.Count;
@@ -289,6 +292,12 @@ namespace LEG.PV.Data.Processor
                 }
             }
 
+            var hasBattery = pvSiteInverter.HasBattery;
+            var batteryCapacity = hasBattery ? pvSiteInverter.Capacity * 1000 : 0.0;
+            var maxLoadPerPeriod = hasBattery ? pvSiteInverter.MaxLoad * 1000 / periodsPerHour: 0.0;
+            var maxDrainPerPeriod = hasBattery ? pvSiteInverter.MaxDrain * 1000 / periodsPerHour : 0.0;
+            var batteryCorrectionFactor = hasBattery ? (1.0 + pvSiteInverter.LossPortion) : 1.0;
+            var batteryStateOfCharge = hasBattery ? batteryCapacity * 0.5 : 0.0;                        // Start at 50% SOC
             for (var index = indexFirstDataRecord; index < dataRecords.Count; index++)
             {
                 var record = dataRecords[index];
@@ -303,16 +312,45 @@ namespace LEG.PV.Data.Processor
                 if (consumptionDictionary != null && consumptionDictionary.ContainsKey(record.Timestamp))
                 { 
                     var r = consumptionDictionary[record.Timestamp];
-                    consumptionDict[PvConstants.MeasuredPower] = r.Solar;
+                    consumptionDict[PvConstants.SolarPower] = r.Solar;
                     consumptionDict[PvConstants.ConsumedPower] = r.Consumers;
                     consumptionDict[PvConstants.WallBox] = r.WallBox;
                     consumptionDict[PvConstants.Battery] = r.Battery;
                     consumptionDict[PvConstants.Grid] = r.Grid;
                     consumptionDict[PvConstants.Residual] = r.Residual;
+                    if (isForecast)
+                    {
+                        consumptionDict[PvConstants.SolarPower] = computedPower.PowerGRTWSF;        // positive values only
+                        consumptionDict[PvConstants.ConsumedPower] = r.Consumers;                   // negative values only
+                        consumptionDict[PvConstants.WallBox] = 0.0;
+                        consumptionDict[PvConstants.Battery] = 0.0;
+                        var netPowerPerPeriod = computedPower.PowerGRTWSF + r.Consumers;
+                        if (hasBattery)
+                        {
+                            if (netPowerPerPeriod > 0 && batteryStateOfCharge < batteryCapacity)
+                            {
+                                var chargePower = Math.Min(netPowerPerPeriod, maxLoadPerPeriod);
+                                chargePower = Math.Min(chargePower, batteryCapacity - batteryStateOfCharge);
+                                batteryStateOfCharge += chargePower;
+                                netPowerPerPeriod -= chargePower;
+                                consumptionDict[PvConstants.Battery] = -chargePower;
+                            }
+                            else if (netPowerPerPeriod < 0 && batteryStateOfCharge > 0)
+                            {
+                                var dischargePower = Math.Min(-netPowerPerPeriod, maxDrainPerPeriod);
+                                dischargePower = Math.Min(dischargePower, batteryStateOfCharge / batteryCorrectionFactor);
+                                batteryStateOfCharge -= dischargePower * batteryCorrectionFactor;
+                                netPowerPerPeriod += dischargePower;
+                                consumptionDict[PvConstants.Battery] = dischargePower;
+                            }
+                        }
+                        consumptionDict[PvConstants.Grid] = -netPowerPerPeriod;
+                        consumptionDict[PvConstants.Residual] = 0.0;
+                    }
                 }
                 else
                 {
-                    consumptionDict[PvConstants.MeasuredPower] = record.MeasuredPower;
+                    consumptionDict[PvConstants.SolarPower] = isForecast ? computedPower.PowerGRTWSF : record.MeasuredPower;
                     consumptionDict[PvConstants.ConsumedPower] = null;
                     consumptionDict[PvConstants.WallBox] = null;
                     consumptionDict[PvConstants.Battery] = null;
@@ -390,6 +428,8 @@ namespace LEG.PV.Data.Processor
             int periodsPerHour)>
             ImportHistoryAndCalculated(string siteId, int displayPeriod = 2)      // 0: downloaded meteo for PV history, 1: meteo PV history till now, 2: including meteo forecast
         {
+            var pvSiteInverter = PvSiteModelGetters.GetSiteDataModel(siteId).Inverters.First();
+
             var pvModelParams = PvModelParamsDictionary[siteId];
 
             MeteoImportResult meteoImportResult = null;
@@ -442,6 +482,7 @@ namespace LEG.PV.Data.Processor
             var listsDataRecords = new List<PvRecordLists>();
             var validListsDataRecords = new List<bool>();
             InjectDataRecords(
+                pvSiteInverter,
                 pvModelParams,
                 installedPower,
                 periodsPerHour,
@@ -454,7 +495,8 @@ namespace LEG.PV.Data.Processor
                 filteredRelativeHumiditySeries,
                 listsDataRecords,
                 validListsDataRecords,
-                consumptionDictionary
+                consumptionDictionary,
+                isForecast: false
                 );
 
             // If forecast is requested, extend data with forecast values
@@ -482,6 +524,7 @@ namespace LEG.PV.Data.Processor
                     filteredRelativeHumidityForecastSeries, _) = FilterAndLabelSeries(perStationWeatherForecast);
 
                 InjectDataRecords(
+                    pvSiteInverter,
                     pvModelParams,
                     installedPower,
                     periodsPerHour,
@@ -494,12 +537,13 @@ namespace LEG.PV.Data.Processor
                     filteredRelativeHumidityForecastSeries,
                     listsDataRecords,
                     validListsDataRecords,
-                    simulatedConsumptionDictionary
+                    simulatedConsumptionDictionary,
+                    isForecast: true
                     );
             }
 
             var dataRecordLabels = new PvRecordLabels(
-                [ PvConstants.MeasuredPower, PvConstants.ConsumedPower, PvConstants.WallBox, PvConstants.Battery, PvConstants.Grid, PvConstants.Residual ],
+                [ PvConstants.SolarPower, PvConstants.ConsumedPower, PvConstants.WallBox, PvConstants.Battery, PvConstants.Grid, PvConstants.Residual ],
                 [ PvConstants.MeasuredPower, PvConstants.PowerGR, PvConstants.PowerGRTW, PvConstants.PowerGRTWSF ],
                 [ PvConstants.Reference, PvConstants.UflGR, PvConstants.UflGRTW, PvConstants.UflGRTWSF ],
                 filteredRadiationLabels.Select(kv => kv.Key).ToList(),

@@ -8,5 +8,6 @@ public record Inverter(
     double Capacity,              // Battery storage capacity in [kWh] 
     double MaxLoad,               // Maximal load capacity in [kW]
     double MaxDrain,              // Maximal drain capacity in [kW]
+    double LossPortion,            // Loss factor for inverter + battery [0..1]
     int IndicativeNrOfRoofs       // Indicative number of roofs -> actual # taken from roof dictionary
 );
